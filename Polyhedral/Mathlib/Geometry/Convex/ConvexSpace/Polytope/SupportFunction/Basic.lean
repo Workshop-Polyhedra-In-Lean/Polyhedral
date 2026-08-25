@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Valentina Taylor
 -/
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
+import Mathlib.Order.WithBotTop
 
 /-! # General properties of support functions
 
@@ -36,7 +37,6 @@ Basic properties to prove: in progress!
 * generalise from the standard dual (or, any inner product) to bilinear pairings
   Assume a bilinear pairing `M →ₗ[R] N →ₗ[R] R` instead, so `P : Set M` would have support function
   of type `N →ₗ[R] R → WithBot (WithTop R)`
-* use `WithBotTop R` as the codomain; this should have the properties we want
 -/
 
 variable {R V : Type*} [Semiring R] [PartialOrder R] [AddCommMonoid V] [Module R V]
@@ -88,12 +88,12 @@ Otherwise, we return a supremum of `φ '' P` (which is unique because `R` has a 
 variable (R) in
 noncomputable
 def supportFunction (P : Set V) :
-    Module.Dual R V → WithBot (WithTop R) := -- could use WithBotTop as the codomain
+    Module.Dual R V → WithBotTop R :=
   fun φ ↦ by
   by_cases hP : P.Nonempty
   · letI S := φ '' P
     by_cases hS' : ∃ x, IsLUB S x
-    · exact WithBot.some (WithTop.some hS'.choose)
+    · exact WithBotTop.coe  hS'.choose
     · by_cases hS : BddAbove S
       · -- TODO: can we simplify, by taking -∞ also as this junk value?
         exact 37 -- TODO: is this the good junk value?
@@ -136,8 +136,7 @@ open scoped Classical in
 lemma supportFunction_of_nonempty_of_bddAbove {P : Set V} (hP : P.Nonempty) {φ : Module.Dual R V}
     (hP' : BddAbove (φ '' P)) :
     supportFunction R P φ =
-      if hS : ∃ x, IsLUB (⇑φ '' P) x then
-      WithBot.some (WithTop.some hS.choose) else WithBot.some 37
+      if hS : ∃ x, IsLUB (⇑φ '' P) x then WithBotTop.coe hS.choose else 37
     := by
   unfold supportFunction
   rw [dite_eq_left hP]
@@ -152,7 +151,7 @@ lemma supportFunction_of_nonempty {P : Set V} (hP : P.Nonempty) (φ : Module.Dua
     supportFunction R P φ = (
       if hS : BddAbove (⇑φ '' P) then
         if _hS' : ∃ x, IsLUB (⇑φ '' P) x then
-        WithBot.some (WithTop.some (Classical.choose hS)) else WithBot.some (37 : R) else ⊤)
+        WithBotTop.coe hs.choose else WithBotTop.coe 37 else ⊤)
     := by
   unfold supportFunction
   dsimp
