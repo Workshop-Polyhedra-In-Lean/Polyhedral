@@ -42,12 +42,14 @@ variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R 
   · exact neg_mem_neg.mp <| h (-t) (neg_subset.mp hst) hcvx.neg
   · exact mem_neg.mp <| h (-t) (neg_subset_neg.mpr hst) hcvx.neg
 
-variable [AddTorsor V A]
-
-noncomputable local instance : ConvexSpace R A := AddTorsor.toConvexSpace
+variable [AddTorsor V A] [ConvexSpace R A] [IsAffineConvexSpace R V A]
 
 lemma convexHull_vadd (s₁ : Set V) (s₂ : Set A) :
     convexHull R (s₁ +ᵥ s₂) = convexHull R s₁ +ᵥ convexHull R s₂ := by
+  apply le_antisymm
+  · refine convexHull_min ?_ ?_
+    · exact vadd_subset_vadd subset_convexHull_self <| subset_convexHull_self
+    sorry
   sorry
 
 end Pointwise

@@ -46,9 +46,8 @@ section Ring
 
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
-variable [AddTorsor V A]
+variable [AddTorsor V A] [ConvexSpace R A] [IsAffineConvexSpace R V A]
 
-local instance : ConvexSpace R A := AddTorsor.toConvexSpace
 -- TODO: add class expressing compatibility between the convex structures on A and V
 
 /- The Minkowski sum of two polytopes is a polytope. -/
@@ -59,18 +58,15 @@ protected lemma vadd {P₁ : Set V} {P₂ : Set A} (hP₁ : IsPolytope R P₁) (
   use s₁ +ᵥ s₂
   rw [Finset.coe_vadd, convexHull_vadd]
 
-/- Minkowski addition preserves convexity. -/
+/- Minkowski translation of a polytope is a polytope. -/
 lemma translate (t : V) {K : Set A} (hK : IsPolytope R K) : IsPolytope R (t +ᵥ K) := by
-  -- TODO: use `IsPolytope.vadd`
-  -- this likely requires a lemma `{t} + K = t + K`.
-  sorry
+  rw [← Set.singleton_vadd]
+  exact (IsPolytope.singleton R t).vadd hK
 
 /- The Minkowski addition of two polytopes is a polytope. -/
 protected lemma add {P₁ : Set V} {P₂ : Set V}
     (hP₁ : IsPolytope R P₁) (hP₂ : IsPolytope R P₂) : IsPolytope R (P₁ + P₂) :=
-  -- TODO: use `IsPolytope.vadd hP₁ hP₂`
-  -- this likely requires a compatbility class between affine and linear convexity
-  sorry
+  hP₁.vadd hP₂
 
 /- The Minkowski addition of two polytopes is a polytope. -/
 protected lemma sub {P₁ : Set V} {P₂ : Set V}
@@ -79,7 +75,9 @@ protected lemma sub {P₁ : Set V} {P₂ : Set V}
 
 protected lemma smul (r : R) {K : Set V} (hK : IsPolytope R K) :
     IsPolytope R (r • K) := by
-  sorry
+  obtain ⟨s, rfl⟩ := hK
+  use r • s
+
 
 end Ring
 
