@@ -89,14 +89,15 @@ end Ring
 
 section SMul
 
-variable [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
-variable [AddCommMonoid V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
+variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
+variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
 variable [SMulCommClass R R V]
 
 @[to_fun (attr := fun_prop)]
 lemma IsAffineMap.const_smul [ConvexSpace R X] {f : X → V}
     (hf : IsAffineMap R f) (r : R) : IsAffineMap R (r • f) := by
-  sorry
+  change IsAffineMap R (fun x => r • f x)
+  exact (DistribSMul.toLinearMap R V r).isAffineMap.comp hf
 
 protected lemma IsConvexSet.smul (r : R) {K : Set V} (hK : IsConvexSet R K) :
     IsConvexSet R (r • K) := by
