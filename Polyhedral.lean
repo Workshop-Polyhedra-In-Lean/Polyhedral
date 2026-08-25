@@ -58,6 +58,8 @@ public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Face
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Pointwise
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.SupportFunction.Basic
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.SupportFunction.Lemmas
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Prod
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Basic
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Basic
