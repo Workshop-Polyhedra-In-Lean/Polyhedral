@@ -28,7 +28,7 @@ section Pointwise
 
 open Pointwise
 
-section Semiring
+section AddCommGroup
 
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
@@ -40,13 +40,18 @@ protected lemma neg (hP : IsPolytope R P) : IsPolytope R (-P) := by classical
   use -s
   simp only [convexHull_neg, Finset.coe_neg]
 
-end Semiring
+@[simp] lemma neg_iff : IsPolytope R (-P) ↔ IsPolytope R P where
+  mp := by nth_rw 2 [← neg_neg P]; exact .neg
+  mpr := .neg
+
+end AddCommGroup
 
 section Ring
 
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
 variable [AddTorsor V A] [ConvexSpace R A] [IsAffineConvexSpace R V A]
+variable [SMulCommClass R R V]
 
 -- TODO: add class expressing compatibility between the convex structures on A and V
 
@@ -68,16 +73,23 @@ protected lemma add {P₁ : Set V} {P₂ : Set V}
     (hP₁ : IsPolytope R P₁) (hP₂ : IsPolytope R P₂) : IsPolytope R (P₁ + P₂) :=
   hP₁.vadd hP₂
 
-/- The Minkowski addition of two polytopes is a polytope. -/
+/- The Minkowski subtraction of two polytopes is a polytope. -/
 protected lemma sub {P₁ : Set V} {P₂ : Set V}
-    (hP₁ : IsPolytope R P₁) (hP₂ : IsPolytope R P₂) : IsPolytope R (P₁ - P₂) :=
+    (hP₁ : IsPolytope R P₁) (hP₂ : IsPolytope R P₂) : IsPolytope R (P₁ - P₂) := by
+  rw [sub_eq_add_neg]
+  exact hP₁.add hP₂.neg
+
+lemma convexHull_smul_ (r : R) (s : Set V)
+    : (convexHull R) (r • s) = r • (convexHull R) s := by
   sorry
 
 protected lemma smul (r : R) {K : Set V} (hK : IsPolytope R K) :
     IsPolytope R (r • K) := by
+  classical
   obtain ⟨s, rfl⟩ := hK
-  sorry
-
+  use s.image (r • ·)
+  rw [Finset.coe_image, Set.image_smul]
+  rw [← convexHull_smul_]
 
 end Ring
 
