@@ -1,18 +1,20 @@
+/-
+Copyright (c) 2026 TODO AUTHORS. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Valentina Taylor
+-/
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.SupportFunction.Basic
+
+/-! # Basic properties of support functions (of sets)
+-/
 
 variable {R V : Type*} [Semiring R] [PartialOrder R] [AddCommMonoid V] [Module R V]
 
 /- ## Basic properties -/
 
--- scaling: TODO write down!
+-- scaling/is homogeneous: TODO write down!
 
 -- additivity: TODO write down!
-
-
--- supportFunction of ∅
--- supportFunction of singleton
-
-
 
 -- supportFunction of Minkowski sum  ---> Rockefeller's book?
 
@@ -24,7 +26,7 @@ variable {R V : Type*} [Semiring R] [PartialOrder R] [AddCommMonoid V] [Module R
 -- (and hope that if V is a module, we have a convex space)
 def convexClosure (P : Set V) : Set V := sorry
 
--- split into convex hull, and one statement about top. closure
+-- split into convex hull, and one statement about topological closure
 
 example {P : Set V} : supportFunction R P = supportFunction R (convexClosure P) := sorry
 
@@ -40,7 +42,11 @@ example {P : Set V} : supportFunction R P = supportFunction R (convexClosure P) 
 "special junk value" in our definition of support functions. -/
 def funkySet : Set ℚ := { q | 0 < q ∧ q ^2 < 2}
 
-instance : IsStrictOrderedRing ℚ := sorry
+instance : IsStrictOrderedRing ℚ where
+  add_le_add_left a b hab c := by gcongr
+  le_of_add_le_add_left a b c h := Rat.add_le_add_left.mp h
+  mul_lt_mul_of_pos_left a ha b c h := (Rat.mul_lt_mul_left ha).mpr h
+  mul_lt_mul_of_pos_right c hc a b h := (Rat.mul_lt_mul_right hc).mpr h
 
 lemma isConvex_funkySet : Convexity.IsConvexSet ℚ funkySet := by
   sorry
