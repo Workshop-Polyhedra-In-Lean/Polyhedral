@@ -76,7 +76,7 @@ protected lemma sub {P₁ : Set V} {P₂ : Set V}
 protected lemma smul (r : R) {K : Set V} (hK : IsPolytope R K) :
     IsPolytope R (r • K) := by
   obtain ⟨s, rfl⟩ := hK
-  use r • s
+  sorry
 
 
 end Ring
