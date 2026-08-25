@@ -16,7 +16,7 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.AffineMap
 
 noncomputable section
 
-variable {ι R K X Y V A W B : Type*}
+variable {R X V A : Type*}
 
 namespace Convexity
 
@@ -26,62 +26,84 @@ open Pointwise
 
 section Semiring
 
-variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
+variable [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
+variable [AddCommMonoid V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
+
+/- Minkowski addition preserves convexity. -/
+protected lemma IsConvexSet.add {K₁ K₂ : Set V}
+    (hK₁ : IsConvexSet R K₁) (hK₂ : IsConvexSet R K₂) : IsConvexSet R (K₁ + K₂) := by
+  rw [← Set.add_image_prod]
+  exact (hK₁.prod hK₂).image (by fun_prop)
+
+end Semiring
+
+section AddCommGroup
+
+variable [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
 
-variable {K K₁ K₂ : Set V}
+variable {K : Set V}
 
 protected lemma IsConvexSet.neg (hK : IsConvexSet R K) : IsConvexSet R (-K) := by
   rw [← Set.image_neg_eq_neg]
-  exact hK.image (LinearEquiv.neg R).toLinearMap.isAffineMap
+  exact hK.image (by fun_prop)
 
 @[simp] lemma IsConvexSet.neg_iff : IsConvexSet R (-K) ↔ IsConvexSet R K where
   mp := by nth_rw 2 [← neg_neg K]; exact .neg
   mpr := .neg
 
-end Semiring
+/- Minkowski subtraction preserves convexity. -/
+protected lemma IsConvexSet.sub {K₁ K₂ : Set V}
+    (hK₁ : IsConvexSet R K₁) (hK₂ : IsConvexSet R K₂) : IsConvexSet R (K₁ - K₂) := by
+  rw [← Set.sub_image_prod]
+  exact (hK₁.prod hK₂).image (by fun_prop)
+
+end AddCommGroup
 
 section Ring
 
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
 variable [AddTorsor V A]
+variable [ConvexSpace R A] [IsAffineConvexSpace R V A]
 
-local instance : ConvexSpace R A := AddTorsor.toConvexSpace
--- TODO: add class expressing compatibility between the convex structures on A and V
+@[to_fun (attr := fun_prop)]
+lemma IsAffineMap.vadd [ConvexSpace R X] {f : X → V} {g : X → A}
+    (hf : IsAffineMap R f) (hg : IsAffineMap R g) :
+    IsAffineMap R (f +ᵥ g) := by
+  sorry
 
-/- Minkowski addition preserves convexity. -/
+/- Minkowski vector addition preserves convexity. -/
 protected lemma IsConvexSet.vadd {K₁ : Set V} {K₂ : Set A}
     (hK₁ : IsConvexSet R K₁) (hK₂ : IsConvexSet R K₂) : IsConvexSet R (K₁ +ᵥ K₂) := by
-  -- TODO: use `AddTorsor.sConvexComb_eq_affineCombination`
-  sorry
+  rw [← Set.vadd_image_prod]
+  exact (hK₁.prod hK₂).image (by fun_prop)
 
-/- Minkowski addition preserves convexity. -/
+/- Translation preserves convexity. -/
 lemma IsConvexSet.translate (t : V) {K : Set A} (hK : IsConvexSet R K) :
     IsConvexSet R (t +ᵥ K) := by
-  -- TODO: use `IsConvexSet.vadd hK₁ hK₂` by setting `K₁ := {t}` and
-  --  some missing vadd lemmas
-  -- this likely requires a compatbility class between affine and linear convexity
-  sorry
+  rw [← Set.singleton_vadd]
+  exact IsConvexSet.vadd IsConvexSet.singleton hK
 
-/- Minkowski addition preserves convexity. -/
-protected lemma IsConvexSet.add {K₁ : Set V} {K₂ : Set V}
-    (hK₁ : IsConvexSet R K₁) (hK₂ : IsConvexSet R K₂) : IsConvexSet R (K₁ + K₂) :=
-  -- TODO: use `IsConvexSet.vadd hK₁ hK₂`
-  -- this likely requires a compatbility class between affine and linear convexity
-  sorry
+end Ring
 
-/- Minkowski addition preserves convexity. -/
-protected lemma IsConvexSet.sub {K₁ : Set V} {K₂ : Set V}
-    (hK₁ : IsConvexSet R K₁) (hK₂ : IsConvexSet R K₂) : IsConvexSet R (K₁ - K₂) :=
-  -- TODO: use `IsConvexSet.vadd` and `IsConvexSet.neg`
+section SMul
+
+variable [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
+variable [AddCommMonoid V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
+variable [SMulCommClass R R V]
+
+@[to_fun (attr := fun_prop)]
+lemma IsAffineMap.const_smul [ConvexSpace R X] {f : X → V}
+    (hf : IsAffineMap R f) (r : R) : IsAffineMap R (r • f) := by
   sorry
 
 protected lemma IsConvexSet.smul (r : R) {K : Set V} (hK : IsConvexSet R K) :
     IsConvexSet R (r • K) := by
-  sorry
+  rw [← Set.image_smul]
+  exact hK.image (by fun_prop)
 
-end Ring
+end SMul
 
 end Pointwise
 

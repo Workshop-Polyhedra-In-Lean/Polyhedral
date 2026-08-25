@@ -197,6 +197,7 @@ section Ring
 
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [ConvexSpace R X] [AddCommGroup X] [Module R X] [IsModuleConvexSpace R X]
+variable [SMulCommClass R R X]
 
 /-! ### Minkowski addition / subtraction -/
 
