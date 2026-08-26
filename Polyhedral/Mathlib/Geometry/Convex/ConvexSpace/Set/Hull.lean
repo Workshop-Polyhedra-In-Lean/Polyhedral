@@ -74,10 +74,7 @@ lemma convexHull_prod (s : Set X) (t : Set Y) :
 
 lemma convexHull_vadd (s₁ : Set V) (s₂ : Set A) :
     convexHull R (s₁ +ᵥ s₂) = convexHull R s₁ +ᵥ convexHull R s₂ := by
-  let f := fun x : V × A ↦ x.1 +ᵥ x.2
-  have h (s : Set V) (t : Set A) : f '' (s ×ˢ t) = s +ᵥ t := by
-    exact vadd_image_prod
-  rw [← h, ← h]
+  rw [← vadd_image_prod, ← vadd_image_prod]
   rw [← IsAffineMap.image_convexHull]
   · rw [convexHull_prod]
   · fun_prop
