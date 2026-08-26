@@ -48,6 +48,11 @@ lemma convexHull_union {P Q : Set X} (hP : IsGroundedPolytope R M P)
   exact ⟨t₁ ∪ t₂, by simp [ht₁, ht₂],
     by simp [convexHull_union_convexHull, convexHull_convexHull_union]⟩
 
+lemma mono_subset {P : Set X} {M N : Set X} (hP : IsGroundedPolytope R M P) (hMN : M ⊆ N) :
+    IsGroundedPolytope R N P := by
+  obtain ⟨t, h₁, h₂⟩ := hP
+  exact ⟨t, h₁.trans hMN, h₂⟩
+
 end IsGroundedPolytope
 
 open IsGroundedPolytope
