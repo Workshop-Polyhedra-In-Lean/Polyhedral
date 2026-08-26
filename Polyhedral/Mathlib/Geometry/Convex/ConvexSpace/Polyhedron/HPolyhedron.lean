@@ -66,6 +66,9 @@ lemma IsHPolyhedron.empty : IsHPolyhedron R (∅ : Set A) := by
     mem_preimage, Function.const_apply, mem_Ici, Left.nonneg_neg_iff, false_iff]
   exact (zero_lt_one' R).not_ge
 
+lemma empty_not_is_h_cone : ¬ IsHCone R (∅ : Set V) := by
+  sorry
+
 
 section CommRing
 
@@ -84,6 +87,12 @@ lemma IsHCone.dual_fg (C : PointedCone R V) (hC : C.FG) :
   ext
   simp [←hG, dual_hull]
 
+lemma foo (C : PointedCone R V) : IsHCone R (C : Set V) ↔ C.DualFG .id :=
+  sorry
+
+
+-- should be easier now: simply apply
+-- IsHCone.dual_fg and IsHPolyhedron.is_h_cone
 lemma IsHPolyhedron.dual_fg (C : PointedCone R V) (hC : C.FG) :
     IsHPolyhedron R (dual p C : Set W) := by
   obtain ⟨G, hG⟩ := hC
@@ -100,29 +109,27 @@ section Field
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsOrderedRing R]
 variable {V : Type*} [AddCommGroup V] [Module R V]
+variable {p : V →ₗ[R] V →ₗ[R] R}
 
-private def p : V →ₗ[R] V →ₗ[R] R := by
+-- TODO get rid of this:
+-- private def p : V →ₗ[R] V →ₗ[R] R := by
   -- have inner := (by instance : InnerProductSpace R (V × V)).innerₗ
-  sorry
+--  sorry
 
 open PointedCone in
--- TODO: we want to prove something like this for affine spaces
-lemma IsHPolyhedron.submodule_dualfg (S : Submodule R V) (hS : S.DualFG p) :
-    IsHPolyhedron R (S : Set V) := by
+-- TODO: we want to prove that an affine space is an HPolyhedron
+lemma IsHCone.submodule_dualfg (S : Submodule R V) (hS : S.DualFG p) :
+    IsHCone R (S : Set V) := by
   classical
-  -- have hS_dual : S.DualFG p := FG.dualfg p hS
   obtain ⟨gen, h_gen⟩ := hS
   have h_gen_ext := Submodule.ext_iff.mp h_gen
   simp only [Submodule.mem_dual, SetLike.mem_coe] at h_gen_ext
-  -- let neg_gen := -gen -- Finset.image (-·) gen
   have h_neg (i : V) : i ∈ gen ↔ -i ∈ -gen := by simp
-  use Finset.image (fun v ↦ (p v).toAffineMap) (gen ∪ -gen)
+  use Finset.image (fun v ↦ (p v)) (gen ∪ -gen)
   ext x
   simp only [SetLike.mem_coe, Finset.mem_image, Finset.mem_union, Finset.mem_neg', iInter_exists,
-    biInter_and', iInter_iInter_eq_right, LinearMap.coe_toAffineMap, mem_iInter, mem_preimage,
+    biInter_and', iInter_iInter_eq_right, mem_iInter, mem_preimage,
     mem_Ici]
-  -- have h : x ∈ S ↔ ∀ i ∈ gen, p x i = (0 : R) := by
-  --   sorry
   constructor
   · intro hx i hi
     have h := (h_gen_ext x).mpr hx
