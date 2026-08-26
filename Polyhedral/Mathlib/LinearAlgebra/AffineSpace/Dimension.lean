@@ -7,6 +7,7 @@ Authors:
 -- TODO #min_imports at the end
 import Mathlib.Combinatorics.SimpleGraph.Basic
 import Mathlib.Geometry.Convex.Cone.Face.Lattice
+import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
 
 import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.AffineSubspace.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Face
@@ -69,7 +70,16 @@ end Ring
 section DivisionRing
 
 -- TODO: Investigate weaker hypotheses.
-variable [DivisionRing k] [Module k V] [LinearOrder k] [IsStrictOrderedRing k]
+variable [DivisionRing k] [Module k V]
+
+/-- Two distinct points span a line: their `vectorSpan` has rank exactly `1`. -/
+theorem finrank_vectorSpan_pair {x y : P} (h : x ≠ y) :
+    Module.finrank k (vectorSpan k ({x, y} : Set P)) = 1 := by
+  have hi : AffineIndependent k ![x, y] := affineIndependent_of_ne k h
+  have := hi.finrank_vectorSpan (n := 1) (by simp)
+  rwa [Matrix.range_cons_cons_empty] at this
+
+variable [LinearOrder k] [IsStrictOrderedRing k]
 variable (s : AffineSubspace k P)
 
 theorem cardinalDim_eq_one_iff :
@@ -78,6 +88,30 @@ theorem cardinalDim_eq_one_iff :
   · dsimp [cardinalDim] at h
     split_ifs at h with h'
     · simp_all
+    -- TODO: Clean-up
+    -- a rank-1 direction has a nonzero spanning vector `v`
+    obtain ⟨⟨v, hv⟩, hv₁, -⟩ := rank_eq_one_iff.mp (WithBot.coe_eq_one.mp h)
+    obtain ⟨p, hp⟩ := Set.nonempty_iff_ne_empty.mpr h'
+    set q := v +ᵥ p with hq_def
+    have hq : q ∈ s := vadd_mem_of_mem_direction hv hp
+    have hvvsub : q -ᵥ p = v := by rw [hq_def, vadd_vsub]
+    have hpq : p ≠ q := fun he ↦ hv₁ <| Subtype.ext <| by
+      rw [he, vsub_self] at hvvsub
+      exact hvvsub.symm
+    -- `{p, q}` already spans a line inside `s`, and by rank it must be all of `s`.
+    refine ⟨p, q, hpq, ?_⟩
+    have hle : affineSpan k ({p, q} : Set P) ≤ s :=
+      affineSpan_le.mpr (Set.insert_subset hp (Set.singleton_subset_iff.mpr hq))
+    have hdir : s.direction = (affineSpan k ({p, q} : Set P)).direction := by
+      have hfr : FiniteDimensional k s.direction :=
+        FiniteDimensional.of_rank_eq_one (WithBot.coe_eq_one.mp h)
+      have h1 : Module.finrank k s.direction = 1 :=
+        Module.rank_eq_one_iff_finrank_eq_one.mp (WithBot.coe_eq_one.mp h)
+      have h2 : Module.finrank k (affineSpan k ({p, q} : Set P)).direction = 1 := by
+        rw [direction_affineSpan]; exact finrank_vectorSpan_pair k P hpq
+      exact (Submodule.eq_of_le_of_finrank_eq (direction_le hle) (h2.trans h1.symm)).symm
+    exact (eq_iff_direction_eq_of_mem hp (subset_affineSpan k _ (Set.mem_insert p _))).mpr hdir
+      /- TODO: Decide if we want anything from here
     obtain ⟨⟨x, hx⟩, h₁, h₂⟩ := rank_eq_one_iff.mp (WithBot.coe_eq_one.mp h)
     obtain ⟨y, hy⟩ := Set.nonempty_iff_ne_empty.mpr h'
     refine ⟨y, x +ᵥ y, fun heq ↦ ?_, ?_⟩
@@ -99,63 +133,17 @@ theorem cardinalDim_eq_one_iff :
         · refine (vadd_mem_iff_mem_of_mem_direction ?_).mpr ?_
           · exact Submodule.smul_mem s.direction r hx
           exact (vadd_mem_iff_mem_of_mem_direction hx).mpr hy
+      -/
   · rintro ⟨x, y, h₁, h₂⟩
+    -- TODO: lemma that s ≠ ∅ → cardinalDim = Module.rank
     dsimp [cardinalDim]
     split_ifs with h'
     · grind [coe_eq_bot_iff, affineSpan_eq_bot]
     simp at h'
     rw [WithBot.coe_eq_one]
     rw [Module.rank_eq_one_iff_finrank_eq_one]
-    sorry
-    /-
-    --apply?
-    --
-    have : s.direction = Submodule.span k {x -ᵥ y} := by
-      ext z
-      --rw [AffineSubspace.mem_direction_iff_eq_vsub_left (P := P)]
-      rw [AffineSubspace.direction_eq_vectorSpan]
-      rw [h₂]
-      --rw?
-      rw [coe_affineSpan]
-      --rw?
-      --rw [vectorSpan_def]
-      ext z
-      refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
-      · simp [affineSpan, spanPoints] at h₂
-        simp [h₂] at h
-        have := mem_affineSpan_iff_exists k |>.mp ⟨x, sorry, z, h, by simp⟩
-        rw? at h₂
-        intro A hA
-        simp at hA
-
-        sorry
-      · sorry
-      simp
-      --rw [mem_affineSpan_iff_exists] at h₂
-      sorry
-    rw [AffineSubspace.direction_eq_vectorSpan]
-    --rw [Module.rank_eq_one_iff_finrank_eq_one]
-    rw [vectorSpan_def]
-    /-
-    have : Fintype ((s : Set P) -ᵥ s) := sorry
-    rw [finrank_span_set_eq_card]
-    · simp
-    · simp
-    -/
-    have WANT : ∃ y, Submodule.span k ((s : Set P) -ᵥ s) = Submodule.span k {y} := sorry
-    obtain ⟨y, hy⟩ := WANT
-    rw [hy]
-    exact?
-    simp
-
---    have := Fintype.ofFinite s
-    rw [finrank_span_set_eq_card]
-    · simp [hy]
-    · simp [hy]
-      have := IsStrictOrderedRing.isDomain (R := k)
-      have : Module.IsTorsionFree k V := sorry
-      exact LinearIndepOn.singleton (by sorry)
-      -/
+    rw [h₂, direction_affineSpan]
+    exact finrank_vectorSpan_pair k P h₁
 
 end DivisionRing
 
