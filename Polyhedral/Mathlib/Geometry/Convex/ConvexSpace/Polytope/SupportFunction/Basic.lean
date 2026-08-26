@@ -5,6 +5,7 @@ Authors: Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Vale
 -/
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
 import Mathlib.Order.WithBotTop
+import Mathlib.Geometry.Convex.ConvexSpace.Defs
 
 /-! # General properties of support functions
 
@@ -39,6 +40,37 @@ Basic properties to prove: in progress!
   of type `N →ₗ[R] R → WithBot (WithTop R)`
 -/
 
+-- Prerequisites for generalising the definition of support function to convex spaces.
+section
+
+open Convexity
+variable {R V W : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
+  [ConvexSpace R V] [ConvexSpace R W]
+
+-- TODO: think about the right generality for this lemma!
+lemma IsAffineMap.add {f g : V → R} (hf : IsAffineMap R f) (hg : IsAffineMap R g) :
+    IsAffineMap R (f + g) := by
+  refine ⟨fun s ↦ ?_⟩
+  sorry -- TODO!
+
+-- TODO: think about the right generality for this lemma!
+lemma IsAffineMap.smul {f : V → R} {c : R} (hf : IsAffineMap R f) :
+    IsAffineMap R (c • f) := by
+  refine ⟨fun s ↦ ?_⟩
+  sorry -- TODO!
+
+@[fun_prop]
+lemma IsAffineMap.zero [Zero W] : IsAffineMap R (0 : V → W) := IsAffineMap.const _
+
+/-- The dual of a convex space `V` over `R`: the module of all affine maps `V → R` -/
+def foo : Submodule R (V → R) where
+  carrier := { f | IsAffineMap R f }
+  add_mem' {f g} hf hg := by simp_all [IsAffineMap.add]
+  zero_mem' := by simp only [Set.mem_ofPred_eq]; fun_prop
+  smul_mem' c x hx := by simp_all [IsAffineMap.smul]
+
+end
+
 variable {R V : Type*} [Semiring R] [PartialOrder R] [AddCommMonoid V] [Module R V]
 
 -- S convex set; take supremum instead of scalar product
@@ -49,8 +81,8 @@ variable {R V : Type*} [Semiring R] [PartialOrder R] [AddCommMonoid V] [Module R
 -- partial order could have two maximal elements which are incomparable
 -- -> want a total order!
 
-    -- Support functions are closely related to convex bodies;
-    -- can extend to unbounded convex sets.
+-- Support functions are closely related to convex bodies;
+-- can extend to unbounded convex sets.
 
 /-
 XXX: This does not cover polytopes in affine spaces; is there a version for them?
