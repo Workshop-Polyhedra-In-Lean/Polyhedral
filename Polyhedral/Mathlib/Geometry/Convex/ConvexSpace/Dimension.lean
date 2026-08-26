@@ -7,6 +7,7 @@ Authors:
 -- TODO: #min_imports later
 import Mathlib.Combinatorics.SimpleGraph.Basic
 import Mathlib.Geometry.Convex.Cone.Face.Lattice
+import Mathlib.LinearAlgebra.AffineSpace.Independent
 
 import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.AffineSubspace.Basic
 import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Dimension
@@ -45,26 +46,16 @@ theorem cardinalDim_eq_bot_iff : cardinalDim k s = ⊥ ↔ s = ∅ := by
 theorem efinDim_eq_bot_iff : efinDim k s = ⊥ ↔ s = ∅ := by
   simp [efinDim]
 
-@[simp]
-theorem eq_singleton_of_affineSpan_eq (k : Type*) {V : Type*} {P : Type*}
-    [Ring k] [AddCommGroup V] [Module k V] [AddTorsor V P] (s : Set P) (x : P)
-    (hx : ↑(affineSpan k s) = {x}) : s = {x} := by
-  have h : s ⊆ {x} := by
-    have h' := (affineSpan_le.mp hx.le)
-    apply h'.trans
-    rfl
-  have hs : s.Nonempty := by
-    apply (affineSpan_nonempty k).mp
-    rw [hx]
-    simp
-  exact ((Set.Nonempty.subset_singleton_iff hs).mp h)
+--@[simp]
+theorem eq_singleton_of_affineSpan_eq (x : P) (hx : ↑(affineSpan k s) = {x}) : s = {x} := by
+  refine (Set.Nonempty.subset_singleton_iff ?_).mp ?_
+  · exact (affineSpan_nonempty k).mp (by simp [hx])
+  · simpa using affineSpan_le.mp hx.le
 
 @[simp]
-theorem eq_affineSpan_singleton (k : Type*) {V : Type*} {P : Type*}
-    [Ring k] [AddCommGroup V] [Module k V] [AddTorsor V P] (x : P) :
-      affineSpan k {x} = {x} := by
+theorem eq_affineSpan_singleton (x : P) : affineSpan k {x} = {x} := by
   ext y
-  simp only [AffineSubspace.mem_affineSpan_singleton, SetLike.mem_singleton_iff]
+  simp
 
 theorem cardinalDim_eq_zero_iff : cardinalDim k s = 0 ↔ ∃ x : P, s = {x} := by
   simp only [cardinalDim]
@@ -131,6 +122,11 @@ AffineIndependent.affineSpan_eq_of_le_of_card_eq_finrank_add_one 📋 Mathlib.Li
 theorem foo (s : Set P) {x y : P} (h₁ : x ≠ y) (h₂ : line[k, x, y] ≤ affineSpan k s) :
     s.Nontrivial :=
   sorry
+theorem foo2 (s : Set P) :
+    ∃ t ⊆ s, affineSpan k t = affineSpan k s ∧ AffineIndependent k ((↑) : t → P) ∧
+      Set.ncard t = cardinalDim k s := -- TODO Ugly mixing of types here, something else?
+  sorry
+
 
 variable [LinearOrder k] [IsStrictOrderedRing k]
 
@@ -157,8 +153,7 @@ theorem nontrivial_of_cardinalDim_eq_one {s : Set P} (h : cardinalDim k s = 1) :
     exact absurd (WithBot.coe_eq_coe.mp h) zero_ne_one
   -/
 
-theorem subset_affineSpan_pair_of_cardinalDim_eq_one
-    (h : cardinalDim k s = 1) :
+theorem subset_affineSpan_pair_of_cardinalDim_eq_one (h : cardinalDim k s = 1) :
     ∃ x y : P, x ≠ y ∧ s ⊆ affineSpan k {x, y} := by
   simp only [cardinalDim] at h
   obtain ⟨x, y, h₁, h₂⟩ := AffineSubspace.cardinalDim_eq_one_iff .. |>.mp h

@@ -44,6 +44,15 @@ noncomputable def cardinalDim : WithBot Cardinal :=
 noncomputable def efinDim : WithBot ENat :=
   WithBot.map Cardinal.toENat (cardinalDim s)
 
+theorem cardinalDim_eq_rank_of_nonempty (h : s.carrier.Nonempty) :
+    cardinalDim s = Module.rank k s.direction := by
+  contrapose! h
+  simp_all [cardinalDim]
+
+theorem nonempty_of_cardinalDim_ne_bot (h : cardinalDim s ≠ ⊥) :
+    s.carrier.Nonempty := by
+  simp_all [cardinalDim, nonempty_iff_ne_bot]
+
 -- nice API
 @[simp]
 theorem cardinalDim_eq_bot_iff : cardinalDim s = ⊥ ↔ s.carrier = ∅ := by
@@ -88,12 +97,10 @@ variable (s : AffineSubspace k P)
 theorem cardinalDim_eq_one_iff :
     cardinalDim s = 1 ↔ ∃ x y : P, x ≠ y ∧ s = affineSpan k {x, y} := by
   refine ⟨fun h ↦ ?_, ?_⟩
-  · -- TODO general lemma for this
-    dsimp [cardinalDim] at h
-    split_ifs at h with h'
-    · simp_all
+  · have h' := nonempty_of_cardinalDim_ne_bot s (by simp [h])
+    rw [cardinalDim_eq_rank_of_nonempty _ h'] at h
     obtain ⟨⟨x, hx⟩, h₁, h₂⟩ := rank_eq_one_iff.mp (WithBot.coe_eq_one.mp h)
-    obtain ⟨y, hy⟩ := Set.nonempty_iff_ne_empty.mpr h'
+    obtain ⟨y, hy⟩ := h'
     have hne : y ≠ x +ᵥ y := fun heq ↦ by
       simp [eq_vadd_iff_vsub_eq] at heq
       simp [heq] at h₁
@@ -106,15 +113,9 @@ theorem cardinalDim_eq_one_iff :
     rw [direction_affineSpan, finrank_vectorSpan_pair  hne,
       Module.rank_eq_one_iff_finrank_eq_one.mp (by simpa using h)]
   · rintro ⟨x, y, h₁, h₂⟩
-    -- TODO: lemma that s ≠ ∅ → cardinalDim = Module.rank
-    dsimp [cardinalDim]
-    split_ifs with h'
-    · grind [coe_eq_bot_iff, affineSpan_eq_bot]
-    simp at h'
-    rw [WithBot.coe_eq_one]
-    rw [Module.rank_eq_one_iff_finrank_eq_one]
-    rw [h₂, direction_affineSpan]
-    exact finrank_vectorSpan_pair k P h₁
+    rw [cardinalDim_eq_rank_of_nonempty _ (by simp [h₂, affineSpan_nonempty])]
+    rw [WithBot.coe_eq_one, Module.rank_eq_one_iff_finrank_eq_one, h₂, direction_affineSpan]
+    exact finrank_vectorSpan_pair h₁
 
 end DivisionRing
 
