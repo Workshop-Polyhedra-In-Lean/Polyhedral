@@ -51,8 +51,12 @@ lemma convexHull_vadd (s₁ : Set V) (s₂ : Set A) :
     apply IsConvexSet.vadd IsConvexSet.convexHull <| IsConvexSet.convexHull
   · sorry
 
-lemma convexHull_prod_singleton (x : X) (s₂ : Set Y) :
+lemma convexHull_prod_singleton_left (x : X) (s₂ : Set Y) :
     convexHull R ({x} ×ˢ s₂) = {x} ×ˢ convexHull R s₂ := by
+    sorry
+
+lemma convexHull_prod_singleton_right (s₁ : Set X) (y : Y) :
+    convexHull R (s₁ ×ˢ {y}) = convexHull R s₁ ×ˢ {y} := by
     sorry
 
 lemma convexHull_prod (s₁ : Set X) (s₂ : Set Y) :
@@ -61,8 +65,14 @@ lemma convexHull_prod (s₁ : Set X) (s₂ : Set Y) :
   · apply convexHull_min
     · exact prod_mono subset_convexHull_self subset_convexHull_self
     exact IsConvexSet.convexHull.prod IsConvexSet.convexHull
-  · refine prod_subset_iff.mpr ?_
-    sorry
+  · have h : s₁ ×ˢ (convexHull R s₂) ⊆ convexHull R (s₁ ×ˢ s₂) := by
+      sorry
+    refine prod_subset_iff.mpr ?_
+    intro x hx y hy
+    have h₁ : convexHull R s₁ ×ˢ {y} ⊆ convexHull R (s₁ ×ˢ s₂):= by
+      sorry
+    apply h₁
+    simp [hx]
 
 end Pointwise
 
