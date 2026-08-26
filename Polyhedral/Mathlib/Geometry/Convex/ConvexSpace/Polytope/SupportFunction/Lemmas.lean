@@ -12,7 +12,9 @@ variable {R V : Type*} [Semiring R] [PartialOrder R] [AddCommMonoid V] [Module R
 
 /- ## Basic properties -/
 
--- scaling/is homogeneous: TODO write down!
+-- is positively homogeneous (i.e., behaviour under scaling φ): TODO write down
+
+-- invariance under dilation: TODO write down!
 
 -- additivity: TODO write down!
 

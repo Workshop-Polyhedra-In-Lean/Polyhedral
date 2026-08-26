@@ -32,4 +32,8 @@ Georg's advice: take a look in textbook if there's another property of support f
 satisfies. Perhaps mathlib should be generalised this way, but that might be just another convexity
 refactor. XXX why was that useful?)
 
+TODO/open question: should the notion of "convex function" also be generalized to
+any convex space? (The current definition is far more specialized.)
+Motivating example: a support function should be a convex function
+
 -/
