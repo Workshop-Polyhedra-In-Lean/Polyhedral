@@ -47,8 +47,23 @@ theorem efinDim_eq_bot_iff : efinDim k s = ⊥ ↔ s = ∅ := by
 @[simp]
 theorem eq_singleton_of_affineSpan_eq (k : Type*) {V : Type*} {P : Type*}
     [Ring k] [AddCommGroup V] [Module k V] [AddTorsor V P] (s : Set P) (x : P)
-    (hx : ↑(affineSpan k s) = {x}) : s = {x} :=
-  sorry
+    (hx : ↑(affineSpan k s) = {x}) : s = {x} := by
+  have h : s ⊆ {x} := by
+    have h' := (affineSpan_le.mp hx.le)
+    apply h'.trans
+    rfl
+  have hs : s.Nonempty := by
+    apply (affineSpan_nonempty k).mp
+    rw [hx]
+    simp
+  exact ((Set.Nonempty.subset_singleton_iff hs).mp h)
+
+@[simp]
+theorem eq_affineSpan_singleton (k : Type*) {V : Type*} {P : Type*}
+    [Ring k] [AddCommGroup V] [Module k V] [AddTorsor V P] (x : P) :
+      affineSpan k {x} = {x} := by
+  ext y
+  simp only [AffineSubspace.mem_affineSpan_singleton, SetLike.mem_singleton_iff]
 
 theorem cardinalDim_eq_zero_iff : cardinalDim k s = 0 ↔ ∃ x : P, s = {x} := by
   simp only [cardinalDim]
@@ -59,8 +74,8 @@ theorem cardinalDim_eq_zero_iff : cardinalDim k s = 0 ↔ ∃ x : P, s = {x} := 
     exact eq_singleton_of_affineSpan_eq _ _ x hx
   · rintro ⟨x, hx⟩
     use x
-    simp [hx]
-    sorry -- TODO fix
+    rw [hx]
+    simp
 
 theorem efinDim_eq_zero_iff : efinDim k s = 0 ↔ ∃ x : P, s = {x} := by
   sorry
