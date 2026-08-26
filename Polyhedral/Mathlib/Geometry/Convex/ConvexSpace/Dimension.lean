@@ -23,11 +23,12 @@ TODO
 
 namespace Convexity
 
-variable {R M X : Type*}
-
-variable (k : Type*) {V P : Type*} [Ring k]
-variable [AddCommGroup V] [Module k V] [AddTorsor V P]
+variable (k : Type*) {V P : Type*} [AddCommGroup V] [AddTorsor V P]
 variable (s : Set P)
+
+section Ring
+
+variable [Ring k] [Module k V]
 
 noncomputable def cardinalDim : WithBot Cardinal :=
   (affineSpan k s).cardinalDim
@@ -65,12 +66,31 @@ theorem cardinalDim_eq_zero_iff : cardinalDim k s = 0 ↔ ∃ x : P, s = {x} := 
 theorem efinDim_eq_zero_iff : efinDim k s = 0 ↔ ∃ x : P, s = {x} := by
   sorry
 
+end Ring
+
+section DivisionRing
+
+variable [DivisionRing k] [Module k V] [LinearOrder k] [IsStrictOrderedRing k]
+
+-- TODO: If this is `cardinalDim k s = 1 ↔ ∃ x y : P, x ≠ y ∧ affineSpan k s = affineSpan k {x, y}`
+-- it closes at rw
 theorem cardinalDim_eq_one_iff :
     cardinalDim k s = 1 ↔ ∃ x y : P, x ≠ y ∧ s = affineSpan k {x, y} := by
-  sorry
+  simp only [cardinalDim]
+  rw [AffineSubspace.cardinalDim_eq_one_iff k P]
+  constructor
+  · rintro ⟨x, y, h₁, h₂⟩
+    refine ⟨x, y, h₁, ?_⟩
+    simp [← h₂]
+    sorry
+  · rintro ⟨x, y, h₁, h₂⟩
+    refine ⟨x, y, h₁, ?_⟩
+    simp [h₂]
 
 theorem efinDim_eq_one_iff :
     efinDim k s = 1 ↔ ∃ x y : P, x ≠ y ∧ s = affineSpan k {x, y} := by
-  sorry
+  simp [efinDim, WithBot.map_eq_one_iff, cardinalDim_eq_one_iff]
+
+end DivisionRing
 
 end Convexity

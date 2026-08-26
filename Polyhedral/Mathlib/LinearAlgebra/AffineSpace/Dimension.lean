@@ -23,11 +23,11 @@ TODO
 
 namespace AffineSubspace
 
-section dimension
+variable (k : Type*) {V : Type*} (P : Type*) [AddCommGroup V] [AddTorsor V P]
 
-variable (k : Type*) {V : Type*} (P : Type*) [Ring k]
-variable [AddCommGroup V] [Module k V] [AddTorsor V P]
+section Ring
 
+variable [Ring k] [Module k V]
 variable (s : AffineSubspace k P)
 
 noncomputable def cardinalDim : WithBot Cardinal :=
@@ -64,16 +64,14 @@ theorem efinDim_eq_zero_iff :
     efinDim _ _ s = 0 ↔ ∃ x : P, s = {x} := by
   sorry
 
-end dimension
+end Ring
 
--- TODO: Investigate weaker hypotheses
-variable (k : Type*) {V : Type*} (P : Type*) [DivisionRing k]
-variable [AddCommGroup V] [Module k V] [AddTorsor V P]
-variable [StrongRankCondition k] [LinearOrder k] [IsStrictOrderedRing k]
+section DivisionRing
 
+-- TODO: Investigate weaker hypotheses.
+variable [DivisionRing k] [Module k V] [LinearOrder k] [IsStrictOrderedRing k]
 variable (s : AffineSubspace k P)
 
-@[simp]
 theorem cardinalDim_eq_one_iff :
     cardinalDim _ _ s = 1 ↔ ∃ x y : P, x ≠ y ∧ s = affineSpan k {x, y} := by
   refine ⟨fun h ↦ ?_, ?_⟩
@@ -158,5 +156,7 @@ theorem cardinalDim_eq_one_iff :
       have : Module.IsTorsionFree k V := sorry
       exact LinearIndepOn.singleton (by sorry)
       -/
+
+end DivisionRing
 
 end AffineSubspace
