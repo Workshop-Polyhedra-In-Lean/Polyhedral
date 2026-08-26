@@ -24,35 +24,38 @@ TODO
 
 namespace AffineSubspace
 
-variable (k : Type*) {V : Type*} (P : Type*) [AddCommGroup V] [AddTorsor V P]
+variable {k : Type*} {V : Type*} {P : Type*} [AddCommGroup V] [AddTorsor V P]
 
 section Ring
 
 variable [Ring k] [Module k V]
 variable (s : AffineSubspace k P)
+-- Ring k
+-- VectorSpace / Module V
+-- Affine subspace s
 
 noncomputable def cardinalDim : WithBot Cardinal :=
   if s.carrier = ∅ then ⊥
   else Module.rank k s.direction
 
 --noncomputable def finDim : WithBot Nat :=
---  WithBot.map Cardinal.toNat (cardinalDim _ _ s)
+--  WithBot.map Cardinal.toNat (cardinalDim s)
 
 noncomputable def efinDim : WithBot ENat :=
-  WithBot.map Cardinal.toENat (cardinalDim _ _ s)
+  WithBot.map Cardinal.toENat (cardinalDim s)
 
 -- nice API
 @[simp]
-theorem cardinalDim_eq_bot_iff : cardinalDim _ _ s = ⊥ ↔ s.carrier = ∅ := by
+theorem cardinalDim_eq_bot_iff : cardinalDim s = ⊥ ↔ s.carrier = ∅ := by
   simp [cardinalDim]
 
 @[simp]
-theorem efinDim_eq_bot_iff : efinDim _ _ s = ⊥ ↔ s.carrier = ∅ := by
+theorem efinDim_eq_bot_iff : efinDim s = ⊥ ↔ s.carrier = ∅ := by
   simp [efinDim]
 
 @[simp]
 theorem cardinalDim_eq_zero_iff :
-    cardinalDim _ _ s = 0 ↔ ∃ x : P, s = {x} := by
+    cardinalDim s = 0 ↔ ∃ x : P, s = {x} := by
   dsimp [cardinalDim]
   constructor
   · intro h
@@ -62,7 +65,7 @@ theorem cardinalDim_eq_zero_iff :
 
 @[simp]
 theorem efinDim_eq_zero_iff :
-    efinDim _ _ s = 0 ↔ ∃ x : P, s = {x} := by
+    efinDim s = 0 ↔ ∃ x : P, s = {x} := by
   sorry
 
 end Ring
@@ -83,7 +86,7 @@ variable [LinearOrder k] [IsStrictOrderedRing k]
 variable (s : AffineSubspace k P)
 
 theorem cardinalDim_eq_one_iff :
-    cardinalDim _ _ s = 1 ↔ ∃ x y : P, x ≠ y ∧ s = affineSpan k {x, y} := by
+    cardinalDim s = 1 ↔ ∃ x y : P, x ≠ y ∧ s = affineSpan k {x, y} := by
   refine ⟨fun h ↦ ?_, ?_⟩
   · -- TODO general lemma for this
     dsimp [cardinalDim] at h
@@ -100,7 +103,7 @@ theorem cardinalDim_eq_one_iff :
     have hle : affineSpan k {y, x +ᵥ y} ≤ s := affineSpan_le.mpr (Set.pair_subset hy hxy)
     let := FiniteDimensional.of_rank_eq_one (WithBot.coe_eq_one.mp h)
     refine Submodule.eq_of_le_of_finrank_eq (direction_le hle) ?_ |>.symm
-    rw [direction_affineSpan, finrank_vectorSpan_pair _ _ hne,
+    rw [direction_affineSpan, finrank_vectorSpan_pair  hne,
       Module.rank_eq_one_iff_finrank_eq_one.mp (by simpa using h)]
   · rintro ⟨x, y, h₁, h₂⟩
     -- TODO: lemma that s ≠ ∅ → cardinalDim = Module.rank
