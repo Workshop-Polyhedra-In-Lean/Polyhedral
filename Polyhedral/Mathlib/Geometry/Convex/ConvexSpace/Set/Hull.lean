@@ -56,26 +56,25 @@ lemma convexHull_prod (s : Set X) (t : Set Y) :
       (prod_mono subset_convexHull_self subset_convexHull_self) ?_
     exact IsConvexSet.convexHull.prod IsConvexSet.convexHull
   · rintro ⟨x, y⟩ ⟨hx, hy⟩
-    have hX (y₀ : Y) : IsAffineMap R (fun x₀ : X ↦ (x₀, y₀)) := by
+    let ιX (y₀ : Y) := fun x₀ : X ↦ (x₀, y₀)
+    have hX (y₀ : Y) : IsAffineMap R (ιX y₀) := by
       constructor
       intro w
-      ext <;> simp
-    have hY (x₀ : X) :
-        IsAffineMap R (fun y₀ : Y ↦ (x₀, y₀)) := by
+      ext <;> simp [ιX]
+    let ιY (x₀ : X) := fun y₀ : Y ↦ (x₀, y₀)
+    have hY (x₀ : X) : IsAffineMap R (ιY x₀) := by
       constructor
       intro w
-      ext <;> simp
+      ext <;> simp [ιY]
     have hx_prod (y₀ : Y) (hy₀ : y₀ ∈ t) :
         (x, y₀) ∈ convexHull R (s ×ˢ t) := by
-      refine convexHull_mono (R := R)
-        (s := (fun x₀ : X ↦ (x₀, y₀)) '' s) ?_ ?_
+      refine convexHull_mono (s := (ιX y₀) '' s) ?_ ?_
       · rintro _ ⟨x₀, hx₀, rfl⟩
         exact ⟨hx₀, hy₀⟩
       · rw [← (hX y₀).image_convexHull s]
         exact ⟨x, hx, rfl⟩
-    rw [← (IsConvexSet.convexHull (R := R) (s := s ×ˢ t)).convexHull_eq_self]
-    refine convexHull_mono (R := R)
-      (s := (fun y' : Y ↦ (x, y')) '' t) ?_ ?_
+    rw [← IsConvexSet.convexHull.convexHull_eq_self]
+    refine convexHull_mono (s := (ιY x) '' t) ?_ ?_
     · rintro _ ⟨y', hy', rfl⟩
       exact hx_prod y' hy'
     · rw [← (hY x).image_convexHull t]
