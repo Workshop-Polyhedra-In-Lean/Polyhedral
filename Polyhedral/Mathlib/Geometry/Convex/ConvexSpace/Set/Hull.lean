@@ -66,11 +66,26 @@ lemma convexHull_prod (s₁ : Set X) (s₂ : Set Y) :
     · exact prod_mono subset_convexHull_self subset_convexHull_self
     exact IsConvexSet.convexHull.prod IsConvexSet.convexHull
   · have h : s₁ ×ˢ (convexHull R s₂) ⊆ convexHull R (s₁ ×ˢ s₂) := by
-      sorry
+      refine prod_subset_iff.mpr ?_
+      intro x hx y hy
+      have h₃ : {x} ×ˢ (convexHull R s₂) ⊆ convexHull R (s₁ ×ˢ s₂) := by
+        rewrite [← convexHull_prod_singleton_left]
+        apply convexHull_mono
+        apply prod_mono_left
+        exact singleton_subset_iff.mpr hx
+      apply h₃
+      simp [hy]
     refine prod_subset_iff.mpr ?_
     intro x hx y hy
+    have h₂ : s₁ ×ˢ {y} ⊆ convexHull R (s₁ ×ˢ s₂) := by
+      apply le_trans _ h
+      apply prod_mono_right
+      exact singleton_subset_iff.mpr hy
     have h₁ : convexHull R s₁ ×ˢ {y} ⊆ convexHull R (s₁ ×ˢ s₂):= by
-      sorry
+      rw [← convexHull_prod_singleton_right]
+      nth_rw 2 [← convexHull_eq_self.mpr IsConvexSet.convexHull]
+      apply convexHull_mono
+      exact h₂
     apply h₁
     simp [hx]
 
