@@ -41,21 +41,6 @@ variable [ConvexSpace R Y]
 
 variable [AddTorsor V A] [ConvexSpace R A] [IsAffineConvexSpace R V A]
 
-lemma prod_vadd_affine:
-    IsAffineMap R (fun x : V × A ↦ x.1 +ᵥ x.2) := by
-  constructor
-  intro s
-
-
-lemma convexHull_vadd (s₁ : Set V) (s₂ : Set A) :
-    convexHull R (s₁ +ᵥ s₂) = convexHull R s₁ +ᵥ convexHull R s₂ := by
-  let f := fun x : V × A ↦ x.1 +ᵥ x.2
-  have h (s : Set V) (t : Set A) : f '' (s ×ˢ t) = s +ᵥ t := by
-    exact vadd_image_prod
-  rw [← h, ← h]
-  rw [← AffineMap.image_convexHull]
-
-
 lemma convexHull_prod (s : Set X) (t : Set Y) :
   convexHull R (s ×ˢ t) = (convexHull R s) ×ˢ (convexHull R t) := by
   apply Set.Subset.antisymm
@@ -86,6 +71,16 @@ lemma convexHull_prod (s : Set X) (t : Set Y) :
       exact hx_prod y' hy'
     · rw [← (hY x).image_convexHull t]
       exact ⟨y, hy, rfl⟩
+
+lemma convexHull_vadd (s₁ : Set V) (s₂ : Set A) :
+    convexHull R (s₁ +ᵥ s₂) = convexHull R s₁ +ᵥ convexHull R s₂ := by
+  let f := fun x : V × A ↦ x.1 +ᵥ x.2
+  have h (s : Set V) (t : Set A) : f '' (s ×ˢ t) = s +ᵥ t := by
+    exact vadd_image_prod
+  rw [← h, ← h]
+  rw [← IsAffineMap.image_convexHull]
+  · rw [convexHull_prod]
+  · fun_prop
 
 end Pointwise
 
