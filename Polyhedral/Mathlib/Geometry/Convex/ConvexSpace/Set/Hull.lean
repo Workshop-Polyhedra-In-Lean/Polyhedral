@@ -53,7 +53,11 @@ lemma convexHull_vadd (s₁ : Set V) (s₂ : Set A) :
 
 lemma convexHull_prod (s₁ : Set X) (s₂ : Set Y) :
     convexHull R (s₁ ×ˢ s₂) = (convexHull R s₁) ×ˢ (convexHull R s₂) := by
-  sorry
+  apply le_antisymm
+  · apply convexHull_min
+    · apply prod_mono <;> exact subset_convexHull_self
+    apply IsConvexSet.prod <;> exact IsConvexSet.convexHull
+  · sorry
 
 end Pointwise
 
