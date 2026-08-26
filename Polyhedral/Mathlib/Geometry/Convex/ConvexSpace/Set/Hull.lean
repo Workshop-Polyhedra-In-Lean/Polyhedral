@@ -23,16 +23,15 @@ open Set
 
 namespace Convexity
 
-variable {R X Y : Type*} [Semiring R] [PartialOrder R] [IsStrictOrderedRing R] [ConvexSpace R X]
-  [ConvexSpace R Y] {C s t : Set X} {x y : X}
 
 section Pointwise
 
+
 open Pointwise
 
-variable {R V A : Type*}
-
+variable {R X Y V A : Type*}
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
+variable [ConvexSpace R X] [ConvexSpace R Y]
 variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
 
 @[simp] lemma convexHull_neg (s : Set V) : -convexHull R s = convexHull R (-s) := by
@@ -47,9 +46,13 @@ variable [AddTorsor V A] [ConvexSpace R A] [IsAffineConvexSpace R V A]
 lemma convexHull_vadd (s₁ : Set V) (s₂ : Set A) :
     convexHull R (s₁ +ᵥ s₂) = convexHull R s₁ +ᵥ convexHull R s₂ := by
   apply le_antisymm
-  · refine convexHull_min ?_ ?_
+  · apply convexHull_min
     · exact vadd_subset_vadd subset_convexHull_self <| subset_convexHull_self
-    sorry
+    apply IsConvexSet.vadd IsConvexSet.convexHull <| IsConvexSet.convexHull
+  · sorry
+
+lemma convexHull_prod (s₁ : Set X) (s₂ : Set Y) :
+    convexHull R (s₁ ×ˢ s₂) = (convexHull R s₁) ×ˢ (convexHull R s₂) := by
   sorry
 
 end Pointwise
