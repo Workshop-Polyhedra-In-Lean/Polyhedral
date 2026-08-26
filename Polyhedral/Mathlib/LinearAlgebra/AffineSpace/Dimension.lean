@@ -85,55 +85,23 @@ variable (s : AffineSubspace k P)
 theorem cardinalDim_eq_one_iff :
     cardinalDim _ _ s = 1 ↔ ∃ x y : P, x ≠ y ∧ s = affineSpan k {x, y} := by
   refine ⟨fun h ↦ ?_, ?_⟩
-  · dsimp [cardinalDim] at h
+  · -- TODO general lemma for this
+    dsimp [cardinalDim] at h
     split_ifs at h with h'
     · simp_all
-    -- TODO: Clean-up
-    -- a rank-1 direction has a nonzero spanning vector `v`
-    obtain ⟨⟨v, hv⟩, hv₁, -⟩ := rank_eq_one_iff.mp (WithBot.coe_eq_one.mp h)
-    obtain ⟨p, hp⟩ := Set.nonempty_iff_ne_empty.mpr h'
-    set q := v +ᵥ p with hq_def
-    have hq : q ∈ s := vadd_mem_of_mem_direction hv hp
-    have hvvsub : q -ᵥ p = v := by rw [hq_def, vadd_vsub]
-    have hpq : p ≠ q := fun he ↦ hv₁ <| Subtype.ext <| by
-      rw [he, vsub_self] at hvvsub
-      exact hvvsub.symm
-    -- `{p, q}` already spans a line inside `s`, and by rank it must be all of `s`.
-    refine ⟨p, q, hpq, ?_⟩
-    have hle : affineSpan k ({p, q} : Set P) ≤ s :=
-      affineSpan_le.mpr (Set.insert_subset hp (Set.singleton_subset_iff.mpr hq))
-    have hdir : s.direction = (affineSpan k ({p, q} : Set P)).direction := by
-      have hfr : FiniteDimensional k s.direction :=
-        FiniteDimensional.of_rank_eq_one (WithBot.coe_eq_one.mp h)
-      have h1 : Module.finrank k s.direction = 1 :=
-        Module.rank_eq_one_iff_finrank_eq_one.mp (WithBot.coe_eq_one.mp h)
-      have h2 : Module.finrank k (affineSpan k ({p, q} : Set P)).direction = 1 := by
-        rw [direction_affineSpan]; exact finrank_vectorSpan_pair k P hpq
-      exact (Submodule.eq_of_le_of_finrank_eq (direction_le hle) (h2.trans h1.symm)).symm
-    exact (eq_iff_direction_eq_of_mem hp (subset_affineSpan k _ (Set.mem_insert p _))).mpr hdir
-      /- TODO: Decide if we want anything from here
     obtain ⟨⟨x, hx⟩, h₁, h₂⟩ := rank_eq_one_iff.mp (WithBot.coe_eq_one.mp h)
     obtain ⟨y, hy⟩ := Set.nonempty_iff_ne_empty.mpr h'
-    refine ⟨y, x +ᵥ y, fun heq ↦ ?_, ?_⟩
-    · simp [eq_vadd_iff_vsub_eq] at heq
+    have hne : y ≠ x +ᵥ y := fun heq ↦ by
+      simp [eq_vadd_iff_vsub_eq] at heq
       simp [heq] at h₁
-    · ext z
-      rw [mem_affineSpan_iff_exists]
-      refine ⟨fun h ↦ ?_, ?_⟩
-      · refine ⟨y, by simp, z -ᵥ y, ?_, by simp⟩
-        simpa [mem_vectorSpan_pair_rev] using h₂ ⟨z -ᵥ y, vsub_mem_direction h hy⟩
-      · rintro ⟨p₁, hp₁, p₂, hp₂, rfl⟩
-        simp only [Set.mem_insert_iff, Set.mem_singleton_iff, mem_vectorSpan_pair_rev,
-          vadd_vsub] at hp₁ hp₂
-        obtain ⟨r, hr⟩ := hp₂
-        rw [← hr]
-        rcases hp₁ with rfl | rfl
-        · refine (vadd_mem_iff_mem_of_mem_direction ?_).mpr hy
-          exact Submodule.smul_mem s.direction r hx
-        · refine (vadd_mem_iff_mem_of_mem_direction ?_).mpr ?_
-          · exact Submodule.smul_mem s.direction r hx
-          exact (vadd_mem_iff_mem_of_mem_direction hx).mpr hy
-      -/
+    refine ⟨y, x +ᵥ y, hne, ?_⟩
+    have hxy := vadd_mem_of_mem_direction hx hy
+    refine eq_iff_direction_eq_of_mem hxy (right_mem_affineSpan_pair ..) |>.mpr ?_
+    have hle : affineSpan k {y, x +ᵥ y} ≤ s := affineSpan_le.mpr (Set.pair_subset hy hxy)
+    let := FiniteDimensional.of_rank_eq_one (WithBot.coe_eq_one.mp h)
+    refine Submodule.eq_of_le_of_finrank_eq (direction_le hle) ?_ |>.symm
+    rw [direction_affineSpan, finrank_vectorSpan_pair _ _ hne,
+      Module.rank_eq_one_iff_finrank_eq_one.mp (by simpa using h)]
   · rintro ⟨x, y, h₁, h₂⟩
     -- TODO: lemma that s ≠ ∅ → cardinalDim = Module.rank
     dsimp [cardinalDim]

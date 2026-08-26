@@ -89,40 +89,61 @@ variable [Field k] [Module k V] [LinearOrder k] [IsStrictOrderedRing k]
 
 attribute [local instance] AddTorsor.toConvexSpace
 
-/-- Every affine subspace is convex: it already absorbs segments by definition
-(`AffineSubspace.smul_vsub_vadd_mem`), and over a field that's enough to check convexity, without
-unwinding general finite convex combinations. -/
+-- TODO Ask Martin, should we connect Convex and IsConvexSet?
+-- there is already AffineSubspace.convex
 theorem isConvexSet_affineSubspace (t : AffineSubspace k P) : IsConvexSet k (t : Set P) :=
   IsConvexSet.of_convexCombPair_mem fun a b ha hb hab x hx y hy ↦ by
     rw [AddTorsor.convexCombPair_eq_lineMap, AffineMap.lineMap_apply]
     exact t.smul_vsub_vadd_mem a hx hy hy
 
-/-- An affine span is convex: a special case of `isConvexSet_affineSubspace`. -/
 theorem isConvexSet_affineSpan : IsConvexSet k (affineSpan k s : Set P) :=
   isConvexSet_affineSubspace k (affineSpan k s)
 
-/-- The convex hull of a set and the set itself have the same affine span: `convexHull k s`
-already sits inside the (convex) `affineSpan k s` by minimality of the hull, and conversely
-`affineSpan` is monotone along `s ⊆ convexHull k s`. -/
 theorem affineSpan_convexHull_eq : affineSpan k (convexHull k s : Set P) = affineSpan k s := by
   refine le_antisymm ?_ (affineSpan_mono k subset_convexHull_self)
-  have h1 : convexHull k s ⊆ (affineSpan k s : Set P) :=
-    convexHull_min (subset_affineSpan k s) (isConvexSet_affineSpan k s)
-  calc affineSpan k (convexHull k s : Set P)
-      ≤ affineSpan k (affineSpan k s : Set P) := affineSpan_mono k h1
-    _ = affineSpan k s := AffineSubspace.affineSpan_coe _
+  have := convexHull_min (subset_affineSpan k s) (isConvexSet_affineSpan k s)
+  grw [affineSpan_mono k this]
+  simp
 
 end Field
 
 section DivisionRing
 
-variable [DivisionRing k] [Module k V] [LinearOrder k] [IsStrictOrderedRing k]
+variable [DivisionRing k] [Module k V]
+
+-- General lemma that we want
+-- Even more general lemma, we might want:
+/-
+exists_affineIndependent 📋 Mathlib.LinearAlgebra.AffineSpace.Independent
+  (k : Type u_1) (V : Type u_2) {P : Type u_3}
+  [DivisionRing k] [AddCommGroup V] [Module k V] [AddTorsor V P] (s : Set P) :
+  ∃ t ⊆ s, affineSpan k t = affineSpan k s ∧ AffineIndependent k Subtype.val
+We should prove the above existence statement and prove that the
+cardinality of t is the dimension of (affineSpan k s)
+
+Use?
+AffineIndependent.affineSpan_eq_top_iff_card_eq_finrank_add_one 📋 Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
+{k : Type u_1} {V : Type u_2} {P : Type u_3} {ι : Type u_4} [DivisionRing k] [AddCommGroup V] [Module k V] [AddTorsor V P] [FiniteDimensional k V] [Fintype ι] {p : ι → P} (hi : AffineIndependent k p) : affineSpan k (Set.range p) = ⊤ ↔ Fintype.card ι = Module.finrank k V + 1
+AffineIndependent.affineSpan_eq_of_le_of_card_eq_finrank_add_one 📋 Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
+{k : Type u_1} {V : Type u_2} {P : Type u_3} {ι : Type u_4} [DivisionRing k] [AddCommGroup V] [Module k V] [AddTorsor V P] [Fintype ι] {p : ι → P} (hi : AffineIndependent k p) {sp : AffineSubspace k P} [FiniteDimensional k ↥sp.direction] (hle : affineSpan k (Set.range p) ≤ sp) (hc : Fintype.card ι = Module.finrank k ↥sp.direction + 1) : affineSpan k (Set.range p) = sp
+
+-/
+theorem foo (s : Set P) {x y : P} (h₁ : x ≠ y) (h₂ : line[k, x, y] ≤ affineSpan k s) :
+    s.Nontrivial :=
+  sorry
+
+variable [LinearOrder k] [IsStrictOrderedRing k]
 
 /-- A set spanning a line (`cardinalDim = 1`) has at least two points: a subsingleton spans at
 most a point, whose `vectorSpan` is `⊥`, i.e. has rank `0 ≠ 1`. -/
-theorem not_subsingleton_of_cardinalDim_eq_one {s : Set P} (h : cardinalDim k s = 1) :
-    ¬ s.Subsingleton := by
+theorem nontrivial_of_cardinalDim_eq_one {s : Set P} (h : cardinalDim k s = 1) :
+    s.Nontrivial := by
+  dsimp [cardinalDim] at h
+  rw [AffineSubspace.cardinalDim_eq_one_iff] at h
+  obtain ⟨x, y, h₁, h₂⟩ := h
+  exact foo k s h₁ (by grind)
   -- TODO: Easier way to do this using the earlier lemmas?
+  /-
   intro hsub
   rcases hsub.eq_empty_or_singleton with rfl | ⟨a, rfl⟩
   · simp [cardinalDim, AffineSubspace.cardinalDim] at h
@@ -134,6 +155,7 @@ theorem not_subsingleton_of_cardinalDim_eq_one {s : Set P} (h : cardinalDim k s 
       simp
     rw [h0] at h
     exact absurd (WithBot.coe_eq_coe.mp h) zero_ne_one
+  -/
 
 theorem subset_affineSpan_pair_of_cardinalDim_eq_one
     (h : cardinalDim k s = 1) :
