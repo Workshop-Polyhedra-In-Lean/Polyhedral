@@ -21,6 +21,7 @@ section Field
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsOrderedRing R]
 variable {V : Type*} [AddCommGroup V] [Module R V]
+variable {W : Type*} [AddCommGroup W] [Module R W]
 variable {A : Type*} [AddTorsor V A]
 -- variable {W : Type*} [AddCommGroup W] [Module R W]
 
@@ -29,48 +30,52 @@ variable [IsModuleConvexSpace R V]
 
 variable [hom : Affine.IsHomogenization R A V]
 
--- lemma IsHPolyhedra.homogenize_dualfg (C : ConvexSet R A) : (IsHPolyhedron R C.carrier) ↔ (homogenize V C).DualFG p := by
---   sorry
 
-variable (R) in
-def homogenize (P : Set A) : PointedCone R V :=
-    PointedCone.hull R (hom.ofPoint '' P)
+-- TODO: We might want to define `homogenize` on non-convex Sets
+-- TODO: `ConvexSet` should be `SetLike` to avoid manual coercion
 
-variable (R) in
-def ConvexSet.homogenize (P : ConvexSet R A) : ConvexCone R V :=
-    ↑(PointedCone.hull R (hom.ofPoint '' P))
+/-- The homogenization of a polyhedron is a polyhedral cone -/
+lemma PointedCone.homogenize_is_h_polyhedral
+  (S : ConvexSet R A) (hS : IsHPolyhedron R S.carrier) (p : W →ₗ[R] V →ₗ[R] R) :
+    PointedCone.IsHPolyhedral p (homogenize V S) := by
+  sorry
 
-omit [IsModuleConvexSpace R V] in
-@[simp]
-lemma ConvexSet.homogenize_coe (P : ConvexSet R A) :
-    _root_.homogenize R (P : Set A) = homogenize R P := by rfl
+/-- The dehomogenization of a polyhedral cone is a polyhedron -/
+lemma ConvexSet.dehomogenize_is_h_polyhedron
+  (C : PointedCone R V) (p : W →ₗ[R] V →ₗ[R] R) (hC : IsHPolyhedral p C) :
+    IsHPolyhedron R (PointedCone.dehomogenize A C).carrier := by
+  sorry
 
-variable (R) in
-def dehomogenize (P : Submodule R V) : Set A := hom.ofPoint ⁻¹' P
+-- `H = (C + S) +ᵥ P` should become the definition of `IsVPolyhedron`
+-- TODO: ConvexSet should have a coercion to Set
 
--- variable (R) in
--- def ConvexCone.dehomogenize (P : ConvexCone R V) : ConvexSet R A :=
---     ⟨hom.ofPoint ⁻¹' P, by
---       obtain ⟨sP, smul_mem, add_mem⟩ := P
---       simp only [coe_mk]
---       apply IsConvexSet.preimage hom.ofPoint.isAffineMap
---       apply IsConvexSet.of_convexCombPair_mem
---       intro a b ha hb hab x hx y hy
---       simp
---       apply add_mem <;> apply smul_mem; sorry
---       -- We have the 0 problem here
---     ⟩
+/--
+Every *H-polyhedron* can be decomposed as the Minkowski sum of
+a *V-polytope*, a *finitely generated cone*, and a *submodule*.
+`H → V` direction of the *Minkowski-Weyl* theorem.
 
--- TODO: Why is ConvexSet not SetLike, nor can be coerced to Set
--- @[simp]
--- lemma ConvexCone.dehomogenize_coe (P : ConvexCone R V) : _root_.dehomogenize R P.toPointedCone = (dehomogenize R P).carrier := by rfl
+As in the definition of *H-polyhedron*, we allow this *submodule*
+to be neither finitely nor co-finitely generated, which is only
+relevant in infinite dimension.
+-/
+lemma v_polyhedral_of_h_polyhedral (H : Set A) (hH : IsHPolyhedron R H) :
+    ∃P : Set A, ∃C : PointedCone R V, ∃S : Submodule R V,
+      (IsPolytope R P) ∧ C.FG ∧ H = ((C : Set V) + S) +ᵥ P := by
+  obtain ⟨gen, h_gen⟩ := hH
+  obtain ⟨S, hS⟩ := h_gen
+  sorry
 
--- lemma IsHPolyhedralCone.homogenize_hpolyhedron (P : Set A) (hP : IsHPolyhedron R P) :
---     IsHCone R (homogenize R P).carrier := by
---   obtain ⟨H, h_gen⟩ := hP
---   have l := hom.ofPoint.linear.leftInverse
---   have Hₗ := H.map (fun (m : A →ᵃ[R] R) ↦ ((m.linear <| hom.ofVector ⁻¹ ·) : V →ₗ[R] R)) H
---   sorry
+/-
+`V → H` direction of the *Minkowski-Weyl* theorem.
+For every finite *V-polytope* + *rays* + *submodule*,
+there exists a finite set of inequalities that describe it.
+-/
+lemma h_polyhedral_of_v_polyhedral
+  {P : Set A} (hP : IsPolytope R P) {C : PointedCone R V} (hC : C.FG) (S : Submodule R V) :
+    IsHPolyhedron R (((C : Set V) + S) +ᵥ P) := by
+  obtain ⟨verts, h_hull⟩ := hP
+  obtain ⟨C_gen, hC_gen⟩ := hC
+  sorry
 
 end Field
 end Homogenization
