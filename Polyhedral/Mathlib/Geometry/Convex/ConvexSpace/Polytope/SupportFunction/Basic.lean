@@ -107,6 +107,28 @@ History of this definition
   Issue: this not satisfied for the rational numbers; perhaps we want rational support functions
   for rational polytopes (which this definition excludes)
   Rational polytopes occur naturally during computation.
+- Attempt 2a: reorder the definition cases; just a Lean issue.
+- Attempt 3: add another case distinction into the definition
+  If S is bounded above (but no least upper bound), return a junk value `37`.
+  If if is unbounded, we return `⊤` instead.
+- Attempt 4: generalize to all convex spaces; defined on the dual of a convex space
+  Issue: is the wrong definition for the scaling property to hold!
+  so revert back to definition 3
+
+  Other issue: choices of junk values
+  For multiplication, if `φ '' P` is a "funky" set (i.e., bounded without a least upper bound),
+  the equation `λ * (supportFunction R P φ) = supportFunction R (λ • P) φ` becomes `λ * junk = junk`.
+  This is false for the current junk value, but becomes true for the junk value `37`.
+  This is also useful as the definition will make one fewer case distinction.
+
+  For Minkowski sums, note that the Minkowski sum of a set `S` with a least upper bound and a funky
+  set `T` can be funky, but also could have a least upper bound. Take `S = [0, 1) x {0} ⊆ ℚ²`
+  and `T = {0} × [0, 1]`. Then `S + T` is the unit square without the edge `{1}×[0,1]`.
+  For some suitable functional (e.g., the function `(x, y) ↦ x)`), this will have no least upper
+  bound, but for other other functionals, there will be a least upper bound.
+
+current definition (attempt 5) below
+
 -/
 
 /-
@@ -126,18 +148,8 @@ def supportFunction (P : Set V) :
   · letI S := φ '' P
     by_cases hS' : ∃ x, IsLUB S x
     · exact WithBotTop.coe  hS'.choose
-    · by_cases hS : BddAbove S
-      · -- TODO: can we simplify, by taking -∞ also as this junk value?
-        exact 37 -- TODO: is this the good junk value?
-      · exact ⊤
-    -- Other definition
-    -- by_cases hS : BddAbove S
-    -- · -- Take a least upper bound of S.
-    --   have : S.Nonempty := by
-    --     simp only [S]
-    --     exact Set.Nonempty.image (⇑φ) hP
-    --   choose x hx using hR S this hS
-    --   exact some (some x)
+    · -- Note that we choose `⊤` as junk value if S is not bounded above.
+      exact ⊤
   · exact ⊥
 
 @[simp]
@@ -166,16 +178,12 @@ lemma supportFunction_singleton {v : V} : supportFunction R {v} = fun φ ↦ φ 
 -- XXX: do we want this lemma, or is it not worth it?
 open scoped Classical in
 lemma supportFunction_of_nonempty_of_bddAbove {P : Set V} (hP : P.Nonempty) {φ : Module.Dual R V}
-    (hP' : BddAbove (φ '' P)) :
+    (_hP' : BddAbove (φ '' P)) :
     supportFunction R P φ =
-      if hS : ∃ x, IsLUB (⇑φ '' P) x then WithBotTop.coe hS.choose else 37
+      if hS : ∃ x, IsLUB (⇑φ '' P) x then WithBotTop.coe hS.choose else ⊤
     := by
   unfold supportFunction
   rw [dite_eq_left hP]
-  simp only [hP']
-  by_cases hx : ∃ x, IsLUB (φ '' P) x
-  · simp [hx]
-  · simp [hx]
 
 /- TODO: we want more specialized versions of this lemma instead
 open scoped Classical in
