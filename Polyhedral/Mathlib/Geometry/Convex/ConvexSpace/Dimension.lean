@@ -39,8 +39,24 @@ noncomputable def efinDim : WithBot ENat :=
   WithBot.map Cardinal.toENat (cardinalDim k s)
 
 @[simp]
+theorem cardinalDim_empty : cardinalDim k (∅ : Set P) = ⊥ := by
+  simp [cardinalDim]
+
+@[simp]
+theorem finDim_empty : finDim k (∅ : Set P) = ⊥ := by
+  simp [finDim]
+
+@[simp]
+theorem efinDim_empty : efinDim k (∅ : Set P) = ⊥ := by
+  simp [efinDim]
+
+@[simp]
 theorem cardinalDim_eq_bot_iff : cardinalDim k s = ⊥ ↔ s = ∅ := by
   simp [cardinalDim]
+
+@[simp]
+theorem finDim_eq_bot_iff : finDim k s = ⊥ ↔ s = ∅ := by
+  simp [finDim]
 
 @[simp]
 theorem efinDim_eq_bot_iff : efinDim k s = ⊥ ↔ s = ∅ := by
@@ -72,29 +88,43 @@ theorem cardinalDim_eq_zero_iff : cardinalDim k s = 0 ↔ ∃ x : P, s = {x} := 
 theorem efinDim_eq_zero_iff : efinDim k s = 0 ↔ ∃ x : P, s = {x} := by
   sorry
 
+theorem cardinalDim_eq_rank {s : Set P} (hs : s.Nonempty) :
+    cardinalDim k s = Module.rank k (affineSpan k s).direction :=
+  AffineSubspace.cardinalDim_eq_rank_of_nonempty _ (Set.Nonempty.affineSpan k hs)
+
+theorem finDim_eq_finrank {s : Set P} (hs : s.Nonempty) :
+    finDim k s = Module.finrank k (affineSpan k s).direction := by
+  refine WithBot.unbot_inj ?_ (by simp) |>.mp ?_
+  · simpa [Set.nonempty_iff_ne_empty] using hs
+  congr 1
+  simp [finDim, cardinalDim_eq_rank _ hs]
+  norm_cast
+
 end Ring
 
 section Field
 
 variable [Field k] [Module k V] [LinearOrder k] [IsStrictOrderedRing k]
 
+-- TODO: read and consider the doc comment, should this be stated for a
+-- [ConvexSpace k P] type class instead?
 attribute [local instance] AddTorsor.toConvexSpace
 
--- TODO Ask Martin, should we connect Convex and IsConvexSet?
--- there is already AffineSubspace.convex
-theorem isConvexSet_affineSubspace (t : AffineSubspace k P) : IsConvexSet k (t : Set P) :=
+theorem _root_.AffineSubspace.isConvexSet (t : AffineSubspace k P) : IsConvexSet k (t : Set P) :=
   IsConvexSet.of_convexCombPair_mem fun a b ha hb hab x hx y hy ↦ by
     rw [AddTorsor.convexCombPair_eq_lineMap, AffineMap.lineMap_apply]
     exact t.smul_vsub_vadd_mem a hx hy hy
 
-theorem isConvexSet_affineSpan : IsConvexSet k (affineSpan k s : Set P) :=
-  isConvexSet_affineSubspace k (affineSpan k s)
+@[simp]
+theorem _root_.AffineSubspace.convexHull_eq (t : AffineSubspace k P) :
+    convexHull k t = (t : Set P) :=
+  convexHull_eq_self.mpr (AffineSubspace.isConvexSet ..)
 
-theorem affineSpan_convexHull_eq : affineSpan k (convexHull k s : Set P) = affineSpan k s := by
+@[simp]
+theorem _root_.affineSpan_convexHull_eq : affineSpan k (convexHull k s : Set P) = affineSpan k s := by
   refine le_antisymm ?_ (affineSpan_mono k subset_convexHull_self)
-  have := convexHull_min (subset_affineSpan k s) (isConvexSet_affineSpan k s)
-  grw [affineSpan_mono k this]
-  simp
+  have := convexHull_min (subset_affineSpan k s) (AffineSubspace.isConvexSet _ _)
+  grw [affineSpan_mono k this, affineSpan_le_of_subset_coe le_rfl]
 
 end Field
 
@@ -102,32 +132,35 @@ section DivisionRing
 
 variable [DivisionRing k] [Module k V]
 
--- General lemma that we want
--- Even more general lemma, we might want:
-/-
-exists_affineIndependent 📋 Mathlib.LinearAlgebra.AffineSpace.Independent
-  (k : Type u_1) (V : Type u_2) {P : Type u_3}
-  [DivisionRing k] [AddCommGroup V] [Module k V] [AddTorsor V P] (s : Set P) :
-  ∃ t ⊆ s, affineSpan k t = affineSpan k s ∧ AffineIndependent k Subtype.val
-We should prove the above existence statement and prove that the
-cardinality of t is the dimension of (affineSpan k s)
+theorem cardinalDim_lt_aleph0 (s : Set P) (hs : s.Nonempty) [FiniteDimensional k V] :
+    cardinalDim k s < Cardinal.aleph0 := by
+  refine (WithBot.unbot_lt_iff ?_).mp ?_
+  · simpa [Set.nonempty_iff_ne_empty] using hs
+  simp [cardinalDim_eq_rank _ hs, Module.rank_lt_aleph0]
 
-Use?
-AffineIndependent.affineSpan_eq_top_iff_card_eq_finrank_add_one 📋 Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
-{k : Type u_1} {V : Type u_2} {P : Type u_3} {ι : Type u_4} [DivisionRing k] [AddCommGroup V] [Module k V] [AddTorsor V P] [FiniteDimensional k V] [Fintype ι] {p : ι → P} (hi : AffineIndependent k p) : affineSpan k (Set.range p) = ⊤ ↔ Fintype.card ι = Module.finrank k V + 1
-AffineIndependent.affineSpan_eq_of_le_of_card_eq_finrank_add_one 📋 Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
-{k : Type u_1} {V : Type u_2} {P : Type u_3} {ι : Type u_4} [DivisionRing k] [AddCommGroup V] [Module k V] [AddTorsor V P] [Fintype ι] {p : ι → P} (hi : AffineIndependent k p) {sp : AffineSubspace k P} [FiniteDimensional k ↥sp.direction] (hle : affineSpan k (Set.range p) ≤ sp) (hc : Fintype.card ι = Module.finrank k ↥sp.direction + 1) : affineSpan k (Set.range p) = sp
+theorem cardinalDim_eq_finDim_unbot (s : Set P) (hs : s.Nonempty) [Module.Finite k V] :
+    cardinalDim k s = (finDim k s).unbot (by simpa [Set.nonempty_iff_ne_empty] using hs) := by
+  simp_rw [cardinalDim_eq_rank _ hs, finDim_eq_finrank _ hs, ← Module.finrank_eq_rank]
+  norm_cast
 
--/
-theorem foo (s : Set P) {x y : P} (h₁ : x ≠ y) (h₂ : line[k, x, y] ≤ affineSpan k s) :
-    s.Nontrivial :=
-  sorry
-theorem foo2 (s : Set P) :
+-- TODO: Replace exists_affineIndependent?
+theorem exists_affineIndependent''' (s : Set P) [FiniteDimensional k V] :
     ∃ t ⊆ s, affineSpan k t = affineSpan k s ∧ AffineIndependent k ((↑) : t → P) ∧
-      Set.ncard t = cardinalDim k s := -- TODO Ugly mixing of types here, something else?
-  sorry
+      t.ncard = (finDim k s).succ := by
+  obtain ⟨t, ht1, ht2, ht3⟩ := exists_affineIndependent k V s
+  refine ⟨t, ht1, ht2, ht3, ?_⟩
+  rcases Set.eq_empty_or_nonempty s with rfl | hs
+  · simp_all
+  rw [finDim_eq_finrank _ hs, ← ht2, direction_affineSpan, WithBot.succ_natCast]
+  have : t.Finite := finite_set_of_fin_dim_affineIndependent k ht3
+  have : Fintype { x // x ∈ t } := Set.Finite.fintype this
+  have : t.ncard ≠ 0 := by
+    grind [Set.ncard_eq_zero, affineSpan_eq_bot, Set.not_nonempty_empty]
+  have := ht3.finrank_vectorSpan (n := t.ncard - 1) (by simp [Nat.sub_one_add_one this])
+  rw [Subtype.range_coe] at this
+  lia
 
-
+/-
 variable [LinearOrder k] [IsStrictOrderedRing k]
 
 /-- A set spanning a line (`cardinalDim = 1`) has at least two points: a subsingleton spans at
@@ -137,34 +170,23 @@ theorem nontrivial_of_cardinalDim_eq_one {s : Set P} (h : cardinalDim k s = 1) :
   dsimp [cardinalDim] at h
   rw [AffineSubspace.cardinalDim_eq_one_iff] at h
   obtain ⟨x, y, h₁, h₂⟩ := h
-  exact foo k s h₁ (by grind)
-  -- TODO: Easier way to do this using the earlier lemmas?
-  /-
-  intro hsub
-  rcases hsub.eq_empty_or_singleton with rfl | ⟨a, rfl⟩
-  · simp [cardinalDim, AffineSubspace.cardinalDim] at h
-  · have hne : (affineSpan k ({a} : Set P)).carrier ≠ ∅ :=
-      Set.nonempty_iff_ne_empty.mp ⟨a, mem_affineSpan k rfl⟩
-    have h0 : cardinalDim k ({a} : Set P) = (0 : Cardinal) := by
-      change (affineSpan k ({a} : Set P)).cardinalDim = _
-      rw [AffineSubspace.cardinalDim, if_neg hne, direction_affineSpan, vectorSpan_singleton]
-      simp
-    rw [h0] at h
-    exact absurd (WithBot.coe_eq_coe.mp h) zero_ne_one
-  -/
-
-theorem subset_affineSpan_pair_of_cardinalDim_eq_one (h : cardinalDim k s = 1) :
-    ∃ x y : P, x ≠ y ∧ s ⊆ affineSpan k {x, y} := by
-  simp only [cardinalDim] at h
-  obtain ⟨x, y, h₁, h₂⟩ := AffineSubspace.cardinalDim_eq_one_iff .. |>.mp h
-  exact ⟨x, y, h₁, h₂ ▸ subset_affineSpan ..⟩
-
--- TODO: other direction?
-
-theorem efinDim_eq_one_iff :
-    efinDim k s = 1 ↔ ∃ x y : P, x ≠ y ∧ s = affineSpan k {x, y} := by
-  -- TODO adapt to above
-  sorry
+  exact nontrivial_of_le_affineSpan k s h₁ (by grind)
+-/
+theorem finDim_eq_iff {n : ℕ} [FiniteDimensional k V] :
+    finDim k s = n ↔
+      ∃ t ⊆ s, s ⊆ affineSpan k t ∧ AffineIndependent k ((↑) : t → P) ∧ t.ncard = n + 1 := by
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · obtain ⟨t, ht1, ht2, ht3, ht4⟩ := exists_affineIndependent''' k s
+    rw [h] at ht4
+    exact ⟨t, ht1, ht2 ▸ subset_affineSpan .., ht3, ht4⟩
+  · obtain ⟨t, ht1, ht2, ht3, ht4⟩ := h
+    have h := le_antisymm (affineSpan_le_of_subset_coe ht2) (affineSpan_mono k ht1)
+    have hs : s.Nonempty := by
+      by_contra! hh
+      simp_all
+    have : Fintype t := Set.Finite.fintype <| by grind [Set.finite_of_ncard_ne_zero]
+    rw [finDim_eq_finrank _ hs, h, ← ht3.finrank_vectorSpan (n := n) (by simpa),
+      Subtype.range_coe, direction_affineSpan]
 
 end DivisionRing
 

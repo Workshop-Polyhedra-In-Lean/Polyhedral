@@ -66,6 +66,7 @@ end Ring
 
 section DivisionRing
 
+-- TODO: Investigate weaker hypotheses.
 variable [DivisionRing k] [Module k V]
 variable (s : AffineSubspace k P)
 
@@ -105,11 +106,11 @@ theorem efinDim_eq_zero_iff :
     efinDim s = 0 ↔ ∃ x : P, s = {x} := by
   sorry
 
-/-- Two distinct points span a line: their `vectorSpan` has rank exactly `1`. -/
+-- TODO: Necessary? Many Module.finrank + vectorSpan lemmas are stated over Set.range, do we want
+-- helpers in a different form?
 theorem finrank_vectorSpan_pair {x y : P} (h : x ≠ y) :
     Module.finrank k (vectorSpan k ({x, y} : Set P)) = 1 := by
-  have hi : AffineIndependent k ![x, y] := affineIndependent_of_ne k h
-  have := hi.finrank_vectorSpan (n := 1) (by simp)
+  have := (affineIndependent_of_ne k h).finrank_vectorSpan (n := 1) (by simp)
   rwa [Matrix.range_cons_cons_empty] at this
 
 variable [LinearOrder k] [IsStrictOrderedRing k]
