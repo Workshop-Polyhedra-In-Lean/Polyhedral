@@ -64,12 +64,12 @@ variable (x : s)
 -- TODO: #min assumptions later
 variable [Field k] [Module k V] [LinearOrder k] [IsStrictOrderedRing k]
 
-/-
-The tangent cone T_x s to a set s at a point x is the conic hull of the
-chordal directions emanating from x.  If s is nonconvex this is not a sensible
-definition.  If s is smooth, this is only the relint.
+/-- The tangent cone of `s` at `x`.
+
+LST comment: is the conic hull of the chordal directions emanating from x.
+If s is nonconvex this is not a sensible definition.  If s is smooth, this
+is only the relint.
 -/
-/-- The tangent cone of `s` at `x`. -/
 def tangentCone : PointedCone k V :=
   PointedCone.hull k {y -ᵥ (x : P) | y ∈ s}
 
