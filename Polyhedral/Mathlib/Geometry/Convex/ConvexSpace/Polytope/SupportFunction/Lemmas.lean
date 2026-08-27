@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Valentina Taylor
 -/
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.SupportFunction.Basic
+import Mathlib.Algebra.Order.Ring.WithTop
 
 /-! # Basic properties of support functions (of sets)
 -/
@@ -14,7 +15,25 @@ variable {R V : Type*} [Semiring R] [PartialOrder R] [AddCommMonoid V] [Module R
 
 -- is positively homogeneous (i.e., behaviour under scaling φ): TODO write down
 
--- invariance under dilation: TODO write down!
+-- invariance under dilation
+open scoped Pointwise Classical in
+lemma supportFunction_smul
+    {P : Set V} {r : R} (hr : 0 ≤ r) (hP : P.Nonempty) (φ : Module.Dual R V) :
+    supportFunction R (r • P) φ = r * (supportFunction R P φ) := by
+  by_cases hP' : ∃ x, IsLUB (φ '' P) x
+  · obtain ⟨x, hx⟩ := hP'
+    have hrP : IsLUB (⇑φ '' (r • P)) (r * x) := sorry
+    rw [supportFunction_of_nonempty_of_isLUB hP hx,
+      supportFunction_of_nonempty_of_isLUB (by simp [hP]) hrP]
+    simp [WithBotTop.coe]
+  · sorry
+
+open scoped Pointwise Classical in
+/-- Version of `supportFunction_smul` allowing for `P` to be empty, but asking for positive `R`. -/
+lemma supportFunction_smul'
+    (P : Set V) {r : R} (hr : 0 < r) (φ : Module.Dual R V) :
+    supportFunction R (r • P) φ = r * (supportFunction R P φ) := by
+  sorry
 
 -- additivity: TODO write down!
 
