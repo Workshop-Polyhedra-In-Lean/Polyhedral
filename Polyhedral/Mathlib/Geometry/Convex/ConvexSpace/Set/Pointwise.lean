@@ -72,16 +72,26 @@ variable {I : Type*}
 @[simp]
 lemma iConvexComb_vadd (w : StdSimplex R I) (f : I → V) (g : I → A) :
     w.iConvexComb (f +ᵥ g) = w.iConvexComb f +ᵥ w.iConvexComb g := by
-    sorry
+    unfold iConvexComb
+    unfold sConvexComb
+
+lemma IsAffineMap.vadd_apply :
+    IsAffineMap R (fun x : (V × A) ↦ x.1 +ᵥ x.2) := by sorry
 
 @[to_fun (attr := fun_prop)]
 lemma IsAffineMap.vadd [ConvexSpace R X] {f : X → V} {g : X → A}
-    (hf : IsAffineMap R f) (hg : IsAffineMap R g) :
-    IsAffineMap R (f +ᵥ g) where
-  map_sConvexComb w := by
-    change f w.sConvexComb +ᵥ g w.sConvexComb = _
-    rw [hf.map_sConvexComb, hg.map_sConvexComb]
-    exact (iConvexComb_vadd w f g).symm
+    (hf : IsAffineMap R f) (hg : IsAffineMap R g) : IsAffineMap R (f +ᵥ g) := by
+  let p : X → (V × A) := fun i => (f i, g i)
+  let H : (V × A) → A := fun (v, a) => v +ᵥ a
+  refine IsAffineMap.comp (f := p) ?_ (g := H) ?_
+  · exact IsAffineMap.vadd_apply
+  · apply IsAffineMap.mk
+    intro s
+    change _ = s.iConvexComb p
+    ext <;> simp only [Prod.fst_iConvexComb, Prod.snd_iConvexComb]
+    · exact hf.map_sConvexComb s
+    · exact hg.map_sConvexComb s
+
 
 /- Minkowski vector addition preserves convexity. -/
 protected lemma IsConvexSet.vadd {K₁ : Set V} {K₂ : Set A}
