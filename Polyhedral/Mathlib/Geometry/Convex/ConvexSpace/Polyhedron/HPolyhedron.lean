@@ -19,7 +19,7 @@ open Pointwise Set
 -- CommRing could be Ring for some definitions
 variable {R : Type*} [CommRing R] [PartialOrder R] [IsOrderedRing R]
 variable {V : Type*} [AddCommGroup V] [Module R V]
-variable {W : Type*} [AddCommGroup W] [Module R W] -- [Module R (W →ₗ[R] R)]
+variable {W : Type*} [AddCommGroup W] [Module R W]
 variable {A : Type*} [AddTorsor V A]
 
 
@@ -59,8 +59,7 @@ lemma IsHPolyhedral.is_h_polyhedron
     iInter_iInter_eq_right, LinearMap.coe_toAffineMap, mem_iInter, mem_preimage, mem_Ici,
     Submodule.mem_toAffineSubspace, and_congr_left_iff, ←hH]
   intro hS
-  rw [show (x ∈ dual p ↑H) = {y | ∀ ⦃x : W⦄, x ∈ ↑H → 0 ≤ (p x) y} x from rfl]
-  exact Eq.to_iff rfl
+  rfl
 
 variable (p : W →ₗ[R] V →ₗ[R] R)
 
@@ -93,6 +92,42 @@ lemma IsHPolyhedral.zero : IsHPolyhedral p (⊥ : PointedCone R V) :=
 
 end PointedCone
 
+section ConvexSet
+
+open Convexity
+
+variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+variable {V : Type*} [AddCommGroup V] [Module R V]
+variable {W : Type*} [AddCommGroup W] [Module R W]
+variable {A : Type*} [AddCommGroup A] [Module R A] [AddTorsor V A] --[space : ConvexSpace R A]
+
+attribute [local instance] AddTorsor.toConvexSpace
+
+#click_suggestions
+/-- An *H*-polyhedron is a convex set -/
+-- TODO: Prove this using convexity of intersections, preimages and affine subspaces
+-- lemma IsConvexSet.h_polyhedron {P : Set A} (hP : IsHPolyhedron R P) : IsConvexSet R P := by
+--   classical
+--   obtain ⟨C', ⟨S, ⟨⟨H, hH⟩, hInter⟩⟩⟩ := hP
+
+
+--   apply IsConvexSet.of_convexCombPair_mem
+--   intro a b ha hb hab x hx y hy
+--   unfold convexCombPair sConvexComb AddTorsor.toConvexSpace AddTorsor.convexCombination Finset.affineCombination
+--   simp
+--   have h : a • x + b • y ∈ P := by
+--     sorry
+--   rw [show (Finsupp.single x a + Finsupp.single y b).support = {x, y} by
+--     rw [Finsupp.support_add_eq, Finsupp.support_single, Finsupp.support_single]
+--     simp
+--     ]
+--   sorry
+
+def IsHPolyhedron.toConvexSet {P : Set A} (hP : IsHPolyhedron R P) : ConvexSet R A :=
+    sorry --⟨P, IsConvexSet.h_polyhedron hP⟩
+
+end ConvexSet
+
 section PartialOrder
 omit [IsOrderedRing R]
 
@@ -109,6 +144,7 @@ lemma IsHPolyhedron.inf {P Q : Set A} (hP : IsHPolyhedron R P) (hQ : IsHPolyhedr
     forall₂_or_left, AffineSubspace.mem_inf_iff]
   tauto
 
+-- TODO: Maybe define coercion AffineSubspace -> HPolyhedron
 /-- Submodules are H-polyhedra. -/
 lemma IsHPolyhedron.affine_subspace (S : AffineSubspace R V) :
     IsHPolyhedron R S.carrier :=
