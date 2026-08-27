@@ -170,7 +170,6 @@ theorem finDim_eq_iff {n : ℕ} [FiniteDimensional k V] :
     by_contra! hh
     simp_all
 
-
 end DivisionRing
 
 end Convexity

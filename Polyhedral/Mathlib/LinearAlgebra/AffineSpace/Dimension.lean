@@ -54,12 +54,12 @@ theorem cardinalDim_mono {s t : AffineSubspace k P} (h : s ≤ t) :
   dsimp [cardinalDim]
   split_ifs <;> simp_all [Submodule.rank_mono (direction_le h)]
 
-theorem cardinalDim_eq_rank_of_nonempty (h : s.carrier.Nonempty) :
+theorem cardinalDim_eq_rank_of_nonempty {s : AffineSubspace k P} (h : s.carrier.Nonempty) :
     cardinalDim s = Module.rank k s.direction := by
   contrapose! h
   simp_all [cardinalDim]
 
-theorem nonempty_of_cardinalDim_ne_bot (h : cardinalDim s ≠ ⊥) :
+theorem nonempty_of_cardinalDim_ne_bot {s : AffineSubspace k P} (h : cardinalDim s ≠ ⊥) :
     s.carrier.Nonempty := by
   simp_all [cardinalDim, nonempty_iff_ne_bot]
 
@@ -93,8 +93,8 @@ theorem subsingleton_of_cardinalDim_le_zero (h : cardinalDim s ≤ 0) :
 theorem cardinalDim_eq_zero_iff :
     cardinalDim s = 0 ↔ ∃ x : P, s = {x} := by
   refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
-  · have h₁ := nonempty_of_cardinalDim_ne_bot s (by simp_all)
-    have h₂ := subsingleton_of_cardinalDim_le_zero s (by simp_all)
+  · have h₁ := nonempty_of_cardinalDim_ne_bot (s := s) (by simp_all)
+    have h₂ := subsingleton_of_cardinalDim_le_zero (s := s) (by simp_all)
     obtain ⟨x, hx⟩ := Set.exists_eq_singleton_iff_nonempty_subsingleton.mpr ⟨h₁, h₂⟩
     exact ⟨x, (AffineSubspace.ext_iff _ _).mpr hx⟩
   · obtain ⟨x, rfl⟩ := h
@@ -118,8 +118,8 @@ variable (s : AffineSubspace k P)
 theorem cardinalDim_eq_one_iff :
     cardinalDim s = 1 ↔ ∃ x y : P, x ≠ y ∧ s = affineSpan k {x, y} := by
   refine ⟨fun h ↦ ?_, ?_⟩
-  · have h' := nonempty_of_cardinalDim_ne_bot s (by simp [h])
-    rw [cardinalDim_eq_rank_of_nonempty _ h'] at h
+  · have h' := nonempty_of_cardinalDim_ne_bot (s := s) (by simp [h])
+    rw [cardinalDim_eq_rank_of_nonempty h'] at h
     obtain ⟨⟨x, hx⟩, h₁, h₂⟩ := rank_eq_one_iff.mp (WithBot.coe_eq_one.mp h)
     obtain ⟨y, hy⟩ := h'
     have hne : y ≠ x +ᵥ y := fun heq ↦ by
@@ -128,14 +128,14 @@ theorem cardinalDim_eq_one_iff :
     refine ⟨y, x +ᵥ y, hne, ?_⟩
     have hxy := vadd_mem_of_mem_direction hx hy
     refine eq_iff_direction_eq_of_mem hxy (right_mem_affineSpan_pair ..) |>.mpr ?_
-    have hle : affineSpan k {y, x +ᵥ y} ≤ s := affineSpan_le.mpr (Set.pair_subset hy hxy)
     let := FiniteDimensional.of_rank_eq_one (WithBot.coe_eq_one.mp h)
-    refine Submodule.eq_of_le_of_finrank_eq (direction_le hle) ?_ |>.symm
-    rw [direction_affineSpan, finrank_vectorSpan_pair  hne,
-      Module.rank_eq_one_iff_finrank_eq_one.mp (by simpa using h)]
+    refine Submodule.eq_of_le_of_finrank_eq ?_ ?_ |>.symm
+    · exact direction_le <| affineSpan_le.mpr <| Set.pair_subset hy hxy
+    · rw [direction_affineSpan, finrank_vectorSpan_pair hne,
+        Module.rank_eq_one_iff_finrank_eq_one.mp (by simpa using h)]
   · rintro ⟨x, y, h₁, h₂⟩
-    rw [cardinalDim_eq_rank_of_nonempty _ (by simp [h₂, affineSpan_nonempty])]
-    rw [WithBot.coe_eq_one, Module.rank_eq_one_iff_finrank_eq_one, h₂, direction_affineSpan]
+    rw [cardinalDim_eq_rank_of_nonempty (by simp [h₂, affineSpan_nonempty]),
+      WithBot.coe_eq_one, Module.rank_eq_one_iff_finrank_eq_one, h₂, direction_affineSpan]
     exact finrank_vectorSpan_pair h₁
 
 end DivisionRing
