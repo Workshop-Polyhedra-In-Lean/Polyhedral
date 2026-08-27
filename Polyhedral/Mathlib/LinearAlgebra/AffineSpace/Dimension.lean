@@ -44,6 +44,11 @@ noncomputable def cardinalDim : WithBot Cardinal :=
 noncomputable def efinDim : WithBot ENat :=
   WithBot.map Cardinal.toENat (cardinalDim s)
 
+theorem cardinalDim_mono {s t : AffineSubspace k P} (h : s ≤ t) :
+    s.cardinalDim ≤ t.cardinalDim := by
+  dsimp [cardinalDim]
+  split_ifs <;> simp_all [Submodule.rank_mono (direction_le h)]
+
 theorem cardinalDim_eq_rank_of_nonempty (h : s.carrier.Nonempty) :
     cardinalDim s = Module.rank k s.direction := by
   contrapose! h
@@ -93,6 +98,13 @@ theorem cardinalDim_eq_zero_iff :
 theorem efinDim_eq_zero_iff :
     efinDim s = 0 ↔ ∃ x : P, s = {x} := by
   sorry
+
+end Ring
+
+section DivisionRing
+
+-- TODO: Investigate weaker hypotheses.
+variable [DivisionRing k] [Module k V]
 
 -- TODO: Necessary? Many Module.finrank + vectorSpan lemmas are stated over Set.range, do we want
 -- helpers in a different form?
