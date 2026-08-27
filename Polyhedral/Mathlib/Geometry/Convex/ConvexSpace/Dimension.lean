@@ -187,9 +187,17 @@ theorem finDim_n_if_affineSpan_has_np1_points{n : ℕ} [FiniteDimensional k V]
   simp_all
 
 -- Corollary of the above
-theorem finDim_eq_one_iff :
-    finDim k s = 1 ↔ ∃ x y : s, x ≠ y ∧ s = affineSpan k {x.1, y.1} := by
+theorem finDim_1_then_affineSpan_spanned_by_2_points [FiniteDimensional k V]
+  (h : finDim k s = 1) :
+    ∃ x y : s, x ≠ y ∧ s = affineSpan k {x.1, y.1} := by
+  have := finDim_n_then_affineSpan_spanned_by_np1_points _ _ h
+  obtain ⟨t, ⟨inSpan, tAffInd, card2⟩⟩ := this
+  norm_num at card2
+  obtain ⟨x, y, xneqy, t_is_xy⟩ := Set.ncard_eq_two.mp card2
+  clear card2
   sorry
+
+
 
 end DivisionRing
 
