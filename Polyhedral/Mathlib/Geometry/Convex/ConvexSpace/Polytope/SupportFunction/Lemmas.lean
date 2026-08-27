@@ -38,6 +38,9 @@ lemma supportFunction_smul'
 -- additivity: TODO write down!
 
 -- supportFunction of Minkowski sum  ---> Rockefeller's book?
+-- XXX: this will require some hypotheses about boundedness of sets
+-- Perhaps add a typeclass "every bounded set has a least upper bound" (which is satisfied for
+-- e.g. `ℝ`), and prove a version of this lemma without this hypothesis.
 
 /- ## Convex closure -/
 -- TODO: figure out the right variables to use!
