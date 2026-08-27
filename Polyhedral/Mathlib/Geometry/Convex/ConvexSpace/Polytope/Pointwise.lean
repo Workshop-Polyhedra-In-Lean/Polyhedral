@@ -51,9 +51,6 @@ section Ring
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
 variable [AddTorsor V A] [ConvexSpace R A] [IsAffineConvexSpace R V A]
-variable [SMulCommClass R R V]
-
--- TODO: add class expressing compatibility between the convex structures on A and V
 
 /- The Minkowski sum of two polytopes is a polytope. -/
 protected lemma vadd {P₁ : Set V} {P₂ : Set A} (hP₁ : IsPolytope R P₁) (hP₂ : IsPolytope R P₂) :
@@ -78,6 +75,8 @@ protected lemma sub {P₁ : Set V} {P₂ : Set V}
     (hP₁ : IsPolytope R P₁) (hP₂ : IsPolytope R P₂) : IsPolytope R (P₁ - P₂) := by
   rw [sub_eq_add_neg]
   exact hP₁.add hP₂.neg
+
+variable [SMulCommClass R R V]
 
 -- TODO: golf + move inside proof below?
 lemma convexHull_smul_ (r : R) (s : Set V)

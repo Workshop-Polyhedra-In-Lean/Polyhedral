@@ -67,22 +67,6 @@ variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R 
 variable [AddTorsor V A]
 variable [ConvexSpace R A] [IsAffineConvexSpace R V A]
 
-variable {I : Type*}
-
-@[simp]
-lemma iConvexComb_vadd (w : StdSimplex R I) (f : I → V) (g : I → A) :
-    w.iConvexComb (f +ᵥ g) = w.iConvexComb f +ᵥ w.iConvexComb g := by
-    sorry
-
-@[to_fun (attr := fun_prop)]
-lemma IsAffineMap.vadd [ConvexSpace R X] {f : X → V} {g : X → A}
-    (hf : IsAffineMap R f) (hg : IsAffineMap R g) :
-    IsAffineMap R (f +ᵥ g) where
-  map_sConvexComb w := by
-    change f w.sConvexComb +ᵥ g w.sConvexComb = _
-    rw [hf.map_sConvexComb, hg.map_sConvexComb]
-    exact (iConvexComb_vadd w f g).symm
-
 /- Minkowski vector addition preserves convexity. -/
 protected lemma IsConvexSet.vadd {K₁ : Set V} {K₂ : Set A}
     (hK₁ : IsConvexSet R K₁) (hK₂ : IsConvexSet R K₂) : IsConvexSet R (K₁ +ᵥ K₂) := by
