@@ -78,26 +78,14 @@ theorem cardinalDim_eq_zero_iff :
   · intro h
     split_ifs at h with h'
     · simp_all
-    · simp at h
-      have sub_singleton: ∀ x y, x ∈ s -> y ∈ s -> x = y := by
-        intro x y x_mem y_mem
-        have x_minus_y := vsub_mem_direction x_mem y_mem
-        rw [h] at x_minus_y
-        simp at x_minus_y
-        exact x_minus_y
-      apply Set.nonempty_iff_ne_empty.mpr at h'
-      have := (Set.Nonempty.some_mem h')
-      use h'.some
-      ext y
-      constructor
-      · intro hy
-        simp
-        exact (sub_singleton _ _ hy this)
-      · simp
-        intro rfl
-        exact this
-  · rintro ⟨x, hx⟩
-    rw [hx]
+    · simp only [WithBot.coe_eq_zero, Submodule.rank_eq_zero] at h
+      have sub_singleton: s.carrier.Subsingleton := by
+        intro x x_mem y y_mem
+        simpa [h] using vsub_mem_direction x_mem y_mem
+      have := Set.nonempty_iff_ne_empty.mpr h'
+      obtain ⟨x,hx⟩ := Set.exists_eq_singleton_iff_nonempty_subsingleton.mpr ⟨this, sub_singleton⟩
+      exact ⟨x, (AffineSubspace.ext_iff _ _).mpr hx⟩
+  · rintro ⟨x, rfl⟩
     simp
     simp [AffineSubspace.direction]
 
