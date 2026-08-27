@@ -79,9 +79,14 @@ protected lemma sub {P₁ : Set V} {P₂ : Set V}
   rw [sub_eq_add_neg]
   exact hP₁.add hP₂.neg
 
+-- TODO: golf + move inside proof below?
 lemma convexHull_smul_ (r : R) (s : Set V)
     : (convexHull R) (r • s) = r • (convexHull R) s := by
-  sorry
+  rw [← Set.image_smul]
+  apply symm
+  let f := DistribSMul.toLinearMap R V r
+  have h : IsAffineMap R f := f.isAffineMap
+  exact Convexity.IsAffineMap.image_convexHull (f:=f) h s
 
 protected lemma smul (r : R) {K : Set V} (hK : IsPolytope R K) :
     IsPolytope R (r • K) := by
