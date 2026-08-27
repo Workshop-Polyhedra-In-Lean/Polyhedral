@@ -63,27 +63,22 @@ theorem efinDim_eq_bot_iff : efinDim k s = ⊥ ↔ s = ∅ := by
   simp [efinDim]
 
 --@[simp]
-theorem eq_singleton_of_affineSpan_eq (x : P) (hx : ↑(affineSpan k s) = {x}) : s = {x} := by
+theorem eq_singleton_of_affineSpan_eq {x : P} (hx : ↑(affineSpan k s) = {x}) : s = {x} := by
   refine (Set.Nonempty.subset_singleton_iff ?_).mp ?_
   · exact (affineSpan_nonempty k).mp (by simp [hx])
   · simpa using affineSpan_le.mp hx.le
 
 @[simp]
 theorem eq_affineSpan_singleton (x : P) : affineSpan k {x} = {x} := by
-  ext y
-  simp
+  simp [AffineSubspace.ext_iff]
 
 theorem cardinalDim_eq_zero_iff : cardinalDim k s = 0 ↔ ∃ x : P, s = {x} := by
-  simp only [cardinalDim]
-  rw [AffineSubspace.cardinalDim_eq_zero_iff]
+  simp only [cardinalDim, AffineSubspace.cardinalDim_eq_zero_iff]
   constructor
   · rintro ⟨x, hx⟩
-    use x
-    exact eq_singleton_of_affineSpan_eq _ _ x hx
+    exact ⟨x, eq_singleton_of_affineSpan_eq _ _ hx⟩
   · rintro ⟨x, hx⟩
-    use x
-    rw [hx]
-    simp
+    exact ⟨x, by simp [hx]⟩
 
 theorem efinDim_eq_zero_iff : efinDim k s = 0 ↔ ∃ x : P, s = {x} := by
   sorry
@@ -160,18 +155,6 @@ theorem exists_affineIndependent''' (s : Set P) [FiniteDimensional k V] :
   rw [Subtype.range_coe] at this
   lia
 
-/-
-variable [LinearOrder k] [IsStrictOrderedRing k]
-
-/-- A set spanning a line (`cardinalDim = 1`) has at least two points: a subsingleton spans at
-most a point, whose `vectorSpan` is `⊥`, i.e. has rank `0 ≠ 1`. -/
-theorem nontrivial_of_cardinalDim_eq_one {s : Set P} (h : cardinalDim k s = 1) :
-    s.Nontrivial := by
-  dsimp [cardinalDim] at h
-  rw [AffineSubspace.cardinalDim_eq_one_iff] at h
-  obtain ⟨x, y, h₁, h₂⟩ := h
-  exact nontrivial_of_le_affineSpan k s h₁ (by grind)
--/
 theorem finDim_eq_iff {n : ℕ} [FiniteDimensional k V] :
     finDim k s = n ↔
       ∃ t ⊆ s, s ⊆ affineSpan k t ∧ AffineIndependent k ((↑) : t → P) ∧ t.ncard = n + 1 := by
@@ -180,13 +163,13 @@ theorem finDim_eq_iff {n : ℕ} [FiniteDimensional k V] :
     rw [h] at ht4
     exact ⟨t, ht1, ht2 ▸ subset_affineSpan .., ht3, ht4⟩
   · obtain ⟨t, ht1, ht2, ht3, ht4⟩ := h
-    have h := le_antisymm (affineSpan_le_of_subset_coe ht2) (affineSpan_mono k ht1)
-    have hs : s.Nonempty := by
-      by_contra! hh
-      simp_all
     have : Fintype t := Set.Finite.fintype <| by grind [Set.finite_of_ncard_ne_zero]
-    rw [finDim_eq_finrank _ hs, h, ← ht3.finrank_vectorSpan (n := n) (by simpa),
-      Subtype.range_coe, direction_affineSpan]
+    have := le_antisymm (affineSpan_le_of_subset_coe ht2) (affineSpan_mono k ht1)
+    rw [finDim_eq_finrank, this, direction_affineSpan,
+      ← ht3.finrank_vectorSpan (n := n) (by simpa), Subtype.range_coe]
+    by_contra! hh
+    simp_all
+
 
 end DivisionRing
 

@@ -34,6 +34,11 @@ variable (s : AffineSubspace k P)
 -- VectorSpace / Module V
 -- Affine subspace s
 
+-- TODO: Should live with definition of direction
+@[simp]
+theorem direction_eq_bot (x : P) : ({x} : AffineSubspace k P).direction = ⊥ := by
+  simp [AffineSubspace.direction]
+
 noncomputable def cardinalDim : WithBot Cardinal :=
   if s.carrier = ∅ then ⊥
   else Module.rank k s.direction
@@ -75,36 +80,30 @@ section DivisionRing
 variable [DivisionRing k] [Module k V]
 variable (s : AffineSubspace k P)
 
+theorem subsingleton_of_cardinalDim_le_zero (h : cardinalDim s ≤ 0) :
+    s.carrier.Subsingleton := by
+  dsimp [cardinalDim] at h
+  split_ifs at h
+  · simp_all
+  intro x hx y hy
+  have := vsub_mem_direction hx hy
+  simp_all
+
 @[simp]
 theorem cardinalDim_eq_zero_iff :
     cardinalDim s = 0 ↔ ∃ x : P, s = {x} := by
-  dsimp [cardinalDim]
-  constructor
-  · intro h
-    split_ifs at h with h'
-    · simp_all
-    simp only [WithBot.coe_eq_zero, Submodule.rank_eq_zero] at h
-    have sub_singleton: s.carrier.Subsingleton := by
-      intro x x_mem y y_mem
-      simpa [h] using vsub_mem_direction x_mem y_mem
-    have := Set.nonempty_iff_ne_empty.mpr h'
-    obtain ⟨x,hx⟩ := Set.exists_eq_singleton_iff_nonempty_subsingleton.mpr ⟨this, sub_singleton⟩
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · have h₁ := nonempty_of_cardinalDim_ne_bot s (by simp_all)
+    have h₂ := subsingleton_of_cardinalDim_le_zero s (by simp_all)
+    obtain ⟨x, hx⟩ := Set.exists_eq_singleton_iff_nonempty_subsingleton.mpr ⟨h₁, h₂⟩
     exact ⟨x, (AffineSubspace.ext_iff _ _).mpr hx⟩
-  · rintro ⟨x, rfl⟩
-    simp
-    simp [AffineSubspace.direction]
+  · obtain ⟨x, rfl⟩ := h
+    simp [cardinalDim]
 
 @[simp]
 theorem efinDim_eq_zero_iff :
     efinDim s = 0 ↔ ∃ x : P, s = {x} := by
   sorry
-
-end Ring
-
-section DivisionRing
-
--- TODO: Investigate weaker hypotheses.
-variable [DivisionRing k] [Module k V]
 
 -- TODO: Necessary? Many Module.finrank + vectorSpan lemmas are stated over Set.range, do we want
 -- helpers in a different form?
