@@ -134,7 +134,7 @@ relevant in infinite dimension.
 -/
 lemma isVPolyhedron_of_isHPolyhedron (H : Set A) (hH : IsHPolyhedron R H) :
     ∃P : Set A, ∃C : PointedCone R V, ∃S : Submodule R V,
-      (IsPolytope R P) ∧ C.IsHPolyhedral p.flip ∧ H = ((C : Set V) + S) +ᵥ P := by
+      (IsPolytope R P) ∧ C.IsHPolyhedral p ∧ H = ((C : Set V) + S) +ᵥ P := by
   obtain ⟨gen, h_gen⟩ := hH
   obtain ⟨S, hS⟩ := h_gen
   sorry
