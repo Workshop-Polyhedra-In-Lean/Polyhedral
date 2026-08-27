@@ -36,4 +36,35 @@ TODO/open question: should the notion of "convex function" also be generalized t
 any convex space? (The current definition is far more specialized.)
 Motivating example: a support function should be a convex function
 
+----------
+
+Question: given `φ : V → R`, does `IsAffineMap φ` imply that `φ` is affine?
+(The converse is clearly true.) TODO: if so, generalise this lemma to that setting!
+This would imply that the dual of a module V, as a convex space, coincides with its dual module.
+Martin believes this is true; would be rather helpful.
+Then, this lemma would hold for any convex map with φ 0 = 0.
+
+/-
+On a module, we have affine maps (`AddTorsor`'s `AffineMap`), and
+convex space's convex maps `IsAffineMap`. We know that the former are the latter
+(proven in the repo). Is the converse true?
+
+Hm... should the "convex space dual" for affine spaces then restrict to only linear maps?
+
+-/
+
+-------
+
+Note. You cannot directly generalise the definition to "any convex space".
+Convex spaces have a dual space (namely, all "convex maps" `V → R`).
+The definition of support functions generalises with domain of this dual,
+i.e. it can be defined for any functional.
+
+However, this is not the right definition, as dilation invariance becomes false:
+an `R`-module `V` has two notion of spaces, either as a module `Module.Dual R V` or as a convex space.
+These spaces are not the same: a convex map `V \to R` (of R-modules) is always affine,
+but need not be linear. The scaling property of the support function only works for linear functionals.
+
+(discussion not converged)
+
 -/
