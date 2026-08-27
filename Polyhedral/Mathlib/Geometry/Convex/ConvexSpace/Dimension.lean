@@ -155,6 +155,10 @@ theorem exists_affineIndependent''' (s : Set P) [FiniteDimensional k V] :
   rw [Subtype.range_coe] at this
   lia
 
+-- TODO: Get rid of [FiniteDimensional k V] and only assume that the affine
+-- subspace is finite, e.g. [Module.Finite k (affineSpace k s).direction]
+
+-- TODO: Should this be stated in the AffineSubspace dimension file instead and this is a corollary?
 theorem finDim_eq_iff {n : ℕ} [FiniteDimensional k V] :
     finDim k s = n ↔
       ∃ t ⊆ s, s ⊆ affineSpan k t ∧ AffineIndependent k ((↑) : t → P) ∧ t.ncard = n + 1 := by
@@ -169,6 +173,11 @@ theorem finDim_eq_iff {n : ℕ} [FiniteDimensional k V] :
       ← ht3.finrank_vectorSpan (n := n) (by simpa), Subtype.range_coe]
     by_contra! hh
     simp_all
+
+-- Corollary of the above
+theorem finDim_eq_one_iff :
+    finDim k s = 1 ↔ ∃ x y : s, x ≠ y ∧ s = affineSpan k {x.1, y.1} := by
+  sorry
 
 end DivisionRing
 
