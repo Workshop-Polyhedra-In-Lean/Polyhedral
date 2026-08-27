@@ -53,6 +53,18 @@ lemma mono_subset {P : Set X} {M N : Set X} (hP : IsGroundedPolytope R M P) (hMN
   obtain ⟨t, h₁, h₂⟩ := hP
   exact ⟨t, h₁.trans hMN, h₂⟩
 
+lemma inf_groundSet_nonempty_of_nonempty {P : Set X} (hP : IsGroundedPolytope R M P)
+    (h : P.Nonempty) : (P ⊓ M).Nonempty := by
+  obtain ⟨t, htM, hPt⟩ := hP
+  apply Set.Nonempty.mono (by simpa using ⟨hPt ▸ subset_convexHull_self, htM⟩)
+  by_contra! H
+  simp only [H, convexHull_empty] at hPt
+  exact Set.not_nonempty_empty (hPt ▸ h)
+
+lemma inf_groundSet_nonempty_iff {P : Set X} (hP : IsGroundedPolytope R M P) :
+    (P ⊓ M).Nonempty ↔ P.Nonempty :=
+  ⟨Set.Nonempty.left, hP.inf_groundSet_nonempty_of_nonempty M⟩
+
 end IsGroundedPolytope
 
 open IsGroundedPolytope
