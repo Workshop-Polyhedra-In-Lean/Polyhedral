@@ -62,27 +62,48 @@ theorem cardinalDim_eq_bot_iff : cardinalDim s = ⊥ ↔ s.carrier = ∅ := by
 theorem efinDim_eq_bot_iff : efinDim s = ⊥ ↔ s.carrier = ∅ := by
   simp [efinDim]
 
+end Ring
+
+section DivisionRing
+
+variable [DivisionRing k] [Module k V]
+variable (s : AffineSubspace k P)
+
 @[simp]
 theorem cardinalDim_eq_zero_iff :
     cardinalDim s = 0 ↔ ∃ x : P, s = {x} := by
   dsimp [cardinalDim]
   constructor
   · intro h
-    sorry
+    split_ifs at h with h'
+    · simp_all
+    · simp at h
+      have sub_singleton: ∀ x y, x ∈ s -> y ∈ s -> x = y := by
+        intro x y x_mem y_mem
+        have x_minus_y := vsub_mem_direction x_mem y_mem
+        rw [h] at x_minus_y
+        simp at x_minus_y
+        exact x_minus_y
+      apply Set.nonempty_iff_ne_empty.mpr at h'
+      have := (Set.Nonempty.some_mem h')
+      use h'.some
+      ext y
+      constructor
+      · intro hy
+        simp
+        exact (sub_singleton _ _ hy this)
+      · simp
+        intro rfl
+        exact this
   · rintro ⟨x, hx⟩
-    sorry
+    rw [hx]
+    simp
+    simp [AffineSubspace.direction]
 
 @[simp]
 theorem efinDim_eq_zero_iff :
     efinDim s = 0 ↔ ∃ x : P, s = {x} := by
   sorry
-
-end Ring
-
-section DivisionRing
-
--- TODO: Investigate weaker hypotheses.
-variable [DivisionRing k] [Module k V]
 
 /-- Two distinct points span a line: their `vectorSpan` has rank exactly `1`. -/
 theorem finrank_vectorSpan_pair {x y : P} (h : x ≠ y) :
