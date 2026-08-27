@@ -46,8 +46,10 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.Lattice
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Face
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.KreinMilman
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Pointwise
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.TangentCone
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Homogenization
@@ -56,6 +58,7 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Hull
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Lattice
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Pointwise
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.TangentCone
 import Polyhedral.Mathlib.GroupTheory.GroupAction.SubMulActionWithZero
 import Polyhedral.Mathlib.GroupTheory.GroupAction.SubMulActionWithZero.Closure
 import Polyhedral.Mathlib.GroupTheory.GroupAction.SubMulActionWithZero.Nonneg
@@ -66,6 +69,7 @@ import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Homogenization.Basic
 import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Homogenization.Canonical
 import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Homogenization.Set
 import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Lattice
+import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.TangentCone
 import Polyhedral.Mathlib.LinearAlgebra.BilinearMap
 import Polyhedral.Mathlib.LinearAlgebra.Dual.Basis
 import Polyhedral.Mathlib.Logic.Function.Const
