@@ -170,10 +170,10 @@ TODO
 -- TODO: Should this be stated in the AffineSubspace dimension file instead and this is a corollary?
 theorem finDim_n_then_affineSpan_spanned_by_np1_points{n : ℕ} [FiniteDimensional k V]
   (h : finDim k s = n) :
-    ∃ t : Set P, s ⊆ affineSpan k t ∧ AffineIndependent k ((↑) : t → P) ∧ t.ncard = n + 1 := by
+    ∃ t ⊆ s, s ⊆ affineSpan k t ∧ AffineIndependent k ((↑) : t → P) ∧ t.ncard = n + 1 := by
   obtain ⟨t, ht1, ht2, ht3, ht4⟩ := exists_affineIndependent''' k s
   rw [h] at ht4
-  exact ⟨t, ht2 ▸ subset_affineSpan .., ht3, ht4⟩
+  exact ⟨t, ht1, ht2 ▸ subset_affineSpan .., ht3, ht4⟩
 
 theorem finDim_n_if_affineSpan_has_np1_points{n : ℕ} [FiniteDimensional k V]
   (h : ∃ t ⊆ s, s ⊆ affineSpan k t ∧ AffineIndependent k ((↑) : t → P) ∧ t.ncard = n + 1) :
@@ -189,15 +189,22 @@ theorem finDim_n_if_affineSpan_has_np1_points{n : ℕ} [FiniteDimensional k V]
 -- Corollary of the above
 theorem finDim_1_then_affineSpan_spanned_by_2_points [FiniteDimensional k V]
   (h : finDim k s = 1) :
-    ∃ x y : s, x ≠ y ∧ s = affineSpan k {x.1, y.1} := by
+    ∃ x y : s, x ≠ y ∧ s ⊆ affineSpan k {x.1, y.1} := by
   have := finDim_n_then_affineSpan_spanned_by_np1_points _ _ h
-  obtain ⟨t, ⟨inSpan, tAffInd, card2⟩⟩ := this
+  obtain ⟨t, ⟨inSpan, tAffInd, _, card2⟩⟩ := this
   norm_num at card2
   obtain ⟨x, y, xneqy, t_is_xy⟩ := Set.ncard_eq_two.mp card2
   clear card2
-  sorry
-
-
+  have hx : x ∈ t := by simp [t_is_xy]
+  have hy : y ∈ t := by simp [t_is_xy]
+  have := Set.mem_of_mem_of_subset hx inSpan
+  have := Set.mem_of_mem_of_subset hy inSpan
+  have : s ⊆ ↑line[k, ↑x, ↑y] := by
+    simp_all
+  refine ⟨⟨x,inSpan hx⟩,⟨y,inSpan hy⟩,?_⟩
+  constructor
+  · simp_all
+  · assumption
 
 end DivisionRing
 
