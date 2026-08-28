@@ -85,10 +85,6 @@ theorem IsHPolyhedral.of_v_repr (p : V →ₗ[R] V' →ₗ[R] R) {C : PointedCon
         simp [hx₂ hv]
 
 
-theorem IsPolyhedral.of_h_repr (p : V →ₗ[R] V' →ₗ[R] R) {C : PointedCone R V}
-    (h : IsHPolyhedral p.flip C) : IsPolyhedral (PointedCone.dual p C.carrier) := by
-  sorry
-
 /-- A polyhedral cone is a polyhedron -/
 lemma IsHPolyhedral.is_h_polyhedron
   {C : PointedCone R V} (p : V' →ₗ[R] V →ₗ[R] R) (hC : IsHPolyhedral p C) :
@@ -339,6 +335,23 @@ open PointedCone Module in
 lemma IsHPolyhedron.fg (C : PointedCone R V) (hC : C.FG) :
     IsHPolyhedron R (C : Set V) :=
   IsHPolyhedral.is_h_polyhedron _ (IsHPolyhedral.fg C hC)
+
+variable {V' : Type*} [AddCommGroup V'] [Module R V']
+
+open PointedCone in
+/-- An H-polyhedral cone with respect to any pairing is polyhedral: its defining functionals
+are in particular plain linear functionals (`DualFG.id`), so the full dual pairing machinery
+applies. -/
+lemma PointedCone.IsHPolyhedral.isPolyhedral {q : V' →ₗ[R] V →ₗ[R] R} {C : PointedCone R V}
+    (hC : IsHPolyhedral q C) : IsPolyhedral C := by
+  obtain ⟨D, S, hD, rfl⟩ := hC
+  exact .of_dualfg_inf_submodule hD.id S
+
+open PointedCone in
+/-- The dual of an H-polyhedral cone is polyhedral. -/
+theorem PointedCone.IsPolyhedral.of_h_repr (q : V →ₗ[R] V' →ₗ[R] R) {C : PointedCone R V}
+    (h : IsHPolyhedral q.flip C) : IsPolyhedral (PointedCone.dual q C.carrier) :=
+  h.isPolyhedral.dual q
 
 end Field
 
