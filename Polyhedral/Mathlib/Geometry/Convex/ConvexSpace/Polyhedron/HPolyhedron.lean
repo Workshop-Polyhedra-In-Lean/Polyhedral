@@ -9,6 +9,7 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Pointwise
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Polyhedral.Basic
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Dual
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.MinkowskiWeyl
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Module
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Homogenization
 
 /-! This file defines polyhedra as the Minkowski sums polytopes and polyhedral cones. -/
@@ -143,10 +144,37 @@ variable {A : Type*} [AddCommGroup A] [Module R A] [AddTorsor V A] --[space : Co
 
 attribute [local instance] AddTorsor.toConvexSpace
 
-lemma IsConvexSet.halfspace (f : A →ᵃ[R] R) : IsConvexSet R (f ⁻¹' Set.Ici 0) := by
-  apply IsConvexSet.preimage
-  exact f.isAffineMap
-  sorry
+lemma isConvexSet_Iic (b : R) : IsConvexSet R (Set.Iic b) := by
+  classical
+  let := IsModuleConvexSpace.ofAddTorsor (R := R) (V := R)
+  refine IsConvexSet.of_sConvexComb_mem fun w hw => ?_
+  rw [sConvexComb_eq_sum, Finsupp.sum]
+  have hle : ∀ m ∈ w.weights.support, w.weights m • m ≤ w.weights m * b := fun m hm => by
+    rw [smul_eq_mul]
+    exact mul_le_mul_of_nonneg_left (hw hm) (Finsupp.le_def.mp w.nonneg m)
+  refine Set.mem_Iic.mpr (le_trans (Finset.sum_le_sum hle) ?_)
+  rw [← Finset.sum_mul]
+  have htot := w.total
+  rw [Finsupp.sum] at htot
+  rw [htot, one_mul]
+
+lemma isConvexSet_Ici (b : R) : IsConvexSet R (Set.Ici b) := by
+  classical
+  let := IsModuleConvexSpace.ofAddTorsor (R := R) (V := R)
+  refine IsConvexSet.of_sConvexComb_mem fun w hw => ?_
+  rw [sConvexComb_eq_sum, Finsupp.sum]
+  have hle : ∀ m ∈ w.weights.support, w.weights m * b ≤ w.weights m • m := fun m hm => by
+    rw [smul_eq_mul]
+    exact mul_le_mul_of_nonneg_left (hw hm) (Finsupp.le_def.mp w.nonneg m)
+  refine Set.mem_Ici.mpr (le_trans ?_ (Finset.sum_le_sum hle))
+  rw [← Finset.sum_mul]
+  have htot := w.total
+  rw [Finsupp.sum] at htot
+  rw [htot, one_mul]
+
+omit [AddCommGroup A] [Module R A] in
+lemma IsConvexSet.halfspace (f : A →ᵃ[R] R) : IsConvexSet R (f ⁻¹' Set.Ici 0) :=
+  (isConvexSet_Ici 0).preimage f.isAffineMap
 
 #click_suggestions
 /-- An *H*-polyhedron is a convex set -/

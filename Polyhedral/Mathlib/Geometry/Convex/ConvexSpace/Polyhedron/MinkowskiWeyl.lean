@@ -192,6 +192,43 @@ lemma IsHPolyhedron.mem_recessionCone_iff_exists {P : Set A} (hP : IsHPolyhedron
   rw [Convex.Set.mem_recessionCone]
   exact hP.forall_smul_vadd_mem_iff_exists hne
 
+/-- The recession cone of a nonempty polytope is trivial: any nonzero direction admits a
+linear functional positive on it, which is bounded on the convex hull of the finitely many
+generators. -/
+lemma Convexity.IsPolytope.recessionCone_eq_bot {P : Set A} (hP : IsPolytope R P)
+    (hne : P.Nonempty) : P.recessionCone R = ⊥ := by
+  rw [eq_bot_iff]
+  intro v hv
+  rw [Submodule.mem_bot]
+  by_contra hv0
+  obtain ⟨f, hf⟩ : ∃ f : Module.Dual R V, f v ≠ 0 := by
+    by_contra hcon
+    push Not at hcon
+    exact hv0 ((Module.forall_dual_apply_eq_zero_iff R v).mp hcon)
+  obtain ⟨x₀, hx₀⟩ := hne
+  set g : Module.Dual R V := (f v)⁻¹ • f with hg
+  have hgv : g v = 1 := by simp [hg, inv_mul_cancel₀ hf]
+  set h : A →ᵃ[R] R := g.toAffineMap.comp (AffineEquiv.vaddConst R x₀).symm.toAffineMap
+    with hhdef
+  have happ : ∀ y : A, h y = g (y -ᵥ x₀) := fun y => by simp [hhdef]
+  obtain ⟨t, rfl⟩ := hP
+  have hte : t.Nonempty := by
+    rcases Finset.eq_empty_or_nonempty t with rfl | hte
+    · simp at hx₀
+    · exact hte
+  have hbound : ∀ y ∈ Convexity.convexHull R (t : Set A), h y ≤ t.sup' hte h := by
+    intro y hy
+    refine convexHull_min (fun s hs => ?_)
+      ((isConvexSet_Iic (t.sup' hte h)).preimage h.isAffineMap) hy
+    exact Finset.le_sup' h hs
+  have hray : ∀ a : R, 0 ≤ a → a ≤ t.sup' hte h := by
+    intro a ha
+    have hb := hbound _ ((Convex.Set.mem_recessionCone.mp hv) x₀ hx₀ a ha)
+    rwa [happ, vadd_vsub, map_smul, smul_eq_mul, hgv, mul_one] at hb
+  have h0 : (0 : R) ≤ t.sup' hte h := hray 0 le_rfl
+  have := hray (t.sup' hte h + 1) (by linarith)
+  linarith
+
 #click_suggestions
 lemma IsHPolyhedron.recessionCone_isHPolyhedral {P : Set A} (hP : IsHPolyhedron R P) :
     IsHPolyhedral .id (P.recessionCone R) := by
