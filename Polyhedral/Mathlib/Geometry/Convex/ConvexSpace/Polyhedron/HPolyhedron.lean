@@ -237,11 +237,20 @@ open PointedCone in
     simp only [neg_neg, _root_.map_neg, LinearMap.neg_apply, Left.nonneg_neg_iff] at h₂
     have h₂' := h₂ (.inr hi)
     linarith -/
+open PointedCone Module in
+/-- A finitely generated cone is H-polyhedral with respect to the standard dual pairing:
+by Minkowski-Weyl (`FG.exists_dualfg_inf_span`) it is the intersection of a `DualFG` cone
+with its linear span. -/
+lemma PointedCone.IsHPolyhedral.fg (C : PointedCone R V) (hC : C.FG) :
+    IsHPolyhedral (LinearMap.id (R := R) (M := Dual R V)) C := by
+  obtain ⟨D, hD, hDC⟩ :=
+    FG.exists_dualfg_inf_span (LinearMap.id (R := R) (M := Dual R V)) hC
+  exact ⟨D, Submodule.span R (C : Set V), hD, hDC.symm⟩
 
+open PointedCone Module in
+/-- A finitely generated cone is an H-polyhedron. -/
 lemma IsHPolyhedron.fg (C : PointedCone R V) (hC : C.FG) :
-    IsHPolyhedron R (C : Set V) := by
-
-  sorry
-
+    IsHPolyhedron R (C : Set V) :=
+  IsHPolyhedral.is_h_polyhedron _ (IsHPolyhedral.fg C hC)
 
 end Field
