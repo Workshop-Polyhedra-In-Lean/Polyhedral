@@ -58,6 +58,32 @@ lemma ConvexSet.dehomogenize_is_h_polyhedron (C : PointedCone R W)
   simp [PointedCone.dehomogenize, ConvexSet.dehomogenize, Set.mem_preimage,
     PointedCone.mem_dual, Submodule.mem_toAffineSubspace]
 
+/-- Dehomogenizing the sum of a cone embedded at weight zero and the homogenization of a
+convex set yields the pointwise sum. -/
+lemma dehomogenize_map_ofVector_sup_homogenize (C : PointedCone R V) (P : ConvexSet R A) :
+    (PointedCone.dehomogenize A (C.map hom.ofVector ⊔ homogenize W P) : Set A)
+      = (C : Set V) +ᵥ (P : Set A) := by
+  ext x
+  simp only [PointedCone.dehomogenize, ConvexSet.dehomogenize, ConvexSet.mk_eq,
+    Set.mem_preimage]
+  constructor
+  · intro hx
+    obtain ⟨y, hy, z, hz, hyz⟩ := Submodule.mem_sup.mp hx
+    obtain ⟨c, hc, rfl⟩ := PointedCone.mem_map.mp hy
+    have hw : hom.weight z = 1 := by
+      have := congrArg hom.weight hyz
+      simpa [hom.weight_zero, hom.weight_one] using this
+    obtain ⟨r, hr, _, ⟨y', hy', rfl⟩, rfl⟩ :=
+      Set.mem_smul.mp <| smul_pos_of_mem_homogenize hz (by rintro rfl; simp at hw)
+    have hr1 : r = 1 := by simpa [hom.weight_one] using hw
+    refine Set.mem_vadd.mpr ⟨c, hc, y', hy', hom.ofPoint_injective ?_⟩
+    rw [AffineMap.map_vadd]
+    simpa [hr1, vadd_eq_add] using hyz
+  · rintro ⟨c, hc, y, hy, rfl⟩
+    rw [AffineMap.map_vadd, vadd_eq_add]
+    exact Submodule.add_mem_sup (PointedCone.mem_map.mpr ⟨c, hc, rfl⟩)
+      (mem_span_of_mem (Set.mem_image_of_mem _ hy))
+
 -- theorem IsHPolyhedron.homogenize_polyhedral_iff {S : ConvexSet R A} :
 --     IsHPolyhedron R (S : Set A) ↔ (homogenize W S).IsHPolyhedral .id := by
 --   exact ⟨PointedCone.homogenize_is_h_polyhedral S, by simp [dehomogenize_is_h_polyhedron]⟩
@@ -83,10 +109,37 @@ variable {p : V' →ₗ[R] V →ₗ[R] R} [Fact p.SeparatingRight]
 --   · use S
 --     sorry
 
-lemma isHPolyhedral_of_v_polyhedral {C : PointedCone R V} (hC : IsPolyhedral C) :
-    IsHPolyhedral p C := by
-  obtain ⟨gen, h_gen⟩ := hC
-  sorry
+omit [Fact p.SeparatingRight] in
+lemma isHPolyhedral_of_v_polyhedral [Fact (Function.Surjective p)] {C : PointedCone R V}
+    (hC : IsPolyhedral C) : IsHPolyhedral p C := by
+  obtain ⟨D, hD, hDC⟩ := hC.exists_dualfg_inf_span p
+  exact ⟨D, Submodule.span R (C : Set V), hD, hDC.symm⟩
+
+section Homogenize
+
+variable [IsModuleConvexSpace R W]
+variable [hom : Affine.IsHomogenization R A W]
+
+include hom in
+/-- The Minkowski sum of an H-polyhedral cone and a polytope is an H-polyhedron: lift the
+cone to weight zero in the homogenization space, add the homogenization of the polytope,
+and dehomogenize the resulting polyhedral cone. -/
+lemma isHPolyhedron_vadd_of_isHPolyhedral_of_isPolytope {C : PointedCone R V}
+    (hC : IsHPolyhedral .id C) {P : Set A} (hP : IsPolytope R P) :
+    IsHPolyhedron R ((C : Set V) +ᵥ P) := by
+  have hC' : IsPolyhedral C := by
+    obtain ⟨D, S, hD, rfl⟩ := hC
+    exact .of_dualfg_inf_submodule hD S
+  have hpoly : ((C.map hom.ofVector)
+      ⊔ homogenize W (⟨P, hP.isConvexSet⟩ : ConvexSet R A)).IsPolyhedral :=
+    (hC'.map hom.ofVector).sup
+      (.of_fg (IsPolytope.homogenize_fg (C := ⟨P, hP.isConvexSet⟩) hP))
+  have hH := ConvexSet.dehomogenize_is_h_polyhedron (A := A) _
+    (isHPolyhedral_of_v_polyhedral hpoly)
+  rw [dehomogenize_map_ofVector_sup_homogenize] at hH
+  simpa using hH
+
+end Homogenize
 
 /- Minkowski-Weyl for polyhedra -/
 open Convex
@@ -219,10 +272,14 @@ lemma IsHPolyhedron.vadd {P : Set V} (hP : IsHPolyhedron R P) {Q : Set A}
     IsHPolyhedron R (P +ᵥ Q) := by
   sorry
 
+/-- `V → H` direction of the Minkowski-Weyl theorem for polyhedra: the Minkowski sum of an
+H-polyhedral cone and a polytope is an H-polyhedron. -/
 lemma isHPolyhedron_of_isVPolyhedron {P : Set A} (hP : IsPolytope R P)
     {C : PointedCone R V} (hC : IsHPolyhedral .id C) :
     IsHPolyhedron R ((C : Set V) +ᵥ P) := by
-  sorry
+  let W := CanonicalHomogenization R A
+  let := IsModuleConvexSpace.ofAddTorsor (R := R) (V := W)
+  exact isHPolyhedron_vadd_of_isHPolyhedral_of_isPolytope (W := W) hC hP
 
 end Field
 end Homogenization
