@@ -24,10 +24,6 @@ def IsAffineIndependentFinset (t : Finset X) : Prop :=
 def IsSimplex (s : Set X) : Prop :=
   ∃ t : Finset X, IsAffineIndependentFinset (R := R) t ∧ s = convexHull R t
 
-/-- A nondegenerate line segment is the convex hull of two distinct points. -/
-def IsLineSegment (s : Set X) : Prop :=
-  ∃ a b, a ≠ b ∧ s = convexHull R {a, b}
-
 /-- Every simplex is a polytope. -/
 lemma IsSimplex.isPolytope {s : Set X} (hs : IsSimplex (R := R) s) : IsPolytope R s :=
   hs.imp fun _ ht ↦ ht.2
