@@ -16,7 +16,6 @@ def IsAffineIndependent (p : ι → X) : Prop :=
   Function.Injective (fun w : StdSimplex R ι ↦ w.iConvexComb p)
 
 /-- A finite set is affinely independent if its subtype inclusion is affinely independent. -/
-variable (R) in
 def IsAffineIndependentFinset (t : Finset X) : Prop :=
   IsAffineIndependent (R := R) ((↑) : t → X)
 
