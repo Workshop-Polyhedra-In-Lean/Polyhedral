@@ -48,7 +48,7 @@ def IsHPolyhedral (p : V' →ₗ[R] V →ₗ[R] R) (P : PointedCone R V) : Prop 
     ∃C : PointedCone R V, ∃S : Submodule R V, C.DualFG p ∧ P = C ⊓ S
 
 #click_suggestions
-theorem IsHPolyhedral.of_v_repr (p : V →ₗ[R] W →ₗ[R] R) {C : PointedCone R V}
+theorem IsHPolyhedral.of_v_repr (p : V →ₗ[R] V' →ₗ[R] R) {C : PointedCone R V}
     (h : IsPolyhedral C) : IsHPolyhedral p (PointedCone.dual p C.carrier) := by
   classical
   unfold IsPolyhedral at h
@@ -84,7 +84,7 @@ theorem IsHPolyhedral.of_v_repr (p : V →ₗ[R] W →ₗ[R] R) {C : PointedCone
         simp [hx₂ hv]
 
 
-theorem IsPolyhedral.of_h_repr (p : V →ₗ[R] W →ₗ[R] R) {C : PointedCone R V}
+theorem IsPolyhedral.of_h_repr (p : V →ₗ[R] V' →ₗ[R] R) {C : PointedCone R V}
     (h : IsHPolyhedral p.flip C) : IsPolyhedral (PointedCone.dual p C.carrier) := by
   sorry
 
