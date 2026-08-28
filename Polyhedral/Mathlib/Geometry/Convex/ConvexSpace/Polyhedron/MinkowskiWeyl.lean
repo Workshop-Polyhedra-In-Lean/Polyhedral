@@ -42,11 +42,19 @@ lemma PointedCone.homogenize_is_h_polyhedral (S : ConvexSet R A)
     PointedCone.IsHPolyhedral .id (homogenize W S) := by
   sorry
 
-/-- The dehomogenization of an H-polyhedral cone is an H-polyhedron. -/
+/-- The dehomogenization of an H-polyhedral cone is an H-polyhedron: each functional `f`
+cutting out the cone descends to the affine map `f ∘ ofPoint`, and the submodule pulls back
+to an affine subspace. -/
 lemma ConvexSet.dehomogenize_is_h_polyhedron (C : PointedCone R W)
     (hC : IsHPolyhedral .id C) :
     IsHPolyhedron R (PointedCone.dehomogenize A C : Set A) := by
-  sorry
+  classical
+  obtain ⟨D, S, ⟨G, rfl⟩, rfl⟩ := hC
+  refine ⟨G.image fun f => f.toAffineMap.comp hom.ofPoint,
+    S.toAffineSubspace.comap hom.ofPoint, ?_⟩
+  ext x
+  simp [PointedCone.dehomogenize, ConvexSet.dehomogenize, Set.mem_preimage,
+    PointedCone.mem_dual, Submodule.mem_toAffineSubspace]
 
 -- theorem IsHPolyhedron.homogenize_polyhedral_iff {S : ConvexSet R A} :
 --     IsHPolyhedron R (S : Set A) ↔ (homogenize W S).IsHPolyhedral .id := by
