@@ -11,7 +11,8 @@ noncomputable section
 
 namespace Convexity
 
-variable {R X Y V A : Type*}
+variable {R X Y V A ι : Type*}
+
 
 open ConvexSpace
 
@@ -20,39 +21,18 @@ section Semiring
 variable [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [ConvexSpace R X]
 
-variable (R) in
-def ConvexSpace.IsAffineIndependent (t : Set X) : Prop :=
-  Function.Injective (sConvexComb ∘ StdSimplex.map (Subtype.val) : StdSimplex R t → X)
 
-variable (R) in
-def IsSimplex (s : Set X) := ∃ t : Finset X, IsAffineIndependent R (t : Set X) ∧ s = convexHull R t
+def IsAffineIndependent (p : ι → X) : Prop :=
+  Function.Injective (fun w : StdSimplex R ι ↦ iConvexComb w p)
 
-variable (R) in
+def IsAffineIndependentFinSet (t : Finset X) : Prop :=
+  IsAffineIndependent (R := R) ((↑) : t → X)
+
+def IsSimplex (s : Set X) := ∃ t : Finset X, IsAffineIndependentFinSet (R := R) t
+                             ∧ convexHull R t = s
+
 def IsLineSegment (s : Set X) := ∃ a, ∃ b≠a, s = convexHull R {a, b}
 
 end Semiring
-
-section Ring
-
-variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
-variable [AddCommGroup V] [Module R V] [AddTorsor V A]
-variable [ConvexSpace R V] [IsModuleConvexSpace R V]
-variable [ConvexSpace R A] [IsAffineConvexSpace R V A]
-
-variable (V) in
-lemma IsAffineIndependent_pair (a b : A) :
-    IsAffineIndependent R {a, b} := by
-  intro w₁ w₂ h
-  simp at h
-  rw [IsAffineConvexSpace.sConvexComb_eq_convexComb (V:=V)] at h
-
-
-
-lemma LineSegmentIsSimplex (s : Set A) (h : IsLineSegment R s) : IsSimplex R s := by
-  obtain ⟨a, b, hab, rfl⟩ := h
-  use ⟨{a, b}, by simpa using hab.symm⟩
-  simp
-
-end Ring
 
 end Convexity
