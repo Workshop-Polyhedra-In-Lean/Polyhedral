@@ -32,15 +32,6 @@ noncomputable def finrank (s : Set A) := Module.finrank R (affineSpan R s).direc
 lemma finrank_empty [Nontrivial R] : finrank R (A := A) ∅ = 0 := by
   rw [finrank, AffineSubspace.span_empty, AffineSubspace.direction_bot, finrank_bot R V]
 
-/-
-lemma finrank_empty : finrank R (A := A) ∅ = 0 := by
-  rw [finrank, AffineSubspace.span_empty, AffineSubspace.direction_bot]
-  rcases subsingleton_or_nontrivial R with hTrivial | hNontrivial
-  · simp -- False
-    sorry
-  · exact finrank_bot R V
--/
-
 end Ring
 
 end Affine
