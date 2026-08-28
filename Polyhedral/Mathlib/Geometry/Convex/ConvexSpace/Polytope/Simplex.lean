@@ -1,4 +1,5 @@
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
+import Mathlib
 
 namespace Convexity
 
@@ -30,6 +31,24 @@ def IsLineSegment (s : Set X) : Prop :=
 /-- Every simplex is a polytope. -/
 lemma IsSimplex.isPolytope {s : Set X} (hs : IsSimplex (R := R) s) : IsPolytope R s :=
   hs.imp fun _ ht ↦ ht.2
+
+lemma IsLineSegment.isPolytope {s : Set X} (hs : IsLineSegment (R := R) s) : IsPolytope R s := by
+  obtain ⟨a, b, hab, rfl⟩ := hs
+  exact IsPolytope.convexHull_finite R (by simp)
+
+variable (R) in
+def UnitCube (n : ℕ) := Set.pi ⊤ (fun (_ : Fin n) => convexHull R {(0 : R), (1 : R)})
+
+lemma UnitCube_IsPolytope (n : ℕ) : IsPolytope R (UnitCube R n) := by
+  let t := Set.pi ⊤ (fun (_ : Fin n) => {(0 : R), (1 : R)})
+  have : UnitCube R n = convexHull R t := by
+    sorry
+  rw [this]
+  refine IsPolytope.convexHull_finite R ?_
+  refine Set.Finite.pi fun i => ?_
+  simp only [Set.finite_insert, Set.finite_singleton]
+
+
 
 end Semiring
 
