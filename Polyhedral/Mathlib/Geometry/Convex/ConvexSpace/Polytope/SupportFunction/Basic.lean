@@ -76,8 +76,6 @@ instance : FunLike (ConvexSpace.dual R V) V R where
 
 end
 
-variable {R V : Type*} [Semiring R] [PartialOrder R] [AddCommMonoid V] [Module R V]
-
 -- S convex set; take supremum instead of scalar product
 -- support function for a convex set (in a convex space, with a total order on the ring)
 -- why do we need a total order? do we now the sup is the max??
@@ -183,15 +181,16 @@ lemma supportFunctionAffine_of_nonempty_of_not_exists_isLUB
     supportFunctionAffine R P φ = ⊤ := by
   simp [supportFunctionAffine, hP, hP']
 
--- supportFunction of singleton
+@[simp]
 lemma supportFunctionAffine_singleton' {v : V} {φ : ConvexSpace.dual R V} :
     supportFunctionAffine R {v} φ = φ v := by
   rw [supportFunctionAffine_of_nonempty_of_isLUB (by simp)]
   simp
 
+@[simp]
 lemma supportFunctionAffine_singleton {v : V} : supportFunctionAffine R {v} = fun φ ↦ φ v := by
   ext φ
-  rw [supportFunctionAffine_singleton']
+  simp
 
 /-
 Then, redefine the linear support function as the restriction of the affine one to the module dual.
@@ -200,6 +199,36 @@ Scalar multiplication, Minkowski sum etc. will still be true under restriction.
 -/
 
 end
+
+section
+
+variable {R V : Type*} [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
+  [AddCommMonoid V] [Module R V]
+
+/-- An `R`-module is a convex space. -/
+instance : Convexity.ConvexSpace R V := sorry -- is this in mathlib already?
+
+end
+
+-- TODO: old variables were the following. are we losing any generality by specialising?
+-- variable {R V : Type*} [Semiring R] [PartialOrder R] [AddCommMonoid V] [Module R V]
+variable {R V : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
+  [AddCommMonoid V] [Module R V]
+
+/-- If `φ : V → R` is a convex map on an `R`-module `V`, it is affine. -/
+-- xxx: does this lemma hold for more general targets?
+-- (if so, state that version using IsAffineMap)
+-- TODO: how to state the conclusion in Lean?
+lemma howtostate (φ : ConvexSpace.dual R V) : True := sorry
+
+-- special case: convex dual maps which preserve the origin are actually in the dual
+-- TODO: find a better name!
+def bar (φ : ConvexSpace.dual R V) (hφ : φ 0 = 0) : Module.Dual R V := sorry
+
+-- lemma: in particular, the Module dual space consists of convex maps
+-- xxx: should this map come with more structure?
+-- TODO: find a better name!
+def iota (φ : Module.Dual R V) : ConvexSpace.dual R V := sorry
 
 /-
 The support function of a set `P ⊆ V`, inside an `R`-module `V`.
@@ -211,16 +240,18 @@ Otherwise, we return a supremum of `φ '' P` (which is unique because `R` has a 
 -/
 variable (R) in
 noncomputable
-def supportFunction (P : Set V) :
-    Module.Dual R V → WithBotTop R :=
-  fun φ ↦ by
-  by_cases hP : P.Nonempty
-  · letI S := φ '' P
-    by_cases hS' : ∃ x, IsLUB S x
-    · exact WithBotTop.coe  hS'.choose
-    · -- Note that we choose `⊤` as junk value if S is not bounded above.
-      exact ⊤
-  · exact ⊥
+def supportFunction (P : Set V) : Module.Dual R V → WithBotTop R :=
+  fun φ ↦ supportFunctionAffine R P (iota φ)
+  -- by_cases hP : P.Nonempty
+  -- · letI S := φ '' P
+  --   by_cases hS' : ∃ x, IsLUB S x
+  --   · exact WithBotTop.coe  hS'.choose
+  --   · -- Note that we choose `⊤` as junk value if S is not bounded above.
+  --     exact ⊤
+  -- · exact ⊥
+
+variable {R V : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
+  [AddCommMonoid V] [Module R V]
 
 @[simp]
 lemma supportFunction_empty : supportFunction R (∅ : Set V) = ⊥ := by
@@ -233,10 +264,12 @@ lemma supportFunction_of_nonempty_of_isLUB
     {P : Set V} (hP : P.Nonempty) {φ : Module.Dual R V}
     {r : R} (hr : IsLUB (φ '' P) r) :
     supportFunction R P φ = r := by
-  have aux : ∃ x, IsLUB (⇑φ '' P) x := by use r
-  simp [supportFunction, hP, aux, aux.choose_spec.unique hr]
+  replace hr : IsLUB (⇑(iota φ) '' P) r := by
+    sorry -- TODO: deduce this from `hr`
+  have aux : ∃ (x : R), IsLUB ((iota φ) '' P) x := by use r
+  simp [supportFunction, supportFunctionAffine, hP, aux, aux.choose_spec.unique hr]
 
--- supportFunction of singleton
+@[simp]
 lemma supportFunction_singleton' {v : V} {φ : Module.Dual R V} : supportFunction R {v} φ = φ v := by
   rw [supportFunction_of_nonempty_of_isLUB (by simp)]
   simp
@@ -253,7 +286,7 @@ lemma supportFunction_of_nonempty_of_bddAbove {P : Set V} (hP : P.Nonempty) {φ 
       if hS : ∃ x, IsLUB (⇑φ '' P) x then WithBotTop.coe hS.choose else ⊤
     := by
   unfold supportFunction
-  rw [dite_eq_left hP]
+  sorry
 
 /- TODO: we want more specialized versions of this lemma instead
 open scoped Classical in
