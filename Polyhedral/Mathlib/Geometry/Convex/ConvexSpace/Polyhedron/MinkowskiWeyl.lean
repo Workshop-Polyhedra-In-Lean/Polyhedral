@@ -39,7 +39,6 @@ variable [hom : Affine.IsHomogenization R A V]
 lemma PointedCone.homogenize_is_h_polyhedral
   (p : W →ₗ[R] V →ₗ[R] R) (S : ConvexSet R A) (hS : IsHPolyhedron R S.carrier) :
     PointedCone.IsHPolyhedral p (homogenize V S) := by
-
   sorry
 
 /-- The dehomogenization of a polyhedral cone is a polyhedron -/

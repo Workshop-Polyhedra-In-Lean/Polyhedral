@@ -47,6 +47,47 @@ TODO: prove
 def IsHPolyhedral (p : W →ₗ[R] V →ₗ[R] R) (P : PointedCone R V) : Prop :=
     ∃C : PointedCone R V, ∃S : Submodule R V, C.DualFG p ∧ P = C ⊓ S
 
+#click_suggestions
+theorem IsHPolyhedral.of_v_repr (p : V →ₗ[R] W →ₗ[R] R) {C : PointedCone R V}
+    (h : IsPolyhedral C) : IsHPolyhedral p (PointedCone.dual p C.carrier) := by
+  classical
+  unfold IsPolyhedral at h
+  obtain ⟨D, ⟨hDFG, ⟨S, rfl⟩⟩⟩ := h
+  unfold IsHPolyhedral
+  use PointedCone.dual p D
+  use Submodule.dual p S
+  constructor
+  · exact FG.dual_dualfg p hDFG
+  · -- rw [← Min.max_oppositeMax]
+    rw [← coe_dual]
+    -- rw [← dual_hull]
+    ext x
+    constructor
+    · intro hx
+      simp [dual] at hx
+      constructor
+      · intro v hv
+        simpa using hx v hv 0 (Submodule.zero_mem S)
+      · intro v hv
+        simpa using hx 0 (Submodule.zero_mem D) v hv
+    · intro hx
+      simp only [Submodule.carrier_eq_coe, dual_sup, Submodule.coe_restrictScalars, mem_dual,
+        mem_union, SetLike.mem_coe]
+      intro v hv
+      simp only [dual_eq_submodule_dual, Submodule.mem_inf, mem_dual, SetLike.mem_coe,
+        Submodule.restrictScalars_mem, Submodule.mem_dual] at hx
+      obtain ⟨hx₁, hx₂⟩ := hx
+      apply Or.by_cases hv
+      · intro hv
+        exact hx₁ hv
+      · intro hv
+        simp [hx₂ hv]
+
+
+theorem IsPolyhedral.of_h_repr (p : V →ₗ[R] W →ₗ[R] R) {C : PointedCone R V}
+    (h : IsHPolyhedral p.flip C) : IsPolyhedral (PointedCone.dual p C.carrier) := by
+  sorry
+
 /-- A polyhedral cone is a polyhedron -/
 lemma IsHPolyhedral.is_h_polyhedron
   {C : PointedCone R V} (p : W →ₗ[R] V →ₗ[R] R) (hC : IsHPolyhedral p C) :
