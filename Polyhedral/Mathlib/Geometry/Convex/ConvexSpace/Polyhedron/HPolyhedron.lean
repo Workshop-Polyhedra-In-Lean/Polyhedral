@@ -172,38 +172,48 @@ omit [AddCommGroup A] [Module R A] in
 lemma IsConvexSet.halfspace (f : A →ᵃ[R] R) : IsConvexSet R (f ⁻¹' Set.Ici 0) :=
   (isConvexSet_Ici 0).preimage f.isAffineMap
 
-#click_suggestions
-/-- An *H*-polyhedron is a convex set -/
--- TODO: Prove this using convexity of intersections, preimages and affine subspaces
--- lemma IsConvexSet.h_polyhedron {P : Set A} (hP : IsHPolyhedron R P) : IsConvexSet R P := by
---   classical
---   obtain ⟨C', ⟨S, ⟨⟨H, hH⟩, hInter⟩⟩⟩ := hP
-
---   apply IsConvexSet.inter
---   · have Cf := C'.image (·.toFun ⁻¹' Set.Ici 0)
---     have h := IsConvexSet.sInter (show ∀ s ∈ Cf, IsConvexSet R s by
-
---       sorry
---     )
---     intro s
-
---     sorry
---   · sorry
-
---   apply IsConvexSet.of_convexCombPair_mem
---   intro a b ha hb hab x hx y hy
---   unfold convexCombPair sConvexComb AddTorsor.toConvexSpace AddTorsor.convexCombination Finset.affineCombination
---   simp
---   -- rw [show (Finsupp.single x a + Finsupp.single y b).support = {x, y} by
---   --   rw [Finsupp.support_add_eq, Finsupp.support_single, Finsupp.support_single]
---   --   simp
---   --   ]
---   sorry
-
-def IsHPolyhedron.toConvexSet {P : Set A} (hP : IsHPolyhedron R P) : ConvexSet R A :=
-    sorry --⟨P, IsConvexSet.h_polyhedron hP⟩
-
 end ConvexSet
+
+section ConvexityOfHPolyhedra
+
+open Convexity
+
+variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+variable {V : Type*} [AddCommGroup V] [Module R V]
+variable {A : Type*} [AddTorsor V A]
+
+attribute [local instance] AddTorsor.toConvexSpace
+
+/-- Affine subspaces are convex. -/
+lemma AffineSubspace.isConvexSet (T : AffineSubspace R A) : IsConvexSet R (T : Set A) := by
+  rcases (T : Set A).eq_empty_or_nonempty with he | ⟨x₀, hx₀⟩
+  · rw [he]
+    exact IsConvexSet.empty
+  · let := IsModuleConvexSpace.ofAddTorsor (R := R) (V := V)
+    have hT : (T : Set A)
+        = ((AffineEquiv.vaddConst R x₀).symm.toAffineMap : A →ᵃ[R] V) ⁻¹' T.direction := by
+      ext y
+      simp only [Set.mem_preimage, AffineEquiv.coe_toAffineMap,
+        AffineEquiv.vaddConst_symm_apply, SetLike.mem_coe]
+      exact (AffineSubspace.vsub_right_mem_direction_iff_mem hx₀ y).symm
+    rw [hT]
+    exact T.direction.isConvexSet.preimage (AffineMap.isAffineMap _)
+
+/-- H-polyhedra are convex. -/
+lemma IsHPolyhedron.isConvexSet {P : Set A} (hP : IsHPolyhedron R P) : IsConvexSet R P := by
+  obtain ⟨H, T, rfl⟩ := hP
+  refine IsConvexSet.inter ?_ (AffineSubspace.isConvexSet T)
+  rw [show (⋂ h ∈ H, ⇑h ⁻¹' Set.Ici (0 : R))
+      = ⋂₀ ((fun h : A →ᵃ[R] R => ⇑h ⁻¹' Set.Ici (0 : R)) '' ↑H) by simp [Set.sInter_image]]
+  refine IsConvexSet.sInter ?_
+  rintro s ⟨h, -, rfl⟩
+  exact IsConvexSet.halfspace h
+
+/-- An H-polyhedron, bundled as a convex set. -/
+def IsHPolyhedron.toConvexSet {P : Set A} (hP : IsHPolyhedron R P) : ConvexSet R A :=
+  ⟨P, hP.isConvexSet⟩
+
+end ConvexityOfHPolyhedra
 
 section PartialOrder
 omit [IsOrderedRing R]
