@@ -1,4 +1,3 @@
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.Face.Grade
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Module
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
@@ -21,15 +20,21 @@ section Semiring
 variable [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [ConvexSpace R X]
 
-
+variable (R) in
 def IsAffineIndependent (p : ι → X) : Prop :=
   Function.Injective (fun w : StdSimplex R ι ↦ iConvexComb w p)
 
+variable (R) in
 def IsAffineIndependentFinSet (t : Finset X) : Prop :=
   IsAffineIndependent (R := R) ((↑) : t → X)
 
+variable (R) in
 def IsSimplex (s : Set X) := ∃ t : Finset X, IsAffineIndependentFinSet (R := R) t
-                             ∧ convexHull R t = s
+                             ∧ s = convexHull R t
+
+lemma IsSimplex_isPolytope {s : Set X} (hs : IsSimplex R s) : IsPolytope R s := by
+  obtain ⟨t, ht⟩ := hs
+  exact ⟨t, ht.2⟩
 
 def IsLineSegment (s : Set X) := ∃ a, ∃ b≠a, s = convexHull R {a, b}
 
