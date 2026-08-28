@@ -31,23 +31,6 @@ variable {A : Type*} [AddTorsor V A]
 
 
 attribute [local instance] AddTorsor.toConvexSpace
-variable [IsModuleConvexSpace R V]
-
-variable [hom : Affine.IsHomogenization R A V]
-
--- TODO: `ConvexSet` should be `SetLike` to avoid manual coercion
-
-
-
-/-- The homogenization of a polyhedron is a polyhedral cone -/
-lemma PointedCone.homogenize_is_h_polyhedral
-  (p : W →ₗ[R] V →ₗ[R] R) (S : ConvexSet R A) (hS : IsHPolyhedron R S.carrier) :
-    PointedCone.IsHPolyhedral p (homogenize V S) := by
-  sorry
-
-/-- The dehomogenization of a polyhedral cone is a polyhedron -/
-lemma ConvexSet.dehomogenize_is_h_polyhedron
-  (p : W →ₗ[R] V →ₗ[R] R) (C : PointedCone R V) (hC : IsHPolyhedral p C) :
 
 section Homogenize
 
@@ -191,6 +174,16 @@ lemma IsHPolyhedron.mem_recessionCone_iff_exists {P : Set A} (hP : IsHPolyhedron
     v ∈ P.recessionCone R ↔ ∃ x ∈ P, ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P := by
   rw [Convex.Set.mem_recessionCone]
   exact hP.forall_smul_vadd_mem_iff_exists hne
+
+/-- Translating a set along its recession cone leaves it unchanged. -/
+lemma Convex.Set.recessionCone_vadd_self {P : Set A} :
+    (P.recessionCone R : Set V) +ᵥ P = P := by
+  ext x
+  constructor
+  · rintro ⟨v, hv, y, hy, rfl⟩
+    simpa using (Convex.Set.mem_recessionCone.mp hv) y hy 1 zero_le_one
+  · intro hx
+    exact ⟨0, (P.recessionCone R).zero_mem, x, hx, zero_vadd _ _⟩
 
 /-- The recession cone of a nonempty polytope is trivial: any nonzero direction admits a
 linear functional positive on it, which is bounded on the convex hull of the finitely many
@@ -445,6 +438,12 @@ theorem PointedCone.homogenize_sup_recessionCone_is_h_polyhedral (S : ConvexSet 
         rw [hom.ofVector_range_eq_weight_ker]
         exact hw
       exact LinearMap.mem_range.mp hrange
+
+/-- Dehomogenizing the homogenization-with-recession-cone of a convex set recovers the set. -/
+lemma dehomogenize_homogenize_sup_recessionCone (S : ConvexSet R A) :
+    (PointedCone.dehomogenize A
+      (homogenize W S ⊔ ((S : Set A).recessionCone R).map hom.ofVector) : Set A) = S := by
+  rw [sup_comm, dehomogenize_map_ofVector_sup_homogenize, Convex.Set.recessionCone_vadd_self]
 
 end Homogenize
 

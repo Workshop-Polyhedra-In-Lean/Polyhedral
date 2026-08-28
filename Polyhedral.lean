@@ -43,6 +43,7 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Module
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.Lattice
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.MinkowskiWeyl
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Face
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
