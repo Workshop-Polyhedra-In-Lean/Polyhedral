@@ -1,11 +1,4 @@
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.Face.Grade
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Module
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Homogenization
-import Mathlib.Geometry.Convex.ConvexSpace.AffineSpace
-
-noncomputable section
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
 
 namespace Convexity
 
@@ -13,11 +6,20 @@ section Semiring
 
 variable {R X : Type*}
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
-variable [ConvexSpace R X] [AddCommMonoid X]
+variable [ConvexSpace R X]
 
 open scoped Pointwise
 
 def IsLineSegment (s : Set X) := ∃ a, ∃ b≠a, s = convexHull R {a, b}
+
+lemma IsLineSegment.isPolytope {s : Set X}
+    (hs : IsLineSegment (R := R) s) : IsPolytope R s := by
+  classical
+  rcases hs with ⟨a, b, _, rfl⟩
+  exact ⟨{a, b}, by simp⟩
+
+section AddCommMonoid
+variable [AddCommMonoid X]
 
 def isZonotope (s : Set X) := ∃ segs : Multiset (Set X),
   (∀ seg ∈ segs, IsLineSegment (R := R) (seg)) ∧ (segs.sum = s)
@@ -38,6 +40,7 @@ lemma UnitCube_IsPolytope (n : ℕ) : IsPolytope R (UnitCube R n) := by
   exact ht ▸ IsPolytope.convexHull_finite R hfinite
 
 
+end AddCommMonoid
 end Semiring
 
 end Convexity
