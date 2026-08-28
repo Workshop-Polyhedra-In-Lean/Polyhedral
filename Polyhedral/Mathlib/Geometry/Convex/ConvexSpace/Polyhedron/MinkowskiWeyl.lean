@@ -181,6 +181,17 @@ def Convex.Set.recessionCone (P : Set A) : PointedCone R V where
     rw [smul_smul]
     exact h y hy (a * c) (show 0 ≤ a * c by exact Right.mul_nonneg ha hc)
 
+lemma Convex.Set.mem_recessionCone {P : Set A} {v : V} :
+    v ∈ P.recessionCone R ↔ ∀ x ∈ P, ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P := Iff.rfl
+
+/-- For a nonempty H-polyhedron, membership in the recession cone can be tested at a single
+point: a direction recedes from every point as soon as it recedes from one. -/
+lemma IsHPolyhedron.mem_recessionCone_iff_exists {P : Set A} (hP : IsHPolyhedron R P)
+    (hne : P.Nonempty) {v : V} :
+    v ∈ P.recessionCone R ↔ ∃ x ∈ P, ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P := by
+  rw [Convex.Set.mem_recessionCone]
+  exact hP.forall_smul_vadd_mem_iff_exists hne
+
 #click_suggestions
 lemma IsHPolyhedron.recessionCone_isHPolyhedral {P : Set A} (hP : IsHPolyhedron R P) :
     IsHPolyhedral .id (P.recessionCone R) := by
