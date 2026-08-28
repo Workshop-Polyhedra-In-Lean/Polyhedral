@@ -9,7 +9,9 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Pointwise
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Polyhedral.Basic
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Dual
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.MinkowskiWeyl
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Module
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Homogenization
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.HPolyhedron
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.Basic
 
@@ -204,11 +206,13 @@ lemma isVPolyhedron_of_isHPolyhedron (H : Set A) (hH : IsHPolyhedron R H) :
 For every finite *V-polytope* + *rays* + *submodule*,
 there exists a finite set of inequalities that describe it.
 -/
-lemma isHPolyhedron_of_isPolytope
-  {P : Set A} (hP : IsPolytope R P) :
+lemma isHPolyhedron_of_isPolytope {P : Set A} (hP : IsPolytope R P) :
     IsHPolyhedron R P := by
-
-  sorry
+  let W := CanonicalHomogenization R A
+  let := IsModuleConvexSpace.ofAddTorsor (R := R) (V := W)
+  have h := ConvexSet.dehomogenize_is_h_polyhedron (A := A) _
+    (IsHPolyhedral.fg _ (IsPolytope.homogenize_fg (W := W) (C := ⟨P, hP.isConvexSet⟩) hP))
+  simpa [PointedCone.dehomogenize] using h
 
 lemma IsHPolyhedron.vadd {P : Set V} (hP : IsHPolyhedron R P) {Q : Set A}
     (hQ : IsHPolyhedron R Q) :
