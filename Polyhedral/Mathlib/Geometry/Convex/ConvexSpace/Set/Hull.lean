@@ -20,20 +20,17 @@ convex set containing `s`. In order theory speak, this is a closure operator.
 public section
 
 open Set
-
 namespace Convexity
-
-variable {R X Y : Type*} [Semiring R] [PartialOrder R] [IsStrictOrderedRing R] [ConvexSpace R X]
-  [ConvexSpace R Y] {C s t : Set X} {x y : X}
-
 section Pointwise
 
 open Pointwise
 
-variable {R V A : Type*}
+variable {R V A X Y : Type*}
 
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
+variable [ConvexSpace R X]
+variable [ConvexSpace R Y]
 
 @[simp] lemma convexHull_neg (s : Set V) : -convexHull R s = convexHull R (-s) := by
   ext x
@@ -42,13 +39,45 @@ variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R 
   · exact neg_mem_neg.mp <| h (-t) (neg_subset.mp hst) hcvx.neg
   · exact mem_neg.mp <| h (-t) (neg_subset_neg.mpr hst) hcvx.neg
 
-variable [AddTorsor V A]
+variable [AddTorsor V A] [ConvexSpace R A] [IsAffineConvexSpace R V A]
 
-noncomputable local instance : ConvexSpace R A := AddTorsor.toConvexSpace
+lemma convexHull_prod (s : Set X) (t : Set Y) :
+  convexHull R (s ×ˢ t) = (convexHull R s) ×ˢ (convexHull R t) := by
+  apply Set.Subset.antisymm
+  · refine convexHull_min
+      (prod_mono subset_convexHull_self subset_convexHull_self) ?_
+    exact IsConvexSet.convexHull.prod IsConvexSet.convexHull
+  · rintro ⟨x, y⟩ ⟨hx, hy⟩
+    let ιX (y₀ : Y) := fun x₀ : X ↦ (x₀, y₀)
+    have hX (y₀ : Y) : IsAffineMap R (ιX y₀) := by
+      constructor
+      intro w
+      ext <;> simp [ιX]
+    let ιY (x₀ : X) := fun y₀ : Y ↦ (x₀, y₀)
+    have hY (x₀ : X) : IsAffineMap R (ιY x₀) := by
+      constructor
+      intro w
+      ext <;> simp [ιY]
+    have hx_prod (y₀ : Y) (hy₀ : y₀ ∈ t) :
+        (x, y₀) ∈ convexHull R (s ×ˢ t) := by
+      refine convexHull_mono (s := (ιX y₀) '' s) ?_ ?_
+      · rintro _ ⟨x₀, hx₀, rfl⟩
+        exact ⟨hx₀, hy₀⟩
+      · rw [← (hX y₀).image_convexHull s]
+        exact ⟨x, hx, rfl⟩
+    rw [← IsConvexSet.convexHull.convexHull_eq_self]
+    refine convexHull_mono (s := (ιY x) '' t) ?_ ?_
+    · rintro _ ⟨y', hy', rfl⟩
+      exact hx_prod y' hy'
+    · rw [← (hY x).image_convexHull t]
+      exact ⟨y, hy, rfl⟩
 
 lemma convexHull_vadd (s₁ : Set V) (s₂ : Set A) :
     convexHull R (s₁ +ᵥ s₂) = convexHull R s₁ +ᵥ convexHull R s₂ := by
-  sorry
+  rw [← vadd_image_prod, ← vadd_image_prod]
+  rw [← IsAffineMap.image_convexHull]
+  · rw [convexHull_prod]
+  · fun_prop
 
 end Pointwise
 

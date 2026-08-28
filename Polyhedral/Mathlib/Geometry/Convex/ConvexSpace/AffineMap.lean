@@ -75,8 +75,12 @@ variable [ConvexSpace R V₂] [IsModuleConvexSpace R V₂]
 
 variable (f : V₁ →ₗ[R] V₂)
 
--- TODO: This must hold. But currently the obvious proof fails due to some instance diamonds
-lemma isAffineMap (f : V₁ →ₗ[R] V₂) : IsAffineMap R f := sorry -- f.toAffineMap.isAffineMap
+lemma isAffineMap (f : V₁ →ₗ[R] V₂) : IsAffineMap R f := by
+  constructor
+  intro s
+  rw [← iConvexComb_id s, sConvexComb_map, iConvexComb_eq_sum, iConvexComb_eq_sum]
+  rw [map_finsuppSum]
+  simp
 
 @[simp] lemma map_sConvexComb (w : StdSimplex R V₁) :
     f (sConvexComb w) = sConvexComb (w.map f) := f.isAffineMap.map_sConvexComb w

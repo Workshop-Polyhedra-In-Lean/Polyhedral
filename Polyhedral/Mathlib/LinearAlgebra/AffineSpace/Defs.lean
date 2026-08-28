@@ -6,6 +6,7 @@ Authors: Martin Winter
 
 import Mathlib.LinearAlgebra.AffineSpace.AffineSubspace.Defs
 import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+import Mathlib.LinearAlgebra.Dimension.Finite
 
 /-! This file proves results about affine spans. -/
 
@@ -28,10 +29,8 @@ noncomputable def rank (s : Set A) := Module.rank R (affineSpan R s).direction
 
 noncomputable def finrank (s : Set A) := Module.finrank R (affineSpan R s).direction
 
-lemma finrank_empty : finrank R (A := A) ∅ = 0 := by
-  simp [finrank, affineSpan, AffineSubspace.direction]
-  have : vectorSpan R (spanPoints R ∅ : Set V) = ⊥ := sorry
-  sorry
+lemma finrank_empty [Nontrivial R] : finrank R (A := A) ∅ = 0 := by
+  rw [finrank, AffineSubspace.span_empty, AffineSubspace.direction_bot, finrank_bot R V]
 
 end Ring
 

@@ -6,7 +6,7 @@ Authors: Olivia Röhrig, Martin Winter
 
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Rank
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Face.Lattice
-
+import Mathlib.Order.CompleteSublattice
 /-!
 ## Rank of Faces
 
@@ -34,13 +34,7 @@ variable {M : Type*} [AddCommGroup M] [Module R M] [Module.IsTorsionFree R M]
 variable {C : PointedCone R M}
 
 lemma bot_iff_rank_zero {F : Face C} (hC : C.Salient) : F.rank = 0 ↔ F = ⊥ := by
-  have hEq : ((F : PointedCone R M) = (⊥ : PointedCone R M)) ↔ F = ⊥ := by
-    sorry
-    -- simpa only [Face.lineal_bot, PointedCone.salient_iff_lineal_bot.mp hC] using
-    --   (Face.toPointedCone_eq_iff (F₁ := F) (F₂ := (⊥ : Face C)))
-  simpa [Face.rank, PointedCone.rank] using
-    (PointedCone.bot_iff_rank_zero (C := (F : PointedCone R M))).trans hEq
-
+  sorry
 end RankZero
 
 end Face

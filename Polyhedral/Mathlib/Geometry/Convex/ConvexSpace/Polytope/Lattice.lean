@@ -178,6 +178,8 @@ instance : SubtractionMonoid (Polytope R X) := .ofSetLike ..
 
 /-! ### Scalar multiplication -/
 
+variable [SMulCommClass R R X]
+
 instance : SMul R (Polytope R X) where
   smul r P := ⟨_, P.isPolytope.smul r⟩
 

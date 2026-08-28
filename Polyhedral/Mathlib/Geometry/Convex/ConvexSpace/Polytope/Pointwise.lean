@@ -28,7 +28,7 @@ section Pointwise
 
 open Pointwise
 
-section Semiring
+section AddCommGroup
 
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
@@ -40,16 +40,17 @@ protected lemma neg (hP : IsPolytope R P) : IsPolytope R (-P) := by classical
   use -s
   simp only [convexHull_neg, Finset.coe_neg]
 
-end Semiring
+@[simp] lemma neg_iff : IsPolytope R (-P) ↔ IsPolytope R P where
+  mp := by nth_rw 2 [← neg_neg P]; exact .neg
+  mpr := .neg
+
+end AddCommGroup
 
 section Ring
 
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
-variable [AddTorsor V A]
-
-local instance : ConvexSpace R A := AddTorsor.toConvexSpace
--- TODO: add class expressing compatibility between the convex structures on A and V
+variable [AddTorsor V A] [ConvexSpace R A] [IsAffineConvexSpace R V A]
 
 /- The Minkowski sum of two polytopes is a polytope. -/
 protected lemma vadd {P₁ : Set V} {P₂ : Set A} (hP₁ : IsPolytope R P₁) (hP₂ : IsPolytope R P₂) :
@@ -59,27 +60,40 @@ protected lemma vadd {P₁ : Set V} {P₂ : Set A} (hP₁ : IsPolytope R P₁) (
   use s₁ +ᵥ s₂
   rw [Finset.coe_vadd, convexHull_vadd]
 
-/- Minkowski addition preserves convexity. -/
+/- Minkowski translation of a polytope is a polytope. -/
 lemma translate (t : V) {K : Set A} (hK : IsPolytope R K) : IsPolytope R (t +ᵥ K) := by
-  -- TODO: use `IsPolytope.vadd`
-  -- this likely requires a lemma `{t} + K = t + K`.
-  sorry
+  rw [← Set.singleton_vadd]
+  exact (IsPolytope.singleton R t).vadd hK
 
 /- The Minkowski addition of two polytopes is a polytope. -/
 protected lemma add {P₁ : Set V} {P₂ : Set V}
     (hP₁ : IsPolytope R P₁) (hP₂ : IsPolytope R P₂) : IsPolytope R (P₁ + P₂) :=
-  -- TODO: use `IsPolytope.vadd hP₁ hP₂`
-  -- this likely requires a compatbility class between affine and linear convexity
-  sorry
+  hP₁.vadd hP₂
 
-/- The Minkowski addition of two polytopes is a polytope. -/
+/- The Minkowski subtraction of two polytopes is a polytope. -/
 protected lemma sub {P₁ : Set V} {P₂ : Set V}
-    (hP₁ : IsPolytope R P₁) (hP₂ : IsPolytope R P₂) : IsPolytope R (P₁ - P₂) :=
-  sorry
+    (hP₁ : IsPolytope R P₁) (hP₂ : IsPolytope R P₂) : IsPolytope R (P₁ - P₂) := by
+  rw [sub_eq_add_neg]
+  exact hP₁.add hP₂.neg
+
+variable [SMulCommClass R R V]
+
+-- TODO: golf + move inside proof below?
+lemma convexHull_smul_ (r : R) (s : Set V)
+    : (convexHull R) (r • s) = r • (convexHull R) s := by
+  rw [← Set.image_smul]
+  apply symm
+  let f := DistribSMul.toLinearMap R V r
+  have h : IsAffineMap R f := f.isAffineMap
+  exact Convexity.IsAffineMap.image_convexHull (f:=f) h s
 
 protected lemma smul (r : R) {K : Set V} (hK : IsPolytope R K) :
     IsPolytope R (r • K) := by
-  sorry
+  classical
+  obtain ⟨s, rfl⟩ := hK
+  use s.image (r • ·)
+  rw [Finset.coe_image, Set.image_smul]
+  rw [← convexHull_smul_]
 
 end Ring
 
