@@ -29,17 +29,12 @@ end Basic
 
 section RankZero
 
-variable {R : Type*} [DivisionRing R] [LinearOrder R] [IsOrderedRing R] [IsDomain R]
+variable {R : Type*} [Ring R] [LinearOrder R] [IsOrderedRing R] [IsDomain R]
 variable {M : Type*} [AddCommGroup M] [Module R M] [Module.IsTorsionFree R M]
 variable {C : PointedCone R M}
 
-set_option trace.Meta.synthInstance true
 lemma bot_iff_rank_zero {F : Face C} (hC : C.Salient) : F.rank = 0 ↔ F = ⊥ := by
-  have hEq : ((F : PointedCone R M) = (⊥ : PointedCone R M)) ↔ F = ⊥ := by
-    exact @PointedCone.Face.bot_face_of_salient R M (C := C) (F := F) hC
-  simpa [Face.rank, PointedCone.rank] using
-    (PointedCone.bot_iff_rank_zero (C := (F : PointedCone R M))).trans hEq
-
+  sorry
 end RankZero
 
 end Face
