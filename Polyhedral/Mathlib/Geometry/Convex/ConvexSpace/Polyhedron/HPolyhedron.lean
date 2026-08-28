@@ -273,3 +273,60 @@ lemma IsHPolyhedron.fg (C : PointedCone R V) (hC : C.FG) :
   IsHPolyhedral.is_h_polyhedron _ (IsHPolyhedral.fg C hC)
 
 end Field
+
+section RecessionDirection
+
+variable {R : Type*} [Field R] [LinearOrder R] [IsOrderedRing R]
+variable {V : Type*} [AddCommGroup V] [Module R V]
+variable {A : Type*} [AddTorsor V A]
+
+/-- In an H-polyhedron, a ray direction that stays inside from a single point stays inside
+from every point: if `a • v +ᵥ x ∈ P` for all `a ≥ 0` for some `x ∈ P`, then the same holds
+from every `y ∈ P`.
+
+This is the H-polyhedral (and topology-free) version of the fact that for closed convex sets
+membership in the recession cone can be tested at a single point; for general non-closed
+convex sets it fails. As a consequence, the `∀`- and `∃`-versions of the recession cone of an
+H-polyhedron agree, see `IsHPolyhedron.forall_smul_vadd_mem_iff_exists`. -/
+theorem IsHPolyhedron.smul_vadd_mem_of_forall_smul_vadd_mem {P : Set A}
+    (hP : IsHPolyhedron R P) {x : A} (hx : x ∈ P) {v : V}
+    (hxv : ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P) {y : A} (hy : y ∈ P) {a : R} (ha : 0 ≤ a) :
+    a • v +ᵥ y ∈ P := by
+  obtain ⟨H, S, rfl⟩ := hP
+  simp only [Set.mem_inter_iff, Set.mem_iInter, Set.mem_preimage, Set.mem_Ici,
+    SetLike.mem_coe, AffineMap.map_vadd, map_smul, smul_eq_mul, vadd_eq_add] at hx hy hxv ⊢
+  refine ⟨fun h hh => ?_, ?_⟩
+  · -- every defining functional is nonnegative on `v`, else walking far along the ray
+    -- from `x` would violate its inequality
+    have hlin : 0 ≤ h.linear v := by
+      by_contra hneg
+      push Not at hneg
+      have h0 : (0 : R) ≤ h x := hx.1 h hh
+      have hdiv : (0 : R) ≤ (h x + 1) / (-h.linear v) :=
+        div_nonneg (by linarith) (by linarith)
+      have hkey := (hxv _ hdiv).1 h hh
+      have hcancel : (h x + 1) / (-h.linear v) * (-h.linear v) = h x + 1 :=
+        div_mul_cancel₀ _ (by linarith)
+      linarith
+    exact add_nonneg (mul_nonneg ha hlin) (hy.1 h hh)
+  · -- `v` lies in the direction of the affine subspace
+    have hv : v ∈ S.direction := by
+      have h1 : (1 : R) • v +ᵥ x ∈ S := (hxv 1 zero_le_one).2
+      rw [one_smul] at h1
+      simpa using AffineSubspace.vsub_mem_direction h1 hx.2
+    exact AffineSubspace.vadd_mem_of_mem_direction (S.direction.smul_mem a hv) hy.2
+
+/-- For a nonempty H-polyhedron, a direction recedes from every point as soon as it recedes
+from a single point. In particular the `∀`-definition of the recession cone
+(see `Convex.Set.recess`) agrees with the `∃`-version. -/
+theorem IsHPolyhedron.forall_smul_vadd_mem_iff_exists {P : Set A} (hP : IsHPolyhedron R P)
+    (hne : P.Nonempty) {v : V} :
+    (∀ x ∈ P, ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P) ↔
+      ∃ x ∈ P, ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P := by
+  refine ⟨fun h => ?_, ?_⟩
+  · obtain ⟨x, hx⟩ := hne
+    exact ⟨x, hx, h x hx⟩
+  · rintro ⟨x, hx, hxv⟩ y hy a ha
+    exact hP.smul_vadd_mem_of_forall_smul_vadd_mem hx hxv hy ha
+
+end RecessionDirection
