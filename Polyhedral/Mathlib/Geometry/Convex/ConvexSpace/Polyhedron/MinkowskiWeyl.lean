@@ -599,7 +599,43 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd {H : Set A}
   rw [← Convex.Set.recessionCone_vadd_self (R := R) (P := H)]
   exact Set.mem_vadd.mpr ⟨v, hv, y, hPH hy, rfl⟩
 
+include hom in
+lemma IsHPolyhedron.recessionCone_isPolyhedral_aux {H : Set A} (hH : IsHPolyhedron R H) :
+    IsPolyhedral (H.recessionCone R) := by
+  have hmap : ((H.recessionCone R).map hom.ofVector : PointedCone R W)
+      = (homogenize W hH.toConvexSet
+          ⊔ ((hH.toConvexSet : Set A).recessionCone R).map hom.ofVector)
+        ⊓ ↑(LinearMap.ker hom.weight) := by
+    apply le_antisymm
+    · refine le_inf le_sup_right ?_
+      rintro _ ⟨v, -, rfl⟩
+      simpa using hom.weight_zero v
+    · rintro z hz
+      obtain ⟨hz₁, hz₂⟩ := Submodule.mem_inf.mp hz
+      exact mem_map_recessionCone_of_weight_eq_zero hz₁ (by simpa using hz₂)
+  have hpoly : ((H.recessionCone R).map hom.ofVector).IsPolyhedral := by
+    rw [hmap]
+    exact (PointedCone.homogenize_sup_recessionCone_is_h_polyhedral (W := W)
+      hH.toConvexSet hH).isPolyhedral.inf (.of_submodule _)
+  have hcm : ((H.recessionCone R).map hom.ofVector).comap hom.ofVector
+      = H.recessionCone R := by
+    ext v
+    rw [PointedCone.mem_comap, PointedCone.mem_map]
+    constructor
+    · rintro ⟨w, hw, heq⟩
+      exact hom.ofVector_injective heq ▸ hw
+    · intro hv
+      exact ⟨v, hv, rfl⟩
+  exact hcm ▸ hpoly.comap hom.ofVector
+
 end Homogenize
+
+/-- The recession cone of an H-polyhedron is a polyhedral cone. -/
+lemma IsHPolyhedron.recessionCone_isPolyhedral {H : Set A} (hH : IsHPolyhedron R H) :
+    IsPolyhedral (H.recessionCone R) := by
+  let W := CanonicalHomogenization R A
+  let := IsModuleConvexSpace.ofAddTorsor (R := R) (V := W)
+  exact IsHPolyhedron.recessionCone_isPolyhedral_aux (W := W) hH
 
 -- TODO: It would be nice to not need the explicit coercion Cone → Set
 /--
@@ -630,11 +666,6 @@ lemma isHPolyhedron_of_isPolytope {P : Set A} (hP : IsPolytope R P) :
     (IsHPolyhedral.fg _ (IsPolytope.homogenize_fg (W := W) (C := ⟨P, hP.isConvexSet⟩) hP))
   simpa [PointedCone.dehomogenize] using h
 
-lemma IsHPolyhedron.vadd {P : Set V} (hP : IsHPolyhedron R P) {Q : Set A}
-    (hQ : IsHPolyhedron R Q) :
-    IsHPolyhedron R (P +ᵥ Q) := by
-  sorry
-
 /-- `V → H` direction of the Minkowski-Weyl theorem for polyhedra: the Minkowski sum of an
 H-polyhedral cone and a polytope is an H-polyhedron. -/
 lemma isHPolyhedron_of_isVPolyhedron {P : Set A} (hP : IsPolytope R P)
@@ -643,6 +674,38 @@ lemma isHPolyhedron_of_isVPolyhedron {P : Set A} (hP : IsPolytope R P)
   let W := CanonicalHomogenization R A
   let := IsModuleConvexSpace.ofAddTorsor (R := R) (V := W)
   exact isHPolyhedron_vadd_of_isHPolyhedral_of_isPolytope (W := W) hC hP
+
+/-- The Minkowski sum of two H-polyhedra is an H-polyhedron: decompose both by Minkowski-Weyl,
+sum the polytopes and the recession cones separately, and reassemble. -/
+lemma IsHPolyhedron.vadd {P : Set V} (hP : IsHPolyhedron R P) {Q : Set A}
+    (hQ : IsHPolyhedron R Q) :
+    IsHPolyhedron R (P +ᵥ Q) := by
+  obtain ⟨P₁, hP₁, hPeq⟩ := isVPolyhedron_of_isHPolyhedron P hP
+  obtain ⟨Q₁, hQ₁, hQeq⟩ := isVPolyhedron_of_isHPolyhedron Q hQ
+  have hEq : P +ᵥ Q
+      = ((P.recessionCone R ⊔ Q.recessionCone R : PointedCone R V) : Set V)
+        +ᵥ (P₁ +ᵥ Q₁) := by
+    conv_lhs => rw [hPeq, hQeq]
+    ext z
+    constructor
+    · rintro ⟨_, ⟨c₁, hc₁, p₁, hp₁, rfl⟩, _, ⟨c₂, hc₂, q₁, hq₁, rfl⟩, rfl⟩
+      refine Set.mem_vadd.mpr ⟨c₁ + c₂, Submodule.add_mem_sup hc₁ hc₂,
+        p₁ +ᵥ q₁, Set.mem_vadd.mpr ⟨p₁, hp₁, q₁, hq₁, rfl⟩, ?_⟩
+      simp only [vadd_vadd, vadd_eq_add]
+      congr 1
+      abel
+    · rintro ⟨v, hv, _, ⟨p₁, hp₁, q₁, hq₁, rfl⟩, rfl⟩
+      obtain ⟨c₁, hc₁, c₂, hc₂, rfl⟩ := Submodule.mem_sup.mp hv
+      refine Set.mem_vadd.mpr ⟨c₁ +ᵥ p₁, Set.mem_vadd.mpr ⟨c₁, hc₁, p₁, hp₁, rfl⟩,
+        c₂ +ᵥ q₁, Set.mem_vadd.mpr ⟨c₂, hc₂, q₁, hq₁, rfl⟩, ?_⟩
+      simp only [vadd_vadd, vadd_eq_add]
+      congr 1
+      abel
+  rw [hEq]
+  let := IsModuleConvexSpace.ofAddTorsor (R := R) (V := V)
+  exact isHPolyhedron_of_isVPolyhedron (hP₁.vadd hQ₁)
+    (isHPolyhedral_of_v_polyhedral (hP.recessionCone_isPolyhedral.sup
+      hQ.recessionCone_isPolyhedral))
 
 end Field
 end Homogenization
