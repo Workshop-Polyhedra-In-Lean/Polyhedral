@@ -62,12 +62,17 @@ lemma IsAffineMap.smul {f : V → R} {c : R} (hf : IsAffineMap R f) :
 @[fun_prop]
 lemma IsAffineMap.zero [Zero W] : IsAffineMap R (0 : V → W) := IsAffineMap.const _
 
+variable (R V) in
 /-- The dual of a convex space `V` over `R`: the module of all affine maps `V → R` -/
-def foo : Submodule R (V → R) where
+def ConvexSpace.dual : Submodule R (V → R) where
   carrier := { f | IsAffineMap R f }
   add_mem' {f g} hf hg := by simp_all [IsAffineMap.add]
   zero_mem' := by simp only [Set.mem_ofPred_eq]; fun_prop
   smul_mem' c x hx := by simp_all [IsAffineMap.smul]
+
+instance : FunLike (ConvexSpace.dual R V) V R where
+  coe φ := φ.1
+  coe_injective φ ψ h := by simp_all
 
 end
 
@@ -131,12 +136,71 @@ current definition (attempt 5) below
 
 -/
 
+section
+
+variable {R V : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
+  [Convexity.ConvexSpace R V]
+
+variable (R) in
+/- Variant of supportFunction, for general convex spaces.
+
+We don't want to define linear programs using support functions,
+but a linear program should have an associated support function.
+"Support fns arise from varying an objective function in a linear program."
+Often, it's convenient to add a constant to a linear program (i.e., you'd want an affine support fn)
+but it's not clear if this is called "support function" in the literature.
+
+WARNING: this does not coincide with the supportFunction over modules,
+as their domains are different.
+
+Q(Martin): Is there a definition of support functions with affine maps in the literature?
+A(Georg): yes, via linear programs (above).
+-/
+noncomputable def supportFunctionAffine (P : Set V) : ConvexSpace.dual R V → WithBotTop R :=
+  fun φ ↦ by classical exact
+  if hP : P.Nonempty then
+    -- Note that we choose `⊤` as junk value if S is not bounded above.
+    if hP' : ∃ x, IsLUB (φ '' P) x then WithBotTop.coe hP'.choose else ⊤
+  else ⊥
+
+@[simp]
+lemma supportFunctionAffine_empty : supportFunctionAffine R (∅ : Set V) = ⊥ := by
+  unfold supportFunctionAffine
+  ext φ
+  have : ¬((∅ : Set V).Nonempty) := by simp
+  simp
+
+lemma supportFunctionAffine_of_nonempty_of_isLUB
+    {P : Set V} (hP : P.Nonempty) {φ : ConvexSpace.dual R V}
+    {r : R} (hr : IsLUB (φ '' P) r) :
+    supportFunctionAffine R P φ = r := by
+  have aux : ∃ x, IsLUB (⇑φ '' P) x := by use r
+  simp [supportFunctionAffine, hP, aux, aux.choose_spec.unique hr]
+
+-- supportFunction of singleton
+lemma supportFunctionAffine_singleton' {v : V} {φ : ConvexSpace.dual R V} :
+    supportFunctionAffine R {v} φ = φ v := by
+  rw [supportFunctionAffine_of_nonempty_of_isLUB (by simp)]
+  simp
+
+lemma supportFunctionAffine_singleton {v : V} : supportFunctionAffine R {v} = fun φ ↦ φ v := by
+  ext φ
+  rw [supportFunctionAffine_singleton']
+
+/-
+Then, redefine the linear support function as the restriction of the affine one to the module dual.
+Scalar multiplication, Minkowski sum etc. will still be true under restriction.
+
+-/
+
+end
+
 /-
 The support function of a set `P ⊆ V`, inside an `R`-module `V`.
 This definition has several special cases:
 If `P` is empty, map any functional to `-∞`. Otherwise, for each functional `φ`,
 - if `φ '' P` is unbounded, we map `φ` to `+∞`;
-- if `φ '' P` has no least upper bound, we map it to a junk value (currently 37).
+- if `φ '' P` has no least upper bound, we map it to `+∞` as a junk value
 Otherwise, we return a supremum of `φ '' P` (which is unique because `R` has a partial order).
 -/
 variable (R) in
