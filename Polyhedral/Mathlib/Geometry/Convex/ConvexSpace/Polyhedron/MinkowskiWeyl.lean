@@ -85,19 +85,6 @@ end Homogenize
 /- Minkowski-Weyl for polyhedral cones -/
 variable {p : V' →ₗ[R] V →ₗ[R] R} [Fact p.SeparatingRight]
 
--- lemma isVPolyhedral_of_isHPolyhedral {C : PointedCone R V} (hC : IsHPolyhedral p C) :
---     IsPolyhedral C := by
---   obtain ⟨gen, ⟨S, ⟨h_DualFG, hInter⟩⟩⟩ := hC
-
---   have h := h_DualFG.fg
---   unfold IsPolyhedral
-
---   use PointedCone.dual p C.carrier
---   constructor
---   · sorry
---   · use S
---     sorry
-
 omit [Fact p.SeparatingRight] in
 lemma isHPolyhedral_of_v_polyhedral [Fact (Function.Surjective p)] {C : PointedCone R V}
     (hC : IsPolyhedral C) : IsHPolyhedral p C := by
@@ -116,12 +103,9 @@ and dehomogenize the resulting polyhedral cone. -/
 lemma isHPolyhedron_vadd_of_isHPolyhedral_of_isPolytope {C : PointedCone R V}
     (hC : IsHPolyhedral .id C) {P : Set A} (hP : IsPolytope R P) :
     IsHPolyhedron R ((C : Set V) +ᵥ P) := by
-  have hC' : IsPolyhedral C := by
-    obtain ⟨D, S, hD, rfl⟩ := hC
-    exact .of_dualfg_inf_submodule hD S
   have hpoly : ((C.map hom.ofVector)
       ⊔ homogenize W (⟨P, hP.isConvexSet⟩ : ConvexSet R A)).IsPolyhedral :=
-    (hC'.map hom.ofVector).sup
+    (hC.isPolyhedral.map hom.ofVector).sup
       (.of_fg (IsPolytope.homogenize_fg (C := ⟨P, hP.isConvexSet⟩) hP))
   have hH := ConvexSet.dehomogenize_is_h_polyhedron (A := A) _
     (isHPolyhedral_of_v_polyhedral hpoly)
