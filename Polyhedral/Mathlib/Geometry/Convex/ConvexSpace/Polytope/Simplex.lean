@@ -28,27 +28,6 @@ def IsSimplex (s : Set X) : Prop :=
 lemma IsSimplex.isPolytope {s : Set X} (hs : IsSimplex (R := R) s) : IsPolytope R s :=
   hs.imp fun _ ht ↦ ht.2
 
-lemma IsLineSegment.isPolytope {s : Set X} (hs : IsLineSegment (R := R) s) : IsPolytope R s := by
-  obtain ⟨a, b, hab, rfl⟩ := hs
-  exact IsPolytope.convexHull_finite R (by simp)
-
-variable (R) in
-def UnitCube (n : ℕ) := Set.pi ⊤ (fun (_ : Fin n) => convexHull R {(0 : R), (1 : R)})
-
-lemma UnitCube_IsPolytope (n : ℕ) : IsPolytope R (UnitCube R n) := by
-  let t := Set.pi ⊤ (fun (_ : Fin n) => {(0 : R), (1 : R)})
-  have hfinite : t.Finite := by
-    refine Set.Finite.pi fun i => ?_
-    simp only [Set.finite_insert, Set.finite_singleton]
-  have ht : UnitCube R n = convexHull R t := by
-    ext x
-    constructor
-    · sorry
-    · sorry
-  exact ht ▸ IsPolytope.convexHull_finite R hfinite
-
-
-
 end Semiring
 
 end Convexity
