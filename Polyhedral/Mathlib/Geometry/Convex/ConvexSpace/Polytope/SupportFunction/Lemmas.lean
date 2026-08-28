@@ -1,5 +1,5 @@
 /-
-Copyright (c) 2026 TODO AUTHORS. All rights reserved.
+Copyright (c) 2026 Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Valentina Taylor. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Valentina Taylor
 -/
@@ -78,7 +78,8 @@ end convex
 
 section linear
 
-variable {R V : Type*} [Semiring R] [PartialOrder R] [AddCommMonoid V] [Module R V]
+variable {R V : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
+  [AddCommMonoid V] [Module R V]
 
 /- ## Basic properties -/
 
@@ -106,10 +107,15 @@ lemma supportFunction_smul'
 
 -- additivity: TODO write down!
 
--- supportFunction of Minkowski sum  ---> Rockefeller's book?
--- XXX: this will require some hypotheses about boundedness of sets
--- Perhaps add a typeclass "every bounded set has a least upper bound" (which is satisfied for
--- e.g. `ℝ`), and prove a version of this lemma without this hypothesis.
+/-
+supportFunction of Minkowski sum  ---> Rockefeller's book?
+
+Note: this will require some hypotheses about boundedness of sets
+Perhaps add a typeclass "every bounded set has a least upper bound" (which is satisfied for
+e.g. `ℝ`), and prove a version of this lemma without this hypothesis.
+Asked on Zulip about a name for this concept, and if this already exists:
+https://leanprover.zulipchat.com/#narrow/channel/217875-Is-there-code-for-X.3F/topic/Every.20bounded.20above.20set.20has.20a.20least.20upper.20bound
+-/
 
 /- ## Convex closure -/
 -- TODO: figure out the right variables to use!
@@ -119,7 +125,9 @@ lemma supportFunction_smul'
 -- (and hope that if V is a module, we have a convex space)
 section
 
-variable {R V Q W : Type*} [Semiring R] [PartialOrder R] [IsStrictOrderedRing R] [AddCommMonoid V] [Module R V] [CommSemiring Q] [PartialOrder Q] [IsStrictOrderedRing Q] [Convexity.ConvexSpace Q W]
+variable {R V Q W : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
+  [AddCommMonoid V] [Module R V]
+  [CommSemiring Q] [PartialOrder Q] [IsStrictOrderedRing Q] [Convexity.ConvexSpace Q W]
 
 lemma supportFunctionConvexHull (P : Set V) :
     supportFunction R P = supportFunction R (Convexity.convexHull R P) := by

@@ -1,4 +1,10 @@
 /-
+Copyright (c) 2026 Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Valentina Taylor. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Valentina Taylor
+-/
+
+/-
 More discussion notes
 
 - IsAffineMap should be renamed! (-> mathlib PR)

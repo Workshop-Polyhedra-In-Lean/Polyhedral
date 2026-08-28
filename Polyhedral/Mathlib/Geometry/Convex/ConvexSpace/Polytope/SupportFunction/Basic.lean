@@ -1,5 +1,5 @@
 /-
-Copyright (c) 2026 TODO AUTHORS. All rights reserved.
+Copyright (c) 2026 Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Valentina Taylor. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Valentina Taylor
 -/
@@ -120,7 +120,8 @@ History of this definition
 
   Other issue: choices of junk values
   For multiplication, if `φ '' P` is a "funky" set (i.e., bounded without a least upper bound),
-  the equation `λ * (supportFunction R P φ) = supportFunction R (λ • P) φ` becomes `λ * junk = junk`.
+  the equation `λ * (supportFunction R P φ) = supportFunction R (λ • P) φ`
+  becomes `λ * junk = junk`.
   This is false for the current junk value, but becomes true for the junk value `37`.
   This is also useful as the definition will make one fewer case distinction.
 
@@ -131,6 +132,8 @@ History of this definition
   bound, but for other other functionals, there will be a least upper bound.
 
 current definition (attempt 5) below
+
+attempt 6: two definitions, supportFunctionAffine and supportFunction (for modules)
 
 -/
 
