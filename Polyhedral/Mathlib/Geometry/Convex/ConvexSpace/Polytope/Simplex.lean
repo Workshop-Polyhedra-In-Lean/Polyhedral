@@ -1,5 +1,4 @@
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
-import Mathlib
 
 namespace Convexity
 
