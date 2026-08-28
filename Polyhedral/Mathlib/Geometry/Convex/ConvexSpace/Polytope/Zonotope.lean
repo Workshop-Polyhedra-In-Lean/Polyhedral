@@ -7,7 +7,6 @@ section Semiring
 variable {R X V : Type*}
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [ConvexSpace R X]
-variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
 
 open scoped Pointwise
 
@@ -23,7 +22,9 @@ lemma IsLineSegment.isPolytope {s : Set X}
 variable (R) in
 def UnitCube (n : ℕ) := Set.pi ⊤ (fun (_ : Fin n) => convexHull R {(0 : R), (1 : R)})
 
-
+variable (R) in
+def isZonotope (s : Set X) := ∃ n : ℕ, ∃ f : (Fin n → R) → X,
+   IsAffineMap R f ∧ f '' UnitCube (R := R) n = s
 
 lemma UnitCube_IsPolytope (n : ℕ) : IsPolytope R (UnitCube R n) := by
   let t := Set.pi ⊤ (fun (_ : Fin n) => {(0 : R), (1 : R)})
@@ -37,10 +38,8 @@ lemma UnitCube_IsPolytope (n : ℕ) : IsPolytope R (UnitCube R n) := by
     · sorry
   exact ht ▸ IsPolytope.convexHull_finite R hfinite
 
-
-variable (R) in
-def isZonotope (s : Set X) := ∃ n : ℕ, ∃ f : (Fin n → R) → X,
-   IsAffineMap R f ∧ f '' UnitCube (R := R) n = s
+section AddCommGroup
+variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
 
 variable (R) in
 lemma sumOfSegments_isZonotope (s : Set V) :
@@ -61,6 +60,7 @@ lemma zonotope_iff_sumOfSegments (s : Set V) :
   · exact sumOfSegments_isZonotope R s
 
 
+end AddCommGroup
 end Semiring
 
 end Convexity
