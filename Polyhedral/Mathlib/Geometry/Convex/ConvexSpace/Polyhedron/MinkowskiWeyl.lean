@@ -33,6 +33,8 @@ variable [hom : Affine.IsHomogenization R A V]
 
 -- TODO: `ConvexSet` should be `SetLike` to avoid manual coercion
 
+
+
 /-- The homogenization of a polyhedron is a polyhedral cone -/
 lemma PointedCone.homogenize_is_h_polyhedral
   (p : W →ₗ[R] V →ₗ[R] R) (S : ConvexSet R A) (hS : IsHPolyhedron R S.carrier) :
@@ -86,7 +88,7 @@ open Convex
 -- For `ConvexSet`, the ∀a is not necessary
 #click_suggestions
 variable (R) in
-def Convex.Set.recess (P : Set A) : PointedCone R V where
+def Convex.Set.recessionCone (P : Set A) : PointedCone R V where
   carrier := { v : V | ∀ x ∈ P, ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P }
   add_mem' := by
     -- TODO: golf
@@ -110,43 +112,49 @@ def Convex.Set.recess (P : Set A) : PointedCone R V where
     exact h y hy (a * c) (show 0 ≤ a * c by exact Right.mul_nonneg ha hc)
 
 #click_suggestions
-lemma IsHPolyhedron.recess_isHPolyhedral {P : Set A} (hP : IsHPolyhedron R P) :
-    IsHPolyhedral p (P.recess R) := by
+lemma IsHPolyhedron.recessionCone_isHPolyhedral {P : Set A} (hP : IsHPolyhedron R P) :
+    IsHPolyhedral .id (P.recessionCone R) := by
   classical
-  -- by_cases h : ∅ = P
-  -- · simp only [Convex.Set.recess, h.symm, mem_empty_iff_false, imp_false, not_le,
-  --     IsEmpty.forall_iff, implies_true, ofPred_true]
-  --   exact IsHPolyhedral.top p
-  -- -- We need to use a point in `P` for the proof below
-  -- obtain ⟨x, hx : x ∈ P⟩ := Set.nonempty_iff_empty_ne.mpr h
+  by_cases h : ∅ = P
+  · simp only [Convex.Set.recessionCone, h.symm, mem_empty_iff_false, imp_false, not_le,
+      IsEmpty.forall_iff, implies_true, ofPred_true]
+    exact IsHPolyhedral.top p
+  -- We need to use a point in `P` for the proof below
+  obtain ⟨x, hx : x ∈ P⟩ := Set.nonempty_iff_empty_ne.mpr h
 
   obtain ⟨H₁, ⟨S₁, rfl⟩⟩ := hP
 
-  -- unfold IsHPolyhedral recess
-  -- let P := (⋂ h ∈ H₁, ⇑h ⁻¹' Ici 0) ∩ ↑S₁
-
+  unfold IsHPolyhedral Set.recessionCone
+  let P := (⋂ h ∈ H₁, ⇑h ⁻¹' Ici 0) ∩ ↑S₁
   let C := H₁.image (·.linear)
-  let C_gen := C.preimage p (injOn_of_injective hp)
 
-  simp only [IsHPolyhedral, Convex.Set.recess, mem_inter_iff, mem_iInter, mem_preimage, mem_Ici,
+  simp only [IsHPolyhedral, Set.recessionCone, mem_inter_iff, mem_iInter, mem_preimage, mem_Ici,
     SetLike.mem_coe, AffineMap.map_vadd, map_smul, smul_eq_mul, vadd_eq_add, and_imp,
     exists_and_left]
-  use (PointedCone.dual p C_gen)
+  use (PointedCone.dual .id C)
   constructor
-  · use C_gen
+  · exact DualFG.dual_of_finset .id C
   · use S₁.direction
     ext v
     simp only [Submodule.mem_mk, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk, mem_ofPred_eq,
       Finset.coe_preimage, mem_inf, PointedCone.mem_dual, mem_preimage,
-      SetLike.mem_coe, restrictScalars_mem, C_gen]
+      SetLike.mem_coe, restrictScalars_mem]
 
     constructor
     · intro h
-      have h' := h x (by
-          intro i hi
+      specialize h x
+      specialize h (by
+        intro i hi
+        simp at hx
+        simp [hi, hx]
+      )
+      sorry
+      -- specialize h (by
+      --   simp at hx
+      --   simp [hx]
+      --   sorry
+      -- )
 
-          simp [hx]
-        )
       constructor
       · intro w hw
         -- have hf : ∃f ∈ H₁, p w = f.linear := match (hC' (p w)).mp hw with
@@ -156,7 +164,6 @@ lemma IsHPolyhedron.recess_isHPolyhedral {P : Set A} (hP : IsHPolyhedron R P) :
         -- let ker := f ⁻¹' {0}
         -- let k := f.linear.zero
         -- have i := p w
-
 
         sorry
       · sorry
@@ -180,7 +187,7 @@ to be neither finitely nor co-finitely generated, which is only
 relevant in infinite dimension.
 -/
 lemma isVPolyhedron_of_isHPolyhedron (H : Set A) (hH : IsHPolyhedron R H) :
-    ∃P : Set A, (IsPolytope R P) ∧ H = (H.recess R : Set V) +ᵥ P := by
+    ∃P : Set A, (IsPolytope R P) ∧ H = (H.recessionCone R : Set V) +ᵥ P := by
   obtain ⟨gen, h_gen⟩ := hH
   obtain ⟨S, hS⟩ := h_gen
   sorry
@@ -190,9 +197,19 @@ lemma isVPolyhedron_of_isHPolyhedron (H : Set A) (hH : IsHPolyhedron R H) :
 For every finite *V-polytope* + *rays* + *submodule*,
 there exists a finite set of inequalities that describe it.
 -/
-lemma isHPolyhedron_of_isVPolyhedron
+lemma isHPolyhedron_of_isPolytope
   {P : Set A} (hP : IsPolytope R P) :
-    IsHPolyhedron R ((P.recess R : Set V) +ᵥ P) := by
+    IsHPolyhedron R P := by
+
+  sorry
+
+lemma IsHPolyhedron.sum {P : Set A} (hP : IsHPolyhedron R P) {Q : Set A} (hQ : IsHPolyhedron R Q) :
+    IsHPolyhedron R (P + Q) := by
+  sorry
+
+lemma isHPolyhedron_of_isVPolyhedron
+  {P : Set A} (hP : IsPolytope R P) {C : PointedCone R V} (C : IsHPolyhedral) :
+    IsHPolyhedron R ((C : Set V) +ᵥ P) := by
   obtain ⟨verts, h_hull⟩ := hP
 
   sorry
