@@ -54,6 +54,9 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Face
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Pointwise
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Simplex
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Zonotope
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Prod
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Homogenization

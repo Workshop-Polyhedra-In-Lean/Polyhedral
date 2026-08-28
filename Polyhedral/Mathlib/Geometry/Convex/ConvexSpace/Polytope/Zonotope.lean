@@ -29,6 +29,7 @@ def isZonotope (s : Set X) := ∃ n : ℕ, ∃ f : (Fin n → R) → X,
 --TODO : generalize this to families of convex spaces
 lemma convexHull_pi {ι : Type*} [Finite ι] (s : Set ι) (α : ι → Set X) :
     Set.pi s (fun i => convexHull R (α i)) = convexHull R (Set.pi s α) := by
+  classical
   have hs : Fintype s := Fintype.ofFinite ↑s
   rw [← Set.coe_toFinset s]
   set t := s.toFinset
