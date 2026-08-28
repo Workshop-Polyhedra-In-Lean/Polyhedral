@@ -117,6 +117,32 @@ lemma supportFunction_smul'
 -- if V has a nice topology... we can define convexClosure, and should have the following
 -- P a set in the convex space, with a topology
 -- (and hope that if V is a module, we have a convex space)
+section
+
+variable {R V Q W : Type*} [Semiring R] [PartialOrder R] [IsStrictOrderedRing R] [AddCommMonoid V] [Module R V] [CommSemiring Q] [PartialOrder Q] [IsStrictOrderedRing Q] [Convexity.ConvexSpace Q W]
+
+lemma supportFunctionConvexHull (P : Set V) :
+    supportFunction R P = supportFunction R (Convexity.convexHull R P) := by
+    -- we have to cast the module R V into a ConvexSpace R V
+    -- this should be doable with Mathlib.Geometry.Convex.ConvexSpace.Module
+    sorry
+
+    -- idea: prove two inequalities
+    -- first follows by inclusion, the other with convex_convexHull_eq and linearity
+    -- convex_convexHull_eq only exists for the Analysis definition
+    -- there should be convex_convexHull_eq for convex spaces
+  -- sorry
+
+lemma supportFunctionAffineConvexHull (P : Set W) :
+    supportFunctionAffine Q P = supportFunctionAffine Q (Convexity.convexHull Q P) := by
+    -- what is the convex hull of ∅
+    --> this is ∅ and therefore compatible with our definition (see convexHull_empty)
+    -- check compatibility with our junk value definition
+    -- "good" remaining case should be then the normal proof
+  sorry
+
+end
+
 def convexClosure (P : Set V) : Set V := sorry
 
 -- split into convex hull, and one statement about topological closure
