@@ -76,53 +76,100 @@ lemma isHPolyhedral_of_v_polyhedral {C : PointedCone R V} (hC : IsPolyhedral C) 
   sorry
 
 /- Minkowski-Weyl for polyhedra -/
+open Convex
 
 -- def IsHPolyhedron.vertices {P : Set A} (hP : IsHPolyhedron R P) : Finset { v ∈ Set A | IsFace 0 hP v}
 
 -- Could be for `ConvexSet` (to avoid polluting the `Set` namespace)
 -- This definiton assigns ⊤ as the recession cone of ∅
-def IsHPolyhedron.recess (P : Set A) : PointedCone R V where
-  carrier := { v : V | ∀x ∈ P, ∀a : R, a•v +ᵥ x ∈ P }
+-- The ∀ could be an ∃ (we could prove it's equivalent for polytopes)
+-- For `ConvexSet`, the ∀a is not necessary
+#click_suggestions
+variable (R) in
+def Convex.Set.recess (P : Set A) : PointedCone R V where
+  carrier := { v : V | ∀ x ∈ P, ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P }
   add_mem' := by
     -- TODO: golf
     intro a b ha hb
     simp only [mem_ofPred_eq, smul_add] at ha hb ⊢
-    intro x hx c
-    have hb' := hb x hx c
+    intro x hx c hc
+    have hb' := hb x hx c hc
     have ha' := ha (c•b +ᵥ x) hb' c
     rw [add_vadd]
-    exact ha'
-  zero_mem' := by simp
+    exact ha' hc
+  zero_mem' := by
+    simp only [mem_ofPred_eq, smul_zero, zero_vadd]
+    intro x hx a ha
+    exact hx
   smul_mem' := by
     -- TODO: golf
     intro ⟨c, hc⟩ x h
     simp only [mem_ofPred_eq, Nonneg.mk_smul] at ⊢ h
-    intro y hy a
+    intro y hy a ha
     rw [smul_smul]
-    exact h y hy (a * c)
-
+    exact h y hy (a * c) (show 0 ≤ a * c by exact Right.mul_nonneg ha hc)
 
 #click_suggestions
 lemma IsHPolyhedron.recess_isHPolyhedral {P : Set A} (hP : IsHPolyhedron R P) :
-    IsHPolyhedral p (IsHPolyhedron.recess P) := by
+    IsHPolyhedral p (P.recess R) := by
   classical
-  obtain ⟨H₁, ⟨S₁, rfl⟩⟩ := hP
-  unfold IsHPolyhedral recess
-  let P := (⋂ h ∈ H₁, ⇑h ⁻¹' Ici 0) ∩ ↑S₁
-  let C := H₁.image (·.linear)
-  -- let C' := PointedCone.hull (C.preimage p (p.injective))
-  simp
-  have S := S₁.direction
-  use PointedCone.dual .id C
-  constructor
-  · unfold PointedCone.DualFG
-    use C
-    sorry
-  · use S
-    ext
-    simp
-    sorry
+  -- by_cases h : ∅ = P
+  -- · simp only [Convex.Set.recess, h.symm, mem_empty_iff_false, imp_false, not_le,
+  --     IsEmpty.forall_iff, implies_true, ofPred_true]
+  --   exact IsHPolyhedral.top p
+  -- -- We need to use a point in `P` for the proof below
+  -- obtain ⟨x, hx : x ∈ P⟩ := Set.nonempty_iff_empty_ne.mpr h
 
+  obtain ⟨H₁, ⟨S₁, rfl⟩⟩ := hP
+
+  -- unfold IsHPolyhedral recess
+  -- let P := (⋂ h ∈ H₁, ⇑h ⁻¹' Ici 0) ∩ ↑S₁
+
+  let C := H₁.image (·.linear)
+  let C_gen := C.preimage p (injOn_of_injective hp)
+
+  simp only [IsHPolyhedral, Convex.Set.recess, mem_inter_iff, mem_iInter, mem_preimage, mem_Ici,
+    SetLike.mem_coe, AffineMap.map_vadd, map_smul, smul_eq_mul, vadd_eq_add, and_imp,
+    exists_and_left]
+  use (PointedCone.dual p C_gen)
+  constructor
+  · use C_gen
+  · use S₁.direction
+    ext v
+    simp only [Submodule.mem_mk, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk, mem_ofPred_eq,
+      Finset.coe_preimage, mem_inf, PointedCone.mem_dual, mem_preimage,
+      SetLike.mem_coe, restrictScalars_mem, C_gen]
+
+    constructor
+    · intro h
+      have h' := h x (by
+          intro i hi
+
+          simp [hx]
+        )
+      constructor
+      · intro w hw
+        -- have hf : ∃f ∈ H₁, p w = f.linear := match (hC' (p w)).mp hw with
+        --   | ⟨f, ⟨hf, ⟨_, h_eq⟩⟩⟩ => ⟨f, ⟨hf, h_eq⟩⟩
+        -- have h_zero : ∃a ∈ A, (p w) a = 0,
+        -- obtain ⟨f, ⟨hf, ⟨_, h_eq⟩⟩⟩ := (hC' (p w)).mp hw
+        -- let ker := f ⁻¹' {0}
+        -- let k := f.linear.zero
+        -- have i := p w
+
+
+        sorry
+      · sorry
+    · intro ⟨hv, hvs⟩ y hyP hyS a
+      constructor
+      · intro i hi
+        have hiP := hyP i hi
+        have hc := (hC i).mp hi
+        sorry
+      · have h_av : a • v ∈ S₁.direction := by exact Submodule.smul_mem S₁.direction a hvs
+        exact (AffineSubspace.vadd_mem_iff_mem_of_mem_direction h_av).mpr hyS
+
+-- TODO: It would be nice to not need the explicit coercion Cone → Set
 /--
 Every *H-polyhedron* can be decomposed as the Minkowski sum of
 a *V-polytope*, a *finitely generated cone*, and a *submodule*.
@@ -133,8 +180,7 @@ to be neither finitely nor co-finitely generated, which is only
 relevant in infinite dimension.
 -/
 lemma isVPolyhedron_of_isHPolyhedron (H : Set A) (hH : IsHPolyhedron R H) :
-    ∃P : Set A, ∃C : PointedCone R V, ∃S : Submodule R V,
-      (IsPolytope R P) ∧ C.IsHPolyhedral p ∧ H = ((C : Set V) + S) +ᵥ P := by
+    ∃P : Set A, (IsPolytope R P) ∧ H = (H.recess R : Set V) +ᵥ P := by
   obtain ⟨gen, h_gen⟩ := hH
   obtain ⟨S, hS⟩ := h_gen
   sorry
@@ -145,10 +191,10 @@ For every finite *V-polytope* + *rays* + *submodule*,
 there exists a finite set of inequalities that describe it.
 -/
 lemma isHPolyhedron_of_isVPolyhedron
-  {P : Set A} (hP : IsPolytope R P) {C : PointedCone R V} (hC : C.FG) (S : Submodule R V) :
-    IsHPolyhedron R (((C : Set V) + S) +ᵥ P) := by
+  {P : Set A} (hP : IsPolytope R P) :
+    IsHPolyhedron R ((P.recess R : Set V) +ᵥ P) := by
   obtain ⟨verts, h_hull⟩ := hP
-  obtain ⟨C_gen, hC_gen⟩ := hC
+
   sorry
 
 end Field

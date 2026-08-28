@@ -103,6 +103,11 @@ variable {A : Type*} [AddCommGroup A] [Module R A] [AddTorsor V A] --[space : Co
 
 attribute [local instance] AddTorsor.toConvexSpace
 
+lemma IsConvexSet.halfspace (f : A →ᵃ[R] R) : IsConvexSet R (f ⁻¹' Set.Ici 0) := by
+  apply IsConvexSet.preimage
+  exact f.isAffineMap
+  sorry
+
 #click_suggestions
 /-- An *H*-polyhedron is a convex set -/
 -- TODO: Prove this using convexity of intersections, preimages and affine subspaces
@@ -110,17 +115,25 @@ attribute [local instance] AddTorsor.toConvexSpace
 --   classical
 --   obtain ⟨C', ⟨S, ⟨⟨H, hH⟩, hInter⟩⟩⟩ := hP
 
+--   apply IsConvexSet.inter
+--   · have Cf := C'.image (·.toFun ⁻¹' Set.Ici 0)
+--     have h := IsConvexSet.sInter (show ∀ s ∈ Cf, IsConvexSet R s by
+
+--       sorry
+--     )
+--     intro s
+
+--     sorry
+--   · sorry
 
 --   apply IsConvexSet.of_convexCombPair_mem
 --   intro a b ha hb hab x hx y hy
 --   unfold convexCombPair sConvexComb AddTorsor.toConvexSpace AddTorsor.convexCombination Finset.affineCombination
 --   simp
---   have h : a • x + b • y ∈ P := by
---     sorry
---   rw [show (Finsupp.single x a + Finsupp.single y b).support = {x, y} by
---     rw [Finsupp.support_add_eq, Finsupp.support_single, Finsupp.support_single]
---     simp
---     ]
+--   -- rw [show (Finsupp.single x a + Finsupp.single y b).support = {x, y} by
+--   --   rw [Finsupp.support_add_eq, Finsupp.support_single, Finsupp.support_single]
+--   --   simp
+--   --   ]
 --   sorry
 
 def IsHPolyhedron.toConvexSet {P : Set A} (hP : IsHPolyhedron R P) : ConvexSet R A :=
@@ -143,6 +156,12 @@ lemma IsHPolyhedron.inf {P Q : Set A} (hP : IsHPolyhedron R P) (hQ : IsHPolyhedr
     mem_inter_iff, mem_iInter, mem_preimage, mem_Ici, SetLike.mem_coe, Finset.mem_union,
     forall₂_or_left, AffineSubspace.mem_inf_iff]
   tauto
+
+-- Simple Lemmas to prove IsConvexSet
+lemma IsHPolyhedron.halfspace (f : A →ᵃ[R] R) : IsHPolyhedron R (f ⁻¹' Set.Ici 0) := by
+  use {f}, ⊤
+  simp
+
 
 -- TODO: Maybe define coercion AffineSubspace -> HPolyhedron
 /-- Submodules are H-polyhedra. -/
