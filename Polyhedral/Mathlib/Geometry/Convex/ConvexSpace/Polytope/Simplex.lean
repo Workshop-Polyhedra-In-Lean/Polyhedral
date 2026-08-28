@@ -1,18 +1,8 @@
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.Face.Grade
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Module
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Homogenization
-
-
-/-! This file introduces `IsAffineIndependet` in Convex Spaces and proves equivalence in affine space. -/
-
-noncomputable section
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
 
 namespace Convexity
 
-variable {R X Y V A ι : Type*}
-
+variable {R X ι : Type*}
 
 open ConvexSpace
 
@@ -21,17 +11,25 @@ section Semiring
 variable [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [ConvexSpace R X]
 
-
+/-- A family of points is affinely independent if its convex-combination map is injective. -/
 def IsAffineIndependent (p : ι → X) : Prop :=
-  Function.Injective (fun w : StdSimplex R ι ↦ iConvexComb w p)
+  Function.Injective (fun w : StdSimplex R ι ↦ w.iConvexComb p)
 
-def IsAffineIndependentFinSet (t : Finset X) : Prop :=
+/-- A finite set is affinely independent if its subtype inclusion is affinely independent. -/
+def IsAffineIndependentFinset (t : Finset X) : Prop :=
   IsAffineIndependent (R := R) ((↑) : t → X)
 
-def IsSimplex (s : Set X) := ∃ t : Finset X, IsAffineIndependentFinSet (R := R) t
-                             ∧ convexHull R t = s
+/-- A simplex is the convex hull of a finite affinely independent set. -/
+def IsSimplex (s : Set X) : Prop :=
+  ∃ t : Finset X, IsAffineIndependentFinset (R := R) t ∧ s = convexHull R t
 
-def IsLineSegment (s : Set X) := ∃ a, ∃ b≠a, s = convexHull R {a, b}
+/-- A nondegenerate line segment is the convex hull of two distinct points. -/
+def IsLineSegment (s : Set X) : Prop :=
+  ∃ a b, a ≠ b ∧ s = convexHull R {a, b}
+
+/-- Every simplex is a polytope. -/
+lemma IsSimplex.isPolytope {s : Set X} (hs : IsSimplex (R := R) s) : IsPolytope R s :=
+  hs.imp fun _ ht ↦ ht.2
 
 end Semiring
 
