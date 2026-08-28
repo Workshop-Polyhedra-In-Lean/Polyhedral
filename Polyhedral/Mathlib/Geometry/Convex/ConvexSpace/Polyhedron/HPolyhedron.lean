@@ -19,7 +19,7 @@ open Pointwise Set
 -- CommRing could be Ring for some definitions
 variable {R : Type*} [CommRing R] [PartialOrder R] [IsOrderedRing R]
 variable {V : Type*} [AddCommGroup V] [Module R V]
-variable {W : Type*} [AddCommGroup W] [Module R W]
+variable {V' : Type*} [AddCommGroup V'] [Module R V']
 variable {A : Type*} [AddTorsor V A]
 
 
@@ -34,7 +34,7 @@ def IsHPolyhedron (P : Set A) : Prop :=
 
 
 namespace PointedCone
-variable (p : W →ₗ[R] V →ₗ[R] R)
+variable (p : V' →ₗ[R] V →ₗ[R] R)
 
 /--
 A cone is *H-polyhedral* if it is the intersection of a submodule and
@@ -44,7 +44,7 @@ One advantage of allowing non-coFG submodules is that the dual of a polyhedral
 cone is polyhedral even under infinite dimension.
 TODO: prove
 -/
-def IsHPolyhedral (p : W →ₗ[R] V →ₗ[R] R) (P : PointedCone R V) : Prop :=
+def IsHPolyhedral (p : V' →ₗ[R] V →ₗ[R] R) (P : PointedCone R V) : Prop :=
     ∃C : PointedCone R V, ∃S : Submodule R V, C.DualFG p ∧ P = C ⊓ S
 
 #click_suggestions
@@ -90,7 +90,7 @@ theorem IsPolyhedral.of_h_repr (p : V →ₗ[R] W →ₗ[R] R) {C : PointedCone 
 
 /-- A polyhedral cone is a polyhedron -/
 lemma IsHPolyhedral.is_h_polyhedron
-  {C : PointedCone R V} (p : W →ₗ[R] V →ₗ[R] R) (hC : IsHPolyhedral p C) :
+  {C : PointedCone R V} (p : V' →ₗ[R] V →ₗ[R] R) (hC : IsHPolyhedral p C) :
     IsHPolyhedron R C.carrier := by classical
   obtain ⟨C', ⟨S, ⟨⟨H, hH⟩, hInter⟩⟩⟩ := hC
   use H.image (p · |>.toAffineMap), S
@@ -102,7 +102,7 @@ lemma IsHPolyhedral.is_h_polyhedron
   intro hS
   rfl
 
-variable (p : W →ₗ[R] V →ₗ[R] R)
+variable (p : V' →ₗ[R] V →ₗ[R] R)
 
 /-- The intersection of polyhedral cones is polyhedral -/
 lemma IsHPolyhedral.inf {P Q : PointedCone R V}
@@ -139,7 +139,6 @@ open Convexity
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 variable {V : Type*} [AddCommGroup V] [Module R V]
-variable {W : Type*} [AddCommGroup W] [Module R W]
 variable {A : Type*} [AddCommGroup A] [Module R A] [AddTorsor V A] --[space : ConvexSpace R A]
 
 attribute [local instance] AddTorsor.toConvexSpace
@@ -223,8 +222,8 @@ section CommRing
 
 variable {R : Type*} [CommRing R] [PartialOrder R] [IsOrderedRing R]
 variable {V : Type*} [AddCommGroup V] [Module R V]
-variable {W : Type*} [AddCommGroup W] [Module R W]
-variable {p : V →ₗ[R] W →ₗ[R] R}
+variable {V' : Type*} [AddCommGroup V'] [Module R V']
+variable {p : V →ₗ[R] V' →ₗ[R] R}
 
 open PointedCone
 
@@ -244,7 +243,7 @@ TODO: The following lemmas need to be translated to use the new definition, and 
 -- should be easier now: simply apply
 -- IsHPolyhedral.dual_fg and IsHPolyhedron.is_h_cone
 lemma IsHPolyhedron.dual_fg (C : PointedCone R V) (hC : C.FG) :
-    IsHPolyhedron R (dual p C : Set W) := by
+    IsHPolyhedron R (dual p C : Set V') := by
   obtain ⟨G, hG⟩ := hC
   classical
   use Finset.image (p · |>.toAffineMap) G

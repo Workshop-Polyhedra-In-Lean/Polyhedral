@@ -9,7 +9,9 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Pointwise
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Polyhedral.Basic
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Dual
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.MinkowskiWeyl
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Module
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Homogenization
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.HPolyhedron
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.Basic
 
@@ -22,9 +24,11 @@ section Field
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsOrderedRing R]
 variable {V : Type*} [AddCommGroup V] [Module R V]
+variable {V' : Type*} [AddCommGroup V'] [Module R V']
 variable {W : Type*} [AddCommGroup W] [Module R W]
+
 variable {A : Type*} [AddTorsor V A]
--- variable {W : Type*} [AddCommGroup W] [Module R W]
+
 
 attribute [local instance] AddTorsor.toConvexSpace
 variable [IsModuleConvexSpace R V]
@@ -44,19 +48,59 @@ lemma PointedCone.homogenize_is_h_polyhedral
 /-- The dehomogenization of a polyhedral cone is a polyhedron -/
 lemma ConvexSet.dehomogenize_is_h_polyhedron
   (p : W →ₗ[R] V →ₗ[R] R) (C : PointedCone R V) (hC : IsHPolyhedral p C) :
-    IsHPolyhedron R (PointedCone.dehomogenize A C : Set A) := by
-  sorry
 
--- theorem IsHPolyhedron.homogenize_polyhedral_iff {S : ConvexSet R A} (p : W →ₗ[R] V →ₗ[R] R) :
---     IsHPolyhedron R S.carrier ↔ (homogenize V S).IsHPolyhedral := by
---   exact ⟨by simp [ConvexSet.dehomogenize_is_h_polyhedron], PointedCone.homogenize_is_h_polyhedral p S⟩
+section Homogenize
+
+variable [IsModuleConvexSpace R W]
+variable [hom : Affine.IsHomogenization R A W]
+
+/-- The dehomogenization of an H-polyhedral cone is an H-polyhedron: each functional `f`
+cutting out the cone descends to the affine map `f ∘ ofPoint`, and the submodule pulls back
+to an affine subspace. -/
+lemma ConvexSet.dehomogenize_is_h_polyhedron (C : PointedCone R W)
+    (hC : IsHPolyhedral .id C) :
+    IsHPolyhedron R (PointedCone.dehomogenize A C : Set A) := by
+  classical
+  obtain ⟨D, S, ⟨G, rfl⟩, rfl⟩ := hC
+  refine ⟨G.image fun f => f.toAffineMap.comp hom.ofPoint,
+    S.toAffineSubspace.comap hom.ofPoint, ?_⟩
+  ext x
+  simp [PointedCone.dehomogenize, ConvexSet.dehomogenize, Set.mem_preimage,
+    PointedCone.mem_dual, Submodule.mem_toAffineSubspace]
+
+/-- Dehomogenizing the sum of a cone embedded at weight zero and the homogenization of a
+convex set yields the pointwise sum. -/
+lemma dehomogenize_map_ofVector_sup_homogenize (C : PointedCone R V) (P : ConvexSet R A) :
+    (PointedCone.dehomogenize A (C.map hom.ofVector ⊔ homogenize W P) : Set A)
+      = (C : Set V) +ᵥ (P : Set A) := by
+  ext x
+  simp only [PointedCone.dehomogenize, ConvexSet.dehomogenize, ConvexSet.mk_eq,
+    Set.mem_preimage]
+  constructor
+  · intro hx
+    obtain ⟨y, hy, z, hz, hyz⟩ := Submodule.mem_sup.mp hx
+    obtain ⟨c, hc, rfl⟩ := PointedCone.mem_map.mp hy
+    have hw : hom.weight z = 1 := by
+      have := congrArg hom.weight hyz
+      simpa [hom.weight_zero, hom.weight_one] using this
+    obtain ⟨r, hr, _, ⟨y', hy', rfl⟩, rfl⟩ :=
+      Set.mem_smul.mp <| smul_pos_of_mem_homogenize hz (by rintro rfl; simp at hw)
+    have hr1 : r = 1 := by simpa [hom.weight_one] using hw
+    refine Set.mem_vadd.mpr ⟨c, hc, y', hy', hom.ofPoint_injective ?_⟩
+    rw [AffineMap.map_vadd]
+    simpa [hr1, vadd_eq_add] using hyz
+  · rintro ⟨c, hc, y, hy, rfl⟩
+    rw [AffineMap.map_vadd, vadd_eq_add]
+    exact Submodule.add_mem_sup (PointedCone.mem_map.mpr ⟨c, hc, rfl⟩)
+      (mem_span_of_mem (Set.mem_image_of_mem _ hy))
+
+end Homogenize
 
 -- `H = (C + S) +ᵥ P` should become the definition of `IsVPolyhedron`
--- TODO: ConvexSet should have a coercion to Set
 
 
 /- Minkowski-Weyl for polyhedral cones -/
-variable {p : W →ₗ[R] V →ₗ[R] R} [Fact p.SeparatingRight]
+variable {p : V' →ₗ[R] V →ₗ[R] R} [Fact p.SeparatingRight]
 
 -- lemma isVPolyhedral_of_isHPolyhedral {C : PointedCone R V} (hC : IsHPolyhedral p C) :
 --     IsPolyhedral C := by
@@ -71,10 +115,37 @@ variable {p : W →ₗ[R] V →ₗ[R] R} [Fact p.SeparatingRight]
 --   · use S
 --     sorry
 
-lemma isHPolyhedral_of_v_polyhedral {C : PointedCone R V} (hC : IsPolyhedral C) :
-    IsHPolyhedral p C := by
-  obtain ⟨gen, h_gen⟩ := hC
-  sorry
+omit [Fact p.SeparatingRight] in
+lemma isHPolyhedral_of_v_polyhedral [Fact (Function.Surjective p)] {C : PointedCone R V}
+    (hC : IsPolyhedral C) : IsHPolyhedral p C := by
+  obtain ⟨D, hD, hDC⟩ := hC.exists_dualfg_inf_span p
+  exact ⟨D, Submodule.span R (C : Set V), hD, hDC.symm⟩
+
+section Homogenize
+
+variable [IsModuleConvexSpace R W]
+variable [hom : Affine.IsHomogenization R A W]
+
+include hom in
+/-- The Minkowski sum of an H-polyhedral cone and a polytope is an H-polyhedron: lift the
+cone to weight zero in the homogenization space, add the homogenization of the polytope,
+and dehomogenize the resulting polyhedral cone. -/
+lemma isHPolyhedron_vadd_of_isHPolyhedral_of_isPolytope {C : PointedCone R V}
+    (hC : IsHPolyhedral .id C) {P : Set A} (hP : IsPolytope R P) :
+    IsHPolyhedron R ((C : Set V) +ᵥ P) := by
+  have hC' : IsPolyhedral C := by
+    obtain ⟨D, S, hD, rfl⟩ := hC
+    exact .of_dualfg_inf_submodule hD S
+  have hpoly : ((C.map hom.ofVector)
+      ⊔ homogenize W (⟨P, hP.isConvexSet⟩ : ConvexSet R A)).IsPolyhedral :=
+    (hC'.map hom.ofVector).sup
+      (.of_fg (IsPolytope.homogenize_fg (C := ⟨P, hP.isConvexSet⟩) hP))
+  have hH := ConvexSet.dehomogenize_is_h_polyhedron (A := A) _
+    (isHPolyhedral_of_v_polyhedral hpoly)
+  rw [dehomogenize_map_ofVector_sup_homogenize] at hH
+  simpa using hH
+
+end Homogenize
 
 /- Minkowski-Weyl for polyhedra -/
 open Convex
@@ -117,7 +188,7 @@ lemma IsHPolyhedron.recessionCone_isHPolyhedral {P : Set A} (hP : IsHPolyhedron 
   by_cases h : ∅ = P
   · simp only [Convex.Set.recessionCone, h.symm, mem_empty_iff_false, imp_false, not_le,
       IsEmpty.forall_iff, implies_true, ofPred_true]
-    exact IsHPolyhedral.top p
+    exact IsHPolyhedral.top _
   -- We need to use a point in `P` for the proof below
   obtain ⟨x, hx : x ∈ P⟩ := Set.nonempty_iff_empty_ne.mpr h
 
@@ -153,27 +224,181 @@ lemma IsHPolyhedron.recessionCone_isHPolyhedral {P : Set A} (hP : IsHPolyhedron 
       --   simp [hx]
       --   sorry
       -- )
-
-      constructor
-      · intro w hw
-        -- have hf : ∃f ∈ H₁, p w = f.linear := match (hC' (p w)).mp hw with
-        --   | ⟨f, ⟨hf, ⟨_, h_eq⟩⟩⟩ => ⟨f, ⟨hf, h_eq⟩⟩
-        -- have h_zero : ∃a ∈ A, (p w) a = 0,
-        -- obtain ⟨f, ⟨hf, ⟨_, h_eq⟩⟩⟩ := (hC' (p w)).mp hw
-        -- let ker := f ⁻¹' {0}
-        -- let k := f.linear.zero
-        -- have i := p w
-
-        sorry
-      · sorry
-    · intro ⟨hv, hvs⟩ y hyP hyS a
+      -- constructor
+      -- · intro w hw
+      --   -- have hf : ∃f ∈ H₁, p w = f.linear := match (hC' (p w)).mp hw with
+      --   --   | ⟨f, ⟨hf, ⟨_, h_eq⟩⟩⟩ => ⟨f, ⟨hf, h_eq⟩⟩
+      --   -- have h_zero : ∃a ∈ A, (p w) a = 0,
+      --   -- obtain ⟨f, ⟨hf, ⟨_, h_eq⟩⟩⟩ := (hC' (p w)).mp hw
+      --   -- let ker := f ⁻¹' {0}
+      --   -- let k := f.linear.zero
+      --   -- have i := p w
+      --   sorry
+      -- · sorry
+    · intro ⟨hv, hvs⟩ y hyP hyS a ha
       constructor
       · intro i hi
         have hiP := hyP i hi
-        have hc := (hC i).mp hi
+        -- have hc := (hC i).mp hi
         sorry
       · have h_av : a • v ∈ S₁.direction := by exact Submodule.smul_mem S₁.direction a hvs
         exact (AffineSubspace.vadd_mem_iff_mem_of_mem_direction h_av).mpr hyS
+
+/-- If an affine functional is nonnegative along the ray `a • v +ᵥ x`, `a ≥ 0`, then its
+linear part is nonnegative on the direction `v`. -/
+lemma AffineMap.linear_nonneg_of_forall_nonneg (h : A →ᵃ[R] R) {x : A} {v : V}
+    (hray : ∀ a : R, 0 ≤ a → 0 ≤ h (a • v +ᵥ x)) : 0 ≤ h.linear v := by
+  by_contra hneg
+  push Not at hneg
+  have h0 : (0 : R) ≤ h x := by simpa using hray 0 le_rfl
+  have hdiv : (0 : R) ≤ (h x + 1) / (-h.linear v) := div_nonneg (by linarith) (by linarith)
+  have hkey := hray _ hdiv
+  simp only [AffineMap.map_vadd, map_smul, smul_eq_mul, vadd_eq_add] at hkey
+  have hcancel : (h x + 1) / (-h.linear v) * (-h.linear v) = h x + 1 :=
+    div_mul_cancel₀ _ (by linarith)
+  linarith
+
+section Homogenize
+
+variable [IsModuleConvexSpace R W]
+variable [hom : Affine.IsHomogenization R A W]
+
+omit [LinearOrder R] [IsOrderedRing R] [IsModuleConvexSpace R W] in
+/-- Every affine functional extends to a linear functional on the homogenization space which
+agrees with it on points and with its linear part on vectors. -/
+lemma Affine.IsHomogenization.exists_linear_extension (h : A →ᵃ[R] R) :
+    ∃ F : W →ₗ[R] R, (∀ x : A, F (hom.ofPoint x) = h x) ∧
+      ∀ v : V, F (hom.ofVector v) = h.linear v := by
+  obtain ⟨F, hF, -⟩ := hom.extend R h
+  have hFx : ∀ x : A, F (hom.ofPoint x) = h x := fun x => congrFun hF x
+  refine ⟨F, hFx, fun v => ?_⟩
+  have x₀ := Classical.arbitrary A
+  have hv : hom.ofVector v = hom.ofPoint (v +ᵥ x₀) - hom.ofPoint x₀ := by simp
+  rw [hv, map_sub, hFx, hFx]
+  simp
+
+omit [IsModuleConvexSpace R W] in
+/-- The homogenization of an H-polyhedron, together with its recession cone placed at weight
+zero, is an H-polyhedral cone. -/
+theorem PointedCone.homogenize_sup_recessionCone_is_h_polyhedral (S : ConvexSet R A)
+    (hS : IsHPolyhedron R (S : Set A)) :
+    IsHPolyhedral .id
+      (homogenize W S ⊔ ((S : Set A).recessionCone R).map hom.ofVector) := by
+  classical
+  by_cases hne : (S : Set A).Nonempty
+  · obtain ⟨x₀, hx₀⟩ := hne
+    obtain ⟨H, T, hST⟩ := hS
+    choose ext hext hextlin using fun h : A →ᵃ[R] R => hom.exists_linear_extension h
+    have hmem : ∀ x : A, x ∈ (S : Set A) ↔ (∀ h ∈ H, 0 ≤ h x) ∧ x ∈ T := by
+      intro x
+      rw [hST]
+      simp
+    have hx₀T : x₀ ∈ T := ((hmem x₀).mp hx₀).2
+    refine ⟨dual .id ↑(insert hom.weight (H.image ext)),
+      T.direction.map hom.ofVector ⊔ R ∙ hom.ofPoint x₀,
+      ⟨insert hom.weight (H.image ext), rfl⟩, ?_⟩
+    apply le_antisymm
+    · refine sup_le ?_ ?_
+      · -- generators `ofPoint x`, `x ∈ S`
+        refine Submodule.span_le.mpr ?_
+        rintro _ ⟨x, hx, rfl⟩
+        obtain ⟨hxH, hxT⟩ := (hmem x).mp hx
+        refine Submodule.mem_inf.mpr ⟨PointedCone.mem_dual.mpr fun g hg => ?_, ?_⟩
+        · simp only [Finset.coe_insert, Set.mem_insert_iff, Finset.coe_image,
+            Set.mem_image, Finset.mem_coe] at hg
+          rcases hg with rfl | ⟨h, hh, rfl⟩
+          · simp [hom.weight_one]
+          · simpa [hext] using hxH h hh
+        · have : hom.ofPoint x = hom.ofVector (x -ᵥ x₀) + hom.ofPoint x₀ := by simp
+          rw [this]
+          exact Submodule.add_mem_sup
+            (Submodule.mem_map_of_mem (AffineSubspace.vsub_mem_direction hxT hx₀T))
+            (Submodule.mem_span_singleton_self _)
+      · -- recession directions at weight zero
+        rintro _ ⟨v, hv, rfl⟩
+        have hvlin : ∀ h ∈ H, 0 ≤ h.linear v := fun h hh =>
+          AffineMap.linear_nonneg_of_forall_nonneg h (x := x₀) fun a ha =>
+            ((hmem _).mp (hv x₀ hx₀ a ha)).1 h hh
+        have hvdir : v ∈ T.direction := by
+          have h1 := ((hmem _).mp (hv x₀ hx₀ 1 zero_le_one)).2
+          rw [one_smul] at h1
+          simpa using AffineSubspace.vsub_mem_direction h1 hx₀T
+        refine Submodule.mem_inf.mpr ⟨PointedCone.mem_dual.mpr fun g hg => ?_,
+          Submodule.mem_sup_left (Submodule.mem_map_of_mem hvdir)⟩
+        simp only [Finset.coe_insert, Set.mem_insert_iff, Finset.coe_image,
+          Set.mem_image, Finset.mem_coe] at hg
+        rcases hg with rfl | ⟨h, hh, rfl⟩
+        · simp [hom.weight_zero]
+        · simpa [hextlin] using hvlin h hh
+    · rintro w hw
+      obtain ⟨hwdual, hwT⟩ := Submodule.mem_inf.mp hw
+      rw [Submodule.restrictScalars_mem] at hwT
+      obtain ⟨y, hy, z, hz, rfl⟩ := Submodule.mem_sup.mp hwT
+      obtain ⟨u, hu, rfl⟩ := Submodule.mem_map.mp hy
+      obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.mp hz
+      have hdual := PointedCone.mem_dual.mp hwdual
+      have hc0 : 0 ≤ c := by
+        have := hdual (Finset.mem_coe.mpr (Finset.mem_insert_self _ _))
+        simpa [hom.weight_zero, hom.weight_one] using this
+      have hlin : ∀ h ∈ H, 0 ≤ h.linear u + c * h x₀ := by
+        intro h hh
+        have := hdual (Finset.mem_coe.mpr
+          (Finset.mem_insert_of_mem (Finset.mem_image_of_mem ext hh)))
+        simpa [hext, hextlin] using this
+      rcases hc0.eq_or_lt with rfl | hcpos
+      · -- weight zero: a recession direction
+        rw [zero_smul, add_zero]
+        refine Submodule.mem_sup_right (PointedCone.mem_map.mpr ⟨u, ?_, rfl⟩)
+        change ∀ y ∈ (S : Set A), ∀ a : R, 0 ≤ a → a • u +ᵥ y ∈ (S : Set A)
+        intro y hy a ha
+        obtain ⟨hyH, hyT⟩ := (hmem y).mp hy
+        refine (hmem _).mpr ⟨fun h hh => ?_, ?_⟩
+        · have hlu : 0 ≤ h.linear u := by simpa using hlin h hh
+          simp only [AffineMap.map_vadd, map_smul, smul_eq_mul, vadd_eq_add]
+          exact add_nonneg (mul_nonneg ha hlu) (hyH h hh)
+        · exact AffineSubspace.vadd_mem_of_mem_direction (T.direction.smul_mem a hu) hyT
+      · -- positive weight: a point of `S`, rescaled
+        have hyS : (c⁻¹ • u +ᵥ x₀) ∈ (S : Set A) := by
+          refine (hmem _).mpr ⟨fun h hh => ?_, ?_⟩
+          · simp only [AffineMap.map_vadd, map_smul, smul_eq_mul, vadd_eq_add]
+            have := mul_nonneg (inv_nonneg.mpr hc0) (hlin h hh)
+            rwa [mul_add, ← mul_assoc, inv_mul_cancel₀ hcpos.ne', one_mul] at this
+          · exact AffineSubspace.vadd_mem_of_mem_direction
+              (T.direction.smul_mem c⁻¹ hu) hx₀T
+        refine Submodule.mem_sup_left ?_
+        have heq : hom.ofVector u + c • hom.ofPoint x₀
+            = c • hom.ofPoint (c⁻¹ • u +ᵥ x₀) := by
+          rw [AffineMap.map_vadd]
+          simp [vadd_eq_add, smul_add, smul_smul, mul_inv_cancel₀ hcpos.ne']
+        rw [heq]
+        exact PointedCone.smul_mem _ hc0
+          (Submodule.mem_span_of_mem (Set.mem_image_of_mem _ hyS))
+  · -- the empty polyhedron: the cone is the weight-zero hyperplane
+    have hSe : (S : Set A) = ∅ := Set.not_nonempty_iff_eq_empty.mp hne
+    have h1 : homogenize W S = ⊥ := by
+      have hSbot : S = (⊥ : ConvexSet R A) := SetLike.ext' (by simpa using hSe)
+      rw [hSbot]
+      exact homogenize_bot
+    have h2 : (S : Set A).recessionCone R = ⊤ := by
+      rw [eq_top_iff]
+      rintro v -
+      change ∀ y ∈ (S : Set A), ∀ a : R, 0 ≤ a → a • v +ᵥ y ∈ (S : Set A)
+      simp [hSe]
+    refine ⟨⊤, LinearMap.ker hom.weight, by simp, ?_⟩
+    rw [h1, h2, bot_sup_eq]
+    ext w
+    simp only [PointedCone.mem_map, Submodule.mem_top, true_and, Submodule.mem_inf,
+      Submodule.restrictScalars_mem, LinearMap.mem_ker]
+    constructor
+    · rintro ⟨v, rfl⟩
+      exact hom.weight_zero v
+    · intro hw
+      have hrange : w ∈ LinearMap.range hom.ofVector := by
+        rw [hom.ofVector_range_eq_weight_ker]
+        exact hw
+      exact LinearMap.mem_range.mp hrange
+
+end Homogenize
 
 -- TODO: It would be nice to not need the explicit coercion Cone → Set
 /--
@@ -196,22 +421,27 @@ lemma isVPolyhedron_of_isHPolyhedron (H : Set A) (hH : IsHPolyhedron R H) :
 For every finite *V-polytope* + *rays* + *submodule*,
 there exists a finite set of inequalities that describe it.
 -/
-lemma isHPolyhedron_of_isPolytope
-  {P : Set A} (hP : IsPolytope R P) :
+lemma isHPolyhedron_of_isPolytope {P : Set A} (hP : IsPolytope R P) :
     IsHPolyhedron R P := by
+  let W := CanonicalHomogenization R A
+  let := IsModuleConvexSpace.ofAddTorsor (R := R) (V := W)
+  have h := ConvexSet.dehomogenize_is_h_polyhedron (A := A) _
+    (IsHPolyhedral.fg _ (IsPolytope.homogenize_fg (W := W) (C := ⟨P, hP.isConvexSet⟩) hP))
+  simpa [PointedCone.dehomogenize] using h
 
+lemma IsHPolyhedron.vadd {P : Set V} (hP : IsHPolyhedron R P) {Q : Set A}
+    (hQ : IsHPolyhedron R Q) :
+    IsHPolyhedron R (P +ᵥ Q) := by
   sorry
 
-lemma IsHPolyhedron.sum {P : Set A} (hP : IsHPolyhedron R P) {Q : Set A} (hQ : IsHPolyhedron R Q) :
-    IsHPolyhedron R (P + Q) := by
-  sorry
-
-lemma isHPolyhedron_of_isVPolyhedron
-  {P : Set A} (hP : IsPolytope R P) {C : PointedCone R V} (C : IsHPolyhedral) :
+/-- `V → H` direction of the Minkowski-Weyl theorem for polyhedra: the Minkowski sum of an
+H-polyhedral cone and a polytope is an H-polyhedron. -/
+lemma isHPolyhedron_of_isVPolyhedron {P : Set A} (hP : IsPolytope R P)
+    {C : PointedCone R V} (hC : IsHPolyhedral .id C) :
     IsHPolyhedron R ((C : Set V) +ᵥ P) := by
-  obtain ⟨verts, h_hull⟩ := hP
-
-  sorry
+  let W := CanonicalHomogenization R A
+  let := IsModuleConvexSpace.ofAddTorsor (R := R) (V := W)
+  exact isHPolyhedron_vadd_of_isHPolyhedral_of_isPolytope (W := W) hC hP
 
 end Field
 end Homogenization
