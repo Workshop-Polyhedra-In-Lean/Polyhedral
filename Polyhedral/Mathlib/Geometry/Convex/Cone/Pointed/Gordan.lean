@@ -1,26 +1,47 @@
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Basic
+import Polyhedral.Mathlib.Algebra.Module.Lattice.Basic
+import Mathlib.Algebra.Order.Archimedean.Basic
+import Mathlib.Algebra.Order.Floor.Defs
 
-variable {R : Type*} [CommRing R]
-variable {K : Type*} [Field K] [Algebra R K] [PartialOrder K] [IsStrictOrderedRing K]
-variable {V : Type*} [AddCommGroup V] [Module R V] [Module K V] [IsScalarTower R K V]
+variable (K : Type*) [Field K] [LinearOrder K] [IsStrictOrderedRing K] [FloorRing K]
+variable {V : Type*} [AddCommGroup V] [Module K V] [Module.Finite K V]
 
-variable (K) in
-def Submodule.IsLatticeIn (Λ : Submodule R V) : Prop :=
-  ∃ (n : ℕ) (v : Fin n → Λ),
-    LinearIndependent K (Subtype.val ∘ v) ∧ Submodule.span R (Set.range v) = ⊤
-
-abbrev PointedCone.latticePoints (C : PointedCone K V) (Λ : Submodule R V) : AddSubmonoid V :=
+/-- The monoid of lattice points of a pointed cone in a lattice. -/
+abbrev PointedCone.latticePoints (C : PointedCone K V) (Λ : Submodule ℤ V) : AddSubmonoid V :=
   C.toAddSubmonoid ⊓ Λ.toAddSubmonoid
 
-variable (Λ : Submodule R V)
-variable (n : ℕ) (r : Fin n → Λ)
+namespace Gordan
 
-#check ConvexCone.hull
-variable (K) in
+variable (Λ : Submodule ℤ V)
+variable (r : Fin (Module.finrank K V) → Λ)
+
 abbrev C : PointedCone K V := (PointedCone.hull K (Set.range (Subtype.val ∘ r)))
 
-theorem gordan (hΛ : Λ.IsLatticeIn K) (hC : (C K Λ n r).toConvexCone.Salient) :
-    ((C K Λ n r).latticePoints Λ).FG := by
-  sorry
+noncomputable def parallelepiped : Set V :=
+    (Finsupp.linearCombination K (Subtype.val ∘ r)) '' { μ | ∀ i, 0 ≤ μ i ∧ μ i < 1 }
 
-#check AddMonoid.FG
+theorem parallelepiped_inter_lattice_finite :
+    (parallelepiped K Λ r ∩ Λ).Finite := sorry
+
+def generators : Set V := ((parallelepiped K Λ r) ∩ Λ) ∪ Set.range (Subtype.val ∘ r)
+
+theorem generators_finite : (generators K Λ r).Finite := by
+  unfold generators
+  apply Set.Finite.union
+  · apply parallelepiped_inter_lattice_finite
+  · apply Finite.Set.finite_range
+
+noncomputable def generatorsFinset : Finset V := Set.Finite.toFinset (generators_finite K Λ r)
+
+theorem gordan (hΛ : Λ.IsLattice' K) (hC : (C K Λ r).toConvexCone.Salient) :
+    ((C K Λ r).latticePoints K Λ).FG := by
+  use generatorsFinset K Λ r
+  apply AddSubmonoid.closure_eq_of_le
+  · sorry
+  · intro γ hγ
+    rw [AddSubmonoid.mem_closure_finset]
+    
+    sorry
+    
+
+end Gordan
