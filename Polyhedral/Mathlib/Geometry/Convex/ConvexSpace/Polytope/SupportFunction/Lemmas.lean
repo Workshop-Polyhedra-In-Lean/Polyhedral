@@ -9,6 +9,75 @@ import Mathlib.Algebra.Order.Ring.WithTop
 /-! # Basic properties of support functions (of sets)
 -/
 
+section
+
+variable {α : Type*} [DecidableEq α] [MulZeroClass α]
+
+#synth Mul (WithTopBot α)
+#check WithTop.instMulZeroClass
+
+-- note: the multiplication we have on WithBotTop R will have -1 * ∞ = ∞
+-- this may not be what we want (but it coincides with what we want for positive scalars)
+-- pehraps assume (a ≠ 0) (ha' : a ≠ -⊤) instead?
+-- (h : 0 < a)
+lemma WithBotTop.mul_top {a : WithBotTop α} (ha : a ≠ 0) (ha' : a ≠ ⊥) : a * ⊤ = ⊤ := by
+  rw [WithBot.mul_def]
+  have : ⊤ ≠ (0 : WithBot (WithTop α)) := by
+    sorry -- what's the lemma to use?
+  simp [ha, this]
+  --rw [WithBot.map₂_bot_right (a := a)]
+  sorry --rw [WithBot.map₂_coe_coe  (a := a) (b := (⊤ : WithTop α))]
+  --simp [WithBot.map₂, Option.map₂, Option.bind, Option.map]
+
+lemma WithBotTop.mul_bot {a : WithBotTop α} (ha : a ≠ 0) (ha' : a ≠ ⊤) : a * ⊥ = ⊥ := by
+  rw [WithBot.mul_def]
+  have : ⊤ ≠ (0 : WithBot (WithTop α)) := by
+    sorry -- what's the lemma to use?
+  simp [ha]
+
+end
+
+section convex
+
+variable {R V : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
+  [Convexity.ConvexSpace R V]
+  {P : Set V}
+
+-- is pos. homogeneous (Judith + Valentina)
+open scoped Classical Pointwise in
+-- XXX: right name?
+lemma supportFunctionAffine_homogeneous {r : R} (hr : 0 < r) (φ : ConvexSpace.dual R V) :
+    supportFunctionAffine R P (r • φ) = r * supportFunctionAffine R P φ := by
+  by_cases! hP : P.Nonempty
+  · by_cases hP' : ∃ x, IsLUB (φ '' P) x
+    · obtain ⟨x, hx⟩ := hP'
+      have hrP : IsLUB ((r • φ) '' P) (r * x) := by
+        sorry -- hopefully, true; should follow from a mathlib lemma
+      rw [supportFunctionAffine_of_nonempty_of_isLUB hP hx,
+        supportFunctionAffine_of_nonempty_of_isLUB (by simp [hP]) hrP]
+      simp [WithBotTop.coe]
+    · have hrP : ¬∃ x, IsLUB (⇑(r • φ) '' P) x := by
+        simp
+        sorry -- should be (an easy consequence of) a mathlib lemma
+      rw [supportFunctionAffine_of_nonempty_of_not_exists_isLUB hP hrP,
+        supportFunctionAffine_of_nonempty_of_not_exists_isLUB hP hP']
+      simp only [WithBotTop.coe, Function.comp_apply]
+      rw [WithBotTop.mul_top (by simp [hr.ne']) (by simp)]
+  · rw [hP]
+    simp only [supportFunctionAffine_empty, Pi.bot_apply]
+    rw [WithBotTop.mul_bot _ (by simp)]
+    · sorry -- missing lemma? should be easy in any case
+
+open scoped Classical Pointwise in
+lemma supportFunctionAffine_homogeneous' (hP : P.Nonempty)
+    {r : R} (hr : 0 ≤ r) (φ : ConvexSpace.dual R V) :
+    supportFunctionAffine R P (r • φ) = r * supportFunctionAffine R P φ := by
+  sorry
+
+end convex
+
+section linear
+
 variable {R V : Type*} [Semiring R] [PartialOrder R] [AddCommMonoid V] [Module R V]
 
 /- ## Basic properties -/
@@ -76,3 +145,5 @@ lemma isConvex_funkySet : Convexity.IsConvexSet ℚ funkySet := by
   sorry
 
 lemma supportFunction_funkySet : supportFunction ℚ funkySet = sorry := sorry
+
+end linear

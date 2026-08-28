@@ -177,6 +177,12 @@ lemma supportFunctionAffine_of_nonempty_of_isLUB
   have aux : ∃ x, IsLUB (⇑φ '' P) x := by use r
   simp [supportFunctionAffine, hP, aux, aux.choose_spec.unique hr]
 
+lemma supportFunctionAffine_of_nonempty_of_not_exists_isLUB
+    {P : Set V} (hP : P.Nonempty) {φ : ConvexSpace.dual R V}
+    (hP' : ¬(∃ x, IsLUB (φ '' P) x)) :
+    supportFunctionAffine R P φ = ⊤ := by
+  simp [supportFunctionAffine, hP, hP']
+
 -- supportFunction of singleton
 lemma supportFunctionAffine_singleton' {v : V} {φ : ConvexSpace.dual R V} :
     supportFunctionAffine R {v} φ = φ v := by
