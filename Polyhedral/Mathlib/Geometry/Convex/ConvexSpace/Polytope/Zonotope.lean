@@ -1,11 +1,4 @@
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.Face.Grade
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Module
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Homogenization
-import Mathlib.Geometry.Convex.ConvexSpace.AffineSpace
-
-noncomputable section
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
 
 namespace Convexity
 
@@ -17,6 +10,15 @@ variable [ConvexSpace R X]
 variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
 
 open scoped Pointwise
+
+variable (R) in
+def IsLineSegment (s : Set X) := ∃ a, ∃ b≠a, s = convexHull R {a, b}
+
+lemma IsLineSegment.isPolytope {s : Set X}
+    (hs : IsLineSegment (R := R) s) : IsPolytope R s := by
+  classical
+  rcases hs with ⟨a, b, _, rfl⟩
+  exact ⟨{a, b}, by simp⟩
 
 variable (R) in
 def UnitCube (n : ℕ) := Set.pi ⊤ (fun (_ : Fin n) => convexHull R {(0 : R), (1 : R)})
@@ -35,8 +37,6 @@ lemma UnitCube_IsPolytope (n : ℕ) : IsPolytope R (UnitCube R n) := by
     · sorry
   exact ht ▸ IsPolytope.convexHull_finite R hfinite
 
-variable (R) in
-def IsLineSegment (s : Set X) := ∃ a, ∃ b≠a, s = convexHull R {a, b}
 
 variable (R) in
 def isZonotope (s : Set X) := ∃ n : ℕ, ∃ f : (Fin n → R) → X,
