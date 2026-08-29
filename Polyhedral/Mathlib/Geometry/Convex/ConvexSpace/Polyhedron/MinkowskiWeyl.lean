@@ -89,26 +89,31 @@ open Convex
 -- The ∀ could be an ∃ (we could prove it's equivalent for polytopes)
 -- For `ConvexSet`, the ∀a is not necessary
 #click_suggestions
+
+#check smul_zero
 variable (R) in
 def Convex.Set.recessionCone (P : Set A) : PointedCone R V where
   carrier := { v : V | ∀ x ∈ P, ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P }
   add_mem' := by
     -- TODO: golf
     intro a b ha hb
-    simp only [mem_ofPred_eq, smul_add] at ha hb ⊢
+    simp only [mem_ofPred, smul_add] at ha hb ⊢
     intro x hx c hc
     have hb' := hb x hx c hc
     have ha' := ha (c•b +ᵥ x) hb' c
     rw [add_vadd]
     exact ha' hc
   zero_mem' := by
-    simp only [mem_ofPred_eq, smul_zero, zero_vadd]
+    -- rw [mem_ofPred] --, smul_zero a]
+    -- rw [smul_zero]
+    simp only [mem_ofPred, smul_zero, zero_vadd]
+    -- tauto -- would also work
     intro x hx a ha
     exact hx
   smul_mem' := by
     -- TODO: golf
     intro ⟨c, hc⟩ x h
-    simp only [mem_ofPred_eq, Nonneg.mk_smul] at ⊢ h
+    simp only [mem_ofPred, Nonneg.mk_smul] at ⊢ h
     intro y hy a ha
     rw [smul_smul]
     exact h y hy (a * c) (show 0 ≤ a * c by exact Right.mul_nonneg ha hc)
