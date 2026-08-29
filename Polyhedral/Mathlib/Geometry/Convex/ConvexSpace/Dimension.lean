@@ -32,7 +32,7 @@ section Ring
 variable [Ring k] [Module k V]
 
 noncomputable def cardinalDim : WithBot Cardinal :=
-  (affineSpan k s).cardinalDim
+  (affineSpan k s).dim
 noncomputable def finDim : WithBot Nat :=
   WithBot.map Cardinal.toNat (cardinalDim k s)
 noncomputable def efinDim : WithBot ENat :=
@@ -62,30 +62,9 @@ theorem finDim_eq_bot_iff : finDim k s = ⊥ ↔ s = ∅ := by
 theorem efinDim_eq_bot_iff : efinDim k s = ⊥ ↔ s = ∅ := by
   simp [efinDim]
 
---@[simp]
-theorem eq_singleton_of_affineSpan_eq {x : P} (hx : ↑(affineSpan k s) = {x}) : s = {x} := by
-  refine (Set.Nonempty.subset_singleton_iff ?_).mp ?_
-  · exact (affineSpan_nonempty k).mp (by simp [hx])
-  · simpa using affineSpan_le.mp hx.le
-
-@[simp]
-theorem eq_affineSpan_singleton (x : P) : affineSpan k {x} = {x} := by
-  simp [AffineSubspace.ext_iff]
-
-theorem cardinalDim_eq_zero_iff : cardinalDim k s = 0 ↔ ∃ x : P, s = {x} := by
-  simp only [cardinalDim, AffineSubspace.cardinalDim_eq_zero_iff]
-  constructor
-  · rintro ⟨x, hx⟩
-    exact ⟨x, eq_singleton_of_affineSpan_eq _ _ hx⟩
-  · rintro ⟨x, hx⟩
-    exact ⟨x, by simp [hx]⟩
-
-theorem efinDim_eq_zero_iff : efinDim k s = 0 ↔ ∃ x : P, s = {x} := by
-  sorry
-
 theorem cardinalDim_eq_rank {s : Set P} (hs : s.Nonempty) :
     cardinalDim k s = Module.rank k (affineSpan k s).direction :=
-  AffineSubspace.cardinalDim_eq_rank_of_nonempty _ (Set.Nonempty.affineSpan k hs)
+  AffineSubspace.dim_eq_rank (by contrapose! hs; simpa using hs)
 
 theorem finDim_eq_finrank {s : Set P} (hs : s.Nonempty) :
     finDim k s = Module.finrank k (affineSpan k s).direction := by
@@ -97,41 +76,12 @@ theorem finDim_eq_finrank {s : Set P} (hs : s.Nonempty) :
 
 end Ring
 
-section Field
-
-variable [Field k] [Module k V] [LinearOrder k] [IsStrictOrderedRing k]
-
--- TODO: read and consider the doc comment, should this be stated for a
--- [ConvexSpace k P] type class instead?
-attribute [local instance] AddTorsor.toConvexSpace
-
-theorem _root_.AffineSubspace.isConvexSet (t : AffineSubspace k P) : IsConvexSet k (t : Set P) :=
-  IsConvexSet.of_convexCombPair_mem fun a b ha hb hab x hx y hy ↦ by
-    rw [AddTorsor.convexCombPair_eq_lineMap, AffineMap.lineMap_apply]
-    exact t.smul_vsub_vadd_mem a hx hy hy
-
-@[simp]
-theorem _root_.AffineSubspace.convexHull_eq (t : AffineSubspace k P) :
-    convexHull k t = (t : Set P) :=
-  convexHull_eq_self.mpr (AffineSubspace.isConvexSet ..)
-
-@[simp]
-theorem _root_.affineSpan_convexHull_eq : affineSpan k (convexHull k s : Set P) = affineSpan k s := by
-  refine le_antisymm ?_ (affineSpan_mono k subset_convexHull_self)
-  have := convexHull_min (subset_affineSpan k s) (AffineSubspace.isConvexSet _ _)
-  grw [affineSpan_mono k this, affineSpan_le_of_subset_coe le_rfl]
-
-end Field
-
 section DivisionRing
 
 variable [DivisionRing k] [Module k V]
 
-theorem cardinalDim_lt_aleph0 (s : Set P) (hs : s.Nonempty) [FiniteDimensional k V] :
-    cardinalDim k s < Cardinal.aleph0 := by
-  refine (WithBot.unbot_lt_iff ?_).mp ?_
-  · simpa [Set.nonempty_iff_ne_empty] using hs
-  simp [cardinalDim_eq_rank _ hs, Module.rank_lt_aleph0]
+theorem cardinalDim_eq_zero_iff : cardinalDim k s = 0 ↔ ∃ x : P, s = {x} := by
+  simp [cardinalDim]
 
 theorem cardinalDim_eq_finDim_unbot (s : Set P) (hs : s.Nonempty) [Module.Finite k V] :
     cardinalDim k s = (finDim k s).unbot (by simpa [Set.nonempty_iff_ne_empty] using hs) := by
@@ -207,5 +157,32 @@ theorem finDim_1_then_affineSpan_spanned_by_2_points [FiniteDimensional k V]
   · assumption
 
 end DivisionRing
+
+section Field
+
+variable [Field k] [Module k V] [LinearOrder k] [IsStrictOrderedRing k]
+
+-- TODO: read and consider the doc comment, should this be stated for a
+-- [ConvexSpace k P] type class instead?
+attribute [local instance] AddTorsor.toConvexSpace
+
+theorem _root_.AffineSubspace.isConvexSet (t : AffineSubspace k P) : IsConvexSet k (t : Set P) :=
+  IsConvexSet.of_convexCombPair_mem fun a b ha hb hab x hx y hy ↦ by
+    rw [AddTorsor.convexCombPair_eq_lineMap, AffineMap.lineMap_apply]
+    exact t.smul_vsub_vadd_mem a hx hy hy
+
+@[simp]
+theorem _root_.AffineSubspace.convexHull_eq (t : AffineSubspace k P) :
+    convexHull k t = (t : Set P) :=
+  convexHull_eq_self.mpr (AffineSubspace.isConvexSet ..)
+
+@[simp]
+theorem _root_.affineSpan_convexHull_eq :
+    affineSpan k (convexHull k s : Set P) = affineSpan k s := by
+  refine le_antisymm ?_ (affineSpan_mono k subset_convexHull_self)
+  have := convexHull_min (subset_affineSpan k s) (AffineSubspace.isConvexSet _ _)
+  grw [affineSpan_mono k this, affineSpan_le_of_subset_coe le_rfl]
+
+end Field
 
 end Convexity
