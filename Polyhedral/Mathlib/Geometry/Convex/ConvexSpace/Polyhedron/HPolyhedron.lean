@@ -47,35 +47,32 @@ TODO: prove
 def IsHPolyhedral (p : V' →ₗ[R] V →ₗ[R] R) (P : PointedCone R V) : Prop :=
     ∃C : PointedCone R V, ∃S : Submodule R V, C.DualFG p ∧ P = C ⊓ S
 
-#click_suggestions
-theorem IsHPolyhedral.of_v_repr (p : V →ₗ[R] V' →ₗ[R] R) {C : PointedCone R V}
+/--
+The dual of a *V-polyhedral cone* is an *H-polyhedral cone*.
+-/
+theorem IsHPolyhedral.dual_isPolyhedral (p : V →ₗ[R] V' →ₗ[R] R) {C : PointedCone R V}
     (h : IsPolyhedral C) : IsHPolyhedral p (PointedCone.dual p C.carrier) := by
   classical
-  unfold IsPolyhedral at h
-  obtain ⟨D, ⟨hDFG, ⟨S, rfl⟩⟩⟩ := h
-  unfold IsHPolyhedral
-  use PointedCone.dual p D
-  use Submodule.dual p S
+  obtain ⟨C', ⟨hFG, ⟨S, rfl⟩⟩⟩ := h
+  use PointedCone.dual p C', Submodule.dual p S
+  -- The proof below is *basically* by-definition, so it should be easier to write
   constructor
-  · exact FG.dual_dualfg p hDFG
-  · -- rw [← Min.max_oppositeMax]
-    rw [← coe_dual]
-    -- rw [← dual_hull]
+  · exact FG.dual_dualfg p hFG
+  · rw [← coe_dual]
     ext x
     constructor
     · intro hx
       simp [dual] at hx
+      -- Use 0 on hx to get rid of the term we don't want on each case
       constructor
       · intro v hv
         simpa using hx v hv 0 (Submodule.zero_mem S)
       · intro v hv
-        simpa using hx 0 (Submodule.zero_mem D) v hv
+        simpa using hx 0 (Submodule.zero_mem C') v hv
     · intro hx
       simp only [Submodule.carrier_eq_coe, dual_sup, Submodule.coe_restrictScalars, mem_dual,
         mem_union, SetLike.mem_coe]
       intro v hv
-      simp only [dual_eq_submodule_dual, Submodule.mem_inf, mem_dual, SetLike.mem_coe,
-        Submodule.restrictScalars_mem, Submodule.mem_dual] at hx
       obtain ⟨hx₁, hx₂⟩ := hx
       apply Or.by_cases hv
       · intro hv
@@ -84,12 +81,37 @@ theorem IsHPolyhedral.of_v_repr (p : V →ₗ[R] V' →ₗ[R] R) {C : PointedCon
         simp [hx₂ hv]
 
 
-theorem IsPolyhedral.of_h_repr (p : V →ₗ[R] V' →ₗ[R] R) {C : PointedCone R V}
+section Field
+
+variable {R : Type*} [Field R] [LinearOrder R] [IsOrderedRing R]
+variable {V : Type*} [AddCommGroup V] [Module R V]
+variable {V' : Type*} [AddCommGroup V'] [Module R V']
+variable {A : Type*} [AddTorsor V A]
+
+#click_suggestions
+theorem IsPolyhedral.dual_isHPolyhedral (p : V →ₗ[R] V' →ₗ[R] R)
+    [Fact p.SeparatingRight] {C : PointedCone R V}
     (h : IsHPolyhedral p.flip C) : IsPolyhedral (PointedCone.dual p C.carrier) := by
-  sorry
+  classical
+  obtain ⟨C', ⟨S, ⟨hDualFG, rfl⟩⟩⟩ := h
+  use PointedCone.dual p C'
+  constructor
+    -- Note: DualFG.dual_fg requires a field with linear order + p.SeparatingRight,
+    --       while the dual `FG.dual_dualfg` requires none of these.
+  · exact DualFG.dual_fg hDualFG
+  · use Submodule.dual p S
+    ext x
+    constructor
+    · intro h
+      simp [PointedCone.dual, Submodule.dual] at ⊢ h
+
+      sorry
+    · sorry
+
+end Field
 
 /-- A polyhedral cone is a polyhedron -/
-lemma IsHPolyhedral.is_h_polyhedron
+lemma IsHPolyhedral.isHPolyhedron
   {C : PointedCone R V} (p : V' →ₗ[R] V →ₗ[R] R) (hC : IsHPolyhedral p C) :
     IsHPolyhedron R C.carrier := by classical
   obtain ⟨C', ⟨S, ⟨⟨H, hH⟩, hInter⟩⟩⟩ := hC
@@ -310,7 +332,7 @@ open PointedCone Module in
 /-- A finitely generated cone is an H-polyhedron. -/
 lemma IsHPolyhedron.fg (C : PointedCone R V) (hC : C.FG) :
     IsHPolyhedron R (C : Set V) :=
-  IsHPolyhedral.is_h_polyhedron _ (IsHPolyhedral.fg C hC)
+  IsHPolyhedral.isHPolyhedron _ (IsHPolyhedral.fg C hC)
 
 end Field
 
@@ -330,8 +352,8 @@ convex sets it fails. As a consequence, the `∀`- and `∃`-versions of the rec
 H-polyhedron agree, see `IsHPolyhedron.forall_smul_vadd_mem_iff_exists`. -/
 theorem IsHPolyhedron.smul_vadd_mem_of_forall_smul_vadd_mem {P : Set A}
     (hP : IsHPolyhedron R P) {x : A} (hx : x ∈ P) {v : V}
-    (hxv : ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P) {y : A} (hy : y ∈ P) {a : R} (ha : 0 ≤ a) :
-    a • v +ᵥ y ∈ P := by
+    (hxv : ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P)
+    {y : A} (hy : y ∈ P) {a : R} (ha : 0 ≤ a) : a • v +ᵥ y ∈ P := by
   obtain ⟨H, S, rfl⟩ := hP
   simp only [Set.mem_inter_iff, Set.mem_iInter, Set.mem_preimage, Set.mem_Ici,
     SetLike.mem_coe, AffineMap.map_vadd, map_smul, smul_eq_mul, vadd_eq_add] at hx hy hxv ⊢
