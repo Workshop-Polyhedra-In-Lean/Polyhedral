@@ -102,15 +102,15 @@ lemma positive_inf_ker {f : M →ₗ[R] R} : f.positive ⊓ f.ker = ⊥ := by
 
 @[simp] lemma positive_zero : positive (0 : M →ₗ[R] R) = ⊥ := by ext x; simp
 
-lemma positive_eq_hull_preimage_singleton (f : M →ₗ[R] R) (c : R) (hc : c ≠ 0) :
-    f.positive = PointedCone.hull R (f ⁻¹' {c}) := by
-  sorry
-
 lemma hull_le_positive_of_subset_preimage_singleton {f : M →ₗ[R] R} {s : Set M} {c : R}
-    (hc : c ≠ 0) (hs : s ⊆ f ⁻¹' {c}) :
+    (hc : 0 < c) (hs : s ⊆ f ⁻¹' {c}) :
     PointedCone.hull R s ≤ f.positive := by
-  rw [positive_eq_hull_preimage_singleton f c hc]
-  exact Submodule.span_mono hs
+  rw [Submodule.span_le]
+  intro y hy
+  simp only [SetLike.mem_coe, mem_positive]
+  intro _
+  rw [Set.mem_preimage.mp (hs hy)]
+  exact hc
 
 end IsStrictOrderedRing
 
@@ -132,5 +132,27 @@ open PointedCone Pointwise
   ext x; simp
 
 end Ring
+
+section Field
+
+variable {R : Type*} [Field R] [LinearOrder R] [IsOrderedRing R]
+variable {M : Type*} [AddCommMonoid M] [Module R M]
+
+lemma positive_eq_hull_preimage_singleton (f : M →ₗ[R] R) {c : R} (hc : 0 < c) :
+    f.positive = PointedCone.hull R (f ⁻¹' {c}) := by
+  refine le_antisymm ?_ (hull_le_positive_of_subset_preimage_singleton hc subset_rfl)
+  intro x hx
+  rcases eq_or_ne x 0 with rfl | hx0
+  · exact Submodule.zero_mem _
+  · have hfx : 0 < f x := mem_positive.mp hx hx0
+    have h1 : (f x * c⁻¹) * (c * (f x)⁻¹) = 1 := by
+      field_simp
+    have hxeq : x = (f x * c⁻¹) • ((c * (f x)⁻¹) • x) := by
+      rw [smul_smul, h1, one_smul]
+    rw [hxeq]
+    refine PointedCone.smul_mem _ (by positivity) (Submodule.subset_span ?_)
+    simp [mul_assoc, inv_mul_cancel₀ hfx.ne']
+
+end Field
 
 end LinearMap

@@ -9,6 +9,7 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Pointwise
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Polyhedral.Basic
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Dual
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.MinkowskiWeyl
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Module
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Homogenization
 
 /-! This file defines polyhedra as the Minkowski sums polytopes and polyhedral cones. -/
@@ -165,43 +166,80 @@ variable {A : Type*} [AddCommGroup A] [Module R A] [AddTorsor V A] --[space : Co
 
 attribute [local instance] AddTorsor.toConvexSpace
 
-lemma IsConvexSet.halfspace (f : A →ᵃ[R] R) : IsConvexSet R (f ⁻¹' Set.Ici 0) := by
-  apply IsConvexSet.preimage
-  exact f.isAffineMap
-  sorry
+lemma isConvexSet_Iic (b : R) : IsConvexSet R (Set.Iic b) := by
+  classical
+  let := IsModuleConvexSpace.ofAddTorsor (R := R) (V := R)
+  refine IsConvexSet.of_sConvexComb_mem fun w hw => ?_
+  rw [sConvexComb_eq_sum, Finsupp.sum]
+  have hle : ∀ m ∈ w.weights.support, w.weights m • m ≤ w.weights m * b := fun m hm => by
+    rw [smul_eq_mul]
+    exact mul_le_mul_of_nonneg_left (hw hm) (Finsupp.le_def.mp w.nonneg m)
+  refine Set.mem_Iic.mpr (le_trans (Finset.sum_le_sum hle) ?_)
+  rw [← Finset.sum_mul]
+  have htot := w.total
+  rw [Finsupp.sum] at htot
+  rw [htot, one_mul]
 
-#click_suggestions
-/-- An *H*-polyhedron is a convex set -/
--- TODO: Prove this using convexity of intersections, preimages and affine subspaces
--- lemma IsConvexSet.h_polyhedron {P : Set A} (hP : IsHPolyhedron R P) : IsConvexSet R P := by
---   classical
---   obtain ⟨C', ⟨S, ⟨⟨H, hH⟩, hInter⟩⟩⟩ := hP
+lemma isConvexSet_Ici (b : R) : IsConvexSet R (Set.Ici b) := by
+  classical
+  let := IsModuleConvexSpace.ofAddTorsor (R := R) (V := R)
+  refine IsConvexSet.of_sConvexComb_mem fun w hw => ?_
+  rw [sConvexComb_eq_sum, Finsupp.sum]
+  have hle : ∀ m ∈ w.weights.support, w.weights m * b ≤ w.weights m • m := fun m hm => by
+    rw [smul_eq_mul]
+    exact mul_le_mul_of_nonneg_left (hw hm) (Finsupp.le_def.mp w.nonneg m)
+  refine Set.mem_Ici.mpr (le_trans ?_ (Finset.sum_le_sum hle))
+  rw [← Finset.sum_mul]
+  have htot := w.total
+  rw [Finsupp.sum] at htot
+  rw [htot, one_mul]
 
---   apply IsConvexSet.inter
---   · have Cf := C'.image (·.toFun ⁻¹' Set.Ici 0)
---     have h := IsConvexSet.sInter (show ∀ s ∈ Cf, IsConvexSet R s by
-
---       sorry
---     )
---     intro s
-
---     sorry
---   · sorry
-
---   apply IsConvexSet.of_convexCombPair_mem
---   intro a b ha hb hab x hx y hy
---   unfold convexCombPair sConvexComb AddTorsor.toConvexSpace AddTorsor.convexCombination Finset.affineCombination
---   simp
---   -- rw [show (Finsupp.single x a + Finsupp.single y b).support = {x, y} by
---   --   rw [Finsupp.support_add_eq, Finsupp.support_single, Finsupp.support_single]
---   --   simp
---   --   ]
---   sorry
-
-def IsHPolyhedron.toConvexSet {P : Set A} (hP : IsHPolyhedron R P) : ConvexSet R A :=
-    sorry --⟨P, IsConvexSet.h_polyhedron hP⟩
+omit [AddCommGroup A] [Module R A] in
+lemma IsConvexSet.halfspace (f : A →ᵃ[R] R) : IsConvexSet R (f ⁻¹' Set.Ici 0) :=
+  (isConvexSet_Ici 0).preimage f.isAffineMap
 
 end ConvexSet
+
+section ConvexityOfHPolyhedra
+
+open Convexity
+
+variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
+variable {V : Type*} [AddCommGroup V] [Module R V]
+variable {A : Type*} [AddTorsor V A]
+
+attribute [local instance] AddTorsor.toConvexSpace
+
+/-- Affine subspaces are convex. -/
+lemma AffineSubspace.isConvexSet (T : AffineSubspace R A) : IsConvexSet R (T : Set A) := by
+  rcases (T : Set A).eq_empty_or_nonempty with he | ⟨x₀, hx₀⟩
+  · rw [he]
+    exact IsConvexSet.empty
+  · let := IsModuleConvexSpace.ofAddTorsor (R := R) (V := V)
+    have hT : (T : Set A)
+        = ((AffineEquiv.vaddConst R x₀).symm.toAffineMap : A →ᵃ[R] V) ⁻¹' T.direction := by
+      ext y
+      simp only [Set.mem_preimage, AffineEquiv.coe_toAffineMap,
+        AffineEquiv.vaddConst_symm_apply, SetLike.mem_coe]
+      exact (AffineSubspace.vsub_right_mem_direction_iff_mem hx₀ y).symm
+    rw [hT]
+    exact T.direction.isConvexSet.preimage (AffineMap.isAffineMap _)
+
+/-- H-polyhedra are convex. -/
+lemma IsHPolyhedron.isConvexSet {P : Set A} (hP : IsHPolyhedron R P) : IsConvexSet R P := by
+  obtain ⟨H, T, rfl⟩ := hP
+  refine IsConvexSet.inter ?_ (AffineSubspace.isConvexSet T)
+  rw [show (⋂ h ∈ H, ⇑h ⁻¹' Set.Ici (0 : R))
+      = ⋂₀ ((fun h : A →ᵃ[R] R => ⇑h ⁻¹' Set.Ici (0 : R)) '' ↑H) by simp [Set.sInter_image]]
+  refine IsConvexSet.sInter ?_
+  rintro s ⟨h, -, rfl⟩
+  exact IsConvexSet.halfspace h
+
+/-- An H-polyhedron, bundled as a convex set. -/
+def IsHPolyhedron.toConvexSet {P : Set A} (hP : IsHPolyhedron R P) : ConvexSet R A :=
+  ⟨P, hP.isConvexSet⟩
+
+end ConvexityOfHPolyhedra
 
 section PartialOrder
 omit [IsOrderedRing R]
@@ -333,6 +371,40 @@ open PointedCone Module in
 lemma IsHPolyhedron.fg (C : PointedCone R V) (hC : C.FG) :
     IsHPolyhedron R (C : Set V) :=
   IsHPolyhedral.isHPolyhedron _ (IsHPolyhedral.fg C hC)
+
+variable {V' : Type*} [AddCommGroup V'] [Module R V']
+
+open PointedCone in
+/-- An H-polyhedral cone with respect to any pairing is polyhedral: its defining functionals
+are in particular plain linear functionals (`DualFG.id`), so the full dual pairing machinery
+applies. -/
+lemma PointedCone.IsHPolyhedral.isPolyhedral {q : V' →ₗ[R] V →ₗ[R] R} {C : PointedCone R V}
+    (hC : IsHPolyhedral q C) : IsPolyhedral C := by
+  obtain ⟨D, S, hD, rfl⟩ := hC
+  exact .of_dualfg_inf_submodule hD.id S
+
+open PointedCone in
+/-- The dual of an H-polyhedral cone is polyhedral. -/
+theorem PointedCone.IsPolyhedral.isHPolyhedral (q : V →ₗ[R] V' →ₗ[R] R) {C : PointedCone R V}
+    (h : IsHPolyhedral q.flip C) : IsPolyhedral (PointedCone.dual q C.carrier) :=
+  h.isPolyhedral.dual q
+
+variable {V' : Type*} [AddCommGroup V'] [Module R V']
+
+open PointedCone in
+/-- An H-polyhedral cone with respect to any pairing is polyhedral: its defining functionals
+are in particular plain linear functionals (`DualFG.id`), so the full dual pairing machinery
+applies. -/
+lemma PointedCone.IsHPolyhedral.isPolyhedral {q : V' →ₗ[R] V →ₗ[R] R} {C : PointedCone R V}
+    (hC : IsHPolyhedral q C) : IsPolyhedral C := by
+  obtain ⟨D, S, hD, rfl⟩ := hC
+  exact .of_dualfg_inf_submodule hD.id S
+
+open PointedCone in
+/-- The dual of an H-polyhedral cone is polyhedral. -/
+theorem PointedCone.IsPolyhedral.of_h_repr (q : V →ₗ[R] V' →ₗ[R] R) {C : PointedCone R V}
+    (h : IsHPolyhedral q.flip C) : IsPolyhedral (PointedCone.dual q C.carrier) :=
+  h.isPolyhedral.dual q
 
 end Field
 
