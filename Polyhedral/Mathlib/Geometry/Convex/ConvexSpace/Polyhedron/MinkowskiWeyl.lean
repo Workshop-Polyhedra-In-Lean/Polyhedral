@@ -37,6 +37,7 @@ variable [hom : Affine.IsHomogenization R A W]
 
 /-- The homogenization of an H-polyhedron is an H-polyhedral cone (with respect to the
 standard dual pairing). -/
+-- This is not true: If S is unbounded, the homogenization is not a closed set.
 lemma PointedCone.homogenize_is_h_polyhedral (S : ConvexSet R A)
     (hS : IsHPolyhedron R (S : Set A)) :
     PointedCone.IsHPolyhedral .id (homogenize W S) := by
