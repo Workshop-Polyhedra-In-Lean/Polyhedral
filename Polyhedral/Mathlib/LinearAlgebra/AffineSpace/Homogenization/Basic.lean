@@ -207,6 +207,34 @@ lemma apply_ofPointRangeEquiv_symm (x : hom.ofPoint.range) :
 
 end IsHomogenization
 
+section WeightHyperplane
+
+variable (g : W →ₗ[R] R)
+
+/-- The weight-one affine hyperplane of a linear functional. -/
+def _root_.LinearMap.weightHyperplane : AffineSubspace R W where
+  carrier := g ⁻¹' {1}
+  smul_vsub_vadd_mem' := by
+    intro c p₁ p₂ p₃ h₁ h₂ h₃
+    simp only [Set.mem_preimage, Set.mem_singleton_iff] at *
+    simp [h₁, h₂, h₃]
+
+@[simp] lemma _root_.LinearMap.mem_weightHyperplane {x : W} :
+    x ∈ g.weightHyperplane ↔ g x = 1 := Iff.rfl
+
+/-- A module is a homogenization of the weight-one hyperplane of any linear functional,
+provided that hyperplane is nonempty. -/
+@[instance_reducible] def IsHomogenization.ofWeight [Nonempty g.weightHyperplane] :
+    IsHomogenization R g.weightHyperplane W where
+  ofPoint := g.weightHyperplane.subtype
+  ofPoint_injective := g.weightHyperplane.subtype_injective
+  weight := g
+  ofPoint_range_eq_preimage_weight_one := by
+    rw [AffineSubspace.coe_subtype, Subtype.range_coe]
+    rfl
+
+end WeightHyperplane
+
 end Ring
 
 end Affine

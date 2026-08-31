@@ -49,6 +49,11 @@ def homogenizeOrderHom : ConvexSet R A →o PointedCone R W where
 lemma homogenize_bot : homogenize W (⊥ : ConvexSet R A) = ⊥ := by
   simp [homogenize, Bot.bot]
 
+@[simp] lemma homogenize_singleton (p : A) :
+    homogenize W ({p} : ConvexSet R A) = R ∙₊ hom.ofPoint p := by
+  have h : (({p} : ConvexSet R A) : Set A) = {p} := rfl
+  rw [homogenize, h, Set.image_singleton]
+
 lemma homogenize_top : homogenize W (⊤ : ConvexSet R A) = hom.weight.positive := by
   rw [homogenize, LinearMap.positive_eq_hull_preimage_singleton hom.weight 1 one_ne_zero,
     ← hom.ofPoint_range_eq_preimage_weight_one]
