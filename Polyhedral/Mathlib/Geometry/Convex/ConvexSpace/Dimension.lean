@@ -182,8 +182,9 @@ section Convex
 
 variable [PartialOrder k] [IsStrictOrderedRing k] [ConvexSpace k P] [IsAffineConvexSpace k V P]
 -- it seems like IsAffineConvexSpace is the generality we need here
--- because convex sets require an ordering on the ring and we don't have that for general affine spaces
+-- because a convex space requires an ordering on the ring and we don't have that for general affine spaces
 
+-- Slop ↓
 /-- An affine subspace is convex: it is closed under affine combinations of its points, and
 convex combinations are affine combinations. -/
 theorem _root_.AffineSubspace.isConvexSet (t : AffineSubspace k P) : IsConvexSet k (t : Set P) := by
