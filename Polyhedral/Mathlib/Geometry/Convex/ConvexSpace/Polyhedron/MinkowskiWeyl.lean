@@ -163,7 +163,7 @@ lemma IsHPolyhedron.mem_recessionCone_iff_exists {P : Set A} (hP : IsHPolyhedron
   rw [Convex.Set.mem_recessionCone]
   exact hP.forall_smul_vadd_mem_iff_exists hne
 
-/-- Translating a set along its recession cone leaves it unchanged. -/
+/-- Minkowski addition of a set P and its recession cone leaves P unchanged. -/
 lemma Convex.Set.recessionCone_vadd_self {P : Set A} :
     (P.recessionCone R : Set V) +ᵥ P = P := by
   ext x
@@ -210,6 +210,7 @@ lemma Convexity.IsPolytope.recessionCone_eq_bot {P : Set A} (hP : IsPolytope R P
   have := hray (t.sup' hte h + 1) (by linarith)
   linarith
 
+-- this lemma does not seem to be used.
 #click_suggestions
 lemma IsHPolyhedron.recessionCone_isHPolyhedral {P : Set A} (hP : IsHPolyhedron R P) :
     IsHPolyhedral .id (P.recessionCone R) := by
@@ -638,14 +639,16 @@ lemma IsHPolyhedron.recessionCone_isPolyhedral {H : Set A} (hH : IsHPolyhedron R
   exact IsHPolyhedron.recessionCone_isPolyhedral_aux (W := W) hH
 
 -- TODO: It would be nice to not need the explicit coercion Cone → Set
+-- TODO: Update the verbal theorem statement.
 /--
-Every *H-polyhedron* can be decomposed as the Minkowski sum of
-a *V-polytope*, a *finitely generated cone*, and a *submodule*.
-`H → V` direction of the *Minkowski-Weyl* theorem.
+`H → V` direction of the *Minkowski-Weyl* Theorem.
+Every *H-polyhedron* H can be decomposed as the Minkowski sum of
+a *V-polytope* P, a *finitely generated cone*, and a *submodule*.
+The finitely generated cone and the submodule together form the
+recession cone in this theorem.
 
-As in the definition of *H-polyhedron*, we allow this *submodule*
-to be neither finitely nor co-finitely generated, which is only
-relevant in infinite dimension.
+As in the definition of *H-polyhedron*, this *submodule* need not have finite dimension
+or finite codimension (which is only relevant in infinite dimension).
 -/
 lemma isVPolyhedron_of_isHPolyhedron (H : Set A) (hH : IsHPolyhedron R H) :
     ∃P : Set A, (IsPolytope R P) ∧ H = (H.recessionCone R : Set V) +ᵥ P := by
