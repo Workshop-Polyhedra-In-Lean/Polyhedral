@@ -46,12 +46,14 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.Lattice
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Face
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.KreinMilman
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Pointwise
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Lattice
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Vertex
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Hull
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Lattice
