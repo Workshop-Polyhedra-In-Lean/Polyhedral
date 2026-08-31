@@ -61,6 +61,7 @@ lemma dual_sup_submodule_fg_eq_dual_inf_dual {S : Submodule 𝕜 N} (hS : S.FG) 
 
 -- # MINKOWSKI WEYL
 
+-- TODO: fix docstring: `dual_sup_span_singleton_eq_dual` is nowhere to see.
 variable (p s w) in
 /-- A set whose dual cone is `span R {w} ⊔ dual p s`, see `dual_sup_span_singleton_eq_dual` -/
 private noncomputable abbrev auxGenSet : Set M :=
@@ -160,8 +161,9 @@ lemma sup_dualfg_fg {C D : PointedCone 𝕜 N} (hC : C.DualFG p) (hD : D.FG) : (
   exact sup_fg_dualfg hD hC
 
 variable (p) [Fact p.SeparatingRight] in
-/-- An FG cone can be written as the intersection of a DualFG cone and an FG submodule. -/
-lemma FG.exists_dualfg_inf_submodule {C : PointedCone 𝕜 N} (hC : C.FG) {S : Submodule 𝕜 N}
+/-- An FG cone `C` can be written as the intersection of a DualFG cone `D` and an FG submodule `S`.
+-/
+theorem FG.exists_dualfg_inf_submodule {C : PointedCone 𝕜 N} (hC : C.FG) {S : Submodule 𝕜 N}
     (hS : S.FG) (hCS : C ≤ S) : ∃ D : PointedCone 𝕜 N, D.DualFG p ∧ D ⊓ S = C := by
   wlog hC' : C = ⊥ with h
   · obtain ⟨D, hdualfg, hD⟩ := h p fg_bot hS bot_le rfl
