@@ -35,6 +35,11 @@ lemma IsSimplex.isConvexSet {s : Set X} (hs : IsSimplex (R := R) s) : IsConvexSe
 @[simp] lemma IsSimplex.convexHull_eq {s : Set X} (hs : IsSimplex (R := R) s) :
     convexHull R s = s := hs.isConvexSet.convexHull_eq_self
 
+lemma IsAffineIndependentFinset.isSimplex {t : Finset X}
+    (ht : IsAffineIndependentFinset (R := R) t) :
+    IsSimplex (R := R) (convexHull R (↑t : Set X)) :=
+  ⟨t, ht, rfl⟩
+
 end Semiring
 
 end Convexity
