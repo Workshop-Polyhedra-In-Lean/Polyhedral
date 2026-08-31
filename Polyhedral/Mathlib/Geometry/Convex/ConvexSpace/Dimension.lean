@@ -67,12 +67,8 @@ theorem cardinalDim_eq_rank {s : Set P} (hs : s.Nonempty) :
   AffineSubspace.dim_eq_rank (by contrapose! hs; simpa using hs)
 
 theorem finDim_eq_finrank {s : Set P} (hs : s.Nonempty) :
-    finDim k s = Module.finrank k (affineSpan k s).direction := by
-  refine WithBot.unbot_inj ?_ (by simp) |>.mp ?_
-  · simpa [Set.nonempty_iff_ne_empty] using hs
-  congr 1
-  simp [finDim, cardinalDim_eq_rank _ hs]
-  norm_cast
+    finDim k s = Module.finrank k (affineSpan k s).direction :=
+    AffineSubspace.findim_eq_finrank (by contrapose! hs; simpa using hs)
 
 end Ring
 
