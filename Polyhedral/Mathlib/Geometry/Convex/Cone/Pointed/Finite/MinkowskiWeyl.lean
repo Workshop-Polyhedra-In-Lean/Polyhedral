@@ -61,9 +61,8 @@ lemma dual_sup_submodule_fg_eq_dual_inf_dual {S : Submodule 𝕜 N} (hS : S.FG) 
 
 -- # MINKOWSKI WEYL
 
--- TODO: fix docstring: `dual_sup_span_singleton_eq_dual` is nowhere to see.
 variable (p s w) in
-/-- A set whose dual cone is `span R {w} ⊔ dual p s`, see `dual_sup_span_singleton_eq_dual` -/
+/-- A set whose dual cone is `span R {w} ⊔ dual p s`, see lemma `dual_auxGenSet` below. -/
 private noncomputable abbrev auxGenSet : Set M :=
   {x ∈ s | 0 ≤ p x w} ∪
     .image2 (fun x y ↦ p x w • y - p y w • x) {x ∈ s | 0 ≤ p x w} {y ∈ s | p y w < 0}
