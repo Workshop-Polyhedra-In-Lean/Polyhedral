@@ -27,6 +27,14 @@ def IsSimplex (s : Set X) : Prop :=
 lemma IsSimplex.isPolytope {s : Set X} (hs : IsSimplex (R := R) s) : IsPolytope R s :=
   hs.imp fun _ ht ↦ ht.2
 
+/-- Every simplex is a convex set. -/
+lemma IsSimplex.isConvexSet {s : Set X} (hs : IsSimplex (R := R) s) : IsConvexSet R s :=
+  hs.isPolytope.isConvexSet
+
+/-- The convex hull of simplex, is the simplex itself. -/
+@[simp] lemma IsSimplex.convexHull_eq {s : Set X} (hs : IsSimplex (R := R) s) :
+    convexHull R s = s := hs.isConvexSet.convexHull_eq_self
+
 end Semiring
 
 end Convexity

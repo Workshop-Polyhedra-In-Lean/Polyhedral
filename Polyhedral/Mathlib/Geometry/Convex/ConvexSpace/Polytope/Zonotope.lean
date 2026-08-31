@@ -35,6 +35,7 @@ lemma convexHull_pi {ι : Type*} [Finite ι] (s : Set ι) (α : ι → Set X) :
   induction t using Finset.induction
   · simp
   · sorry --this might be hard, since we only proved convexHull distributing over cartesian prodúct but this is an intersection.
+  sorry
 
 lemma UnitCube_IsPolytope (n : ℕ) : IsPolytope R (UnitCube R n) := by
   let t := Set.pi ⊤ (fun (_ : Fin n) => {(0 : R), (1 : R)})
