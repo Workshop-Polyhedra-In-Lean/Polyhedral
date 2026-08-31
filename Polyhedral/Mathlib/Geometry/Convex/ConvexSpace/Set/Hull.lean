@@ -27,19 +27,10 @@ open Pointwise
 
 variable {R V A X Y : Type*}
 
-variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
-variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
-variable [ConvexSpace R X]
-variable [ConvexSpace R Y]
+section Semiring
 
-@[simp] lemma convexHull_neg (s : Set V) : -convexHull R s = convexHull R (-s) := by
-  ext x
-  simp only [mem_neg, mem_convexHull_iff]
-  constructor <;> intro h t hst hcvx
-  · exact neg_mem_neg.mp <| h (-t) (neg_subset.mp hst) hcvx.neg
-  · exact mem_neg.mp <| h (-t) (neg_subset_neg.mpr hst) hcvx.neg
-
-variable [AddTorsor V A] [ConvexSpace R A] [IsAffineConvexSpace R V A]
+variable [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
+variable [ConvexSpace R X] [ConvexSpace R Y]
 
 lemma convexHull_prod (s : Set X) (t : Set Y) :
   convexHull R (s ×ˢ t) = (convexHull R s) ×ˢ (convexHull R t) := by
@@ -72,12 +63,30 @@ lemma convexHull_prod (s : Set X) (t : Set Y) :
     · rw [← (hY x).image_convexHull t]
       exact ⟨y, hy, rfl⟩
 
+end Semiring
+
+section Ring
+
+variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
+variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
+
+@[simp] lemma convexHull_neg (s : Set V) : -convexHull R s = convexHull R (-s) := by
+  ext x
+  simp only [mem_neg, mem_convexHull_iff]
+  constructor <;> intro h t hst hcvx
+  · exact neg_mem_neg.mp <| h (-t) (neg_subset.mp hst) hcvx.neg
+  · exact mem_neg.mp <| h (-t) (neg_subset_neg.mpr hst) hcvx.neg
+
+variable [AddTorsor V A] [ConvexSpace R A] [IsAffineConvexSpace R V A]
+
 lemma convexHull_vadd (s₁ : Set V) (s₂ : Set A) :
     convexHull R (s₁ +ᵥ s₂) = convexHull R s₁ +ᵥ convexHull R s₂ := by
   rw [← vadd_image_prod, ← vadd_image_prod]
   rw [← IsAffineMap.image_convexHull]
   · rw [convexHull_prod]
   · fun_prop
+
+end Ring
 
 end Pointwise
 

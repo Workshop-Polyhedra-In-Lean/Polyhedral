@@ -44,6 +44,17 @@ lemma isConvexSet (hP : IsPolytope R P) : IsConvexSet R P := by
   obtain ⟨_, rfl⟩ := hP
   exact IsConvexSet.convexHull
 
+protected lemma prod {Y : Type*} [ConvexSpace R Y]
+    {P : Set X} {Q : Set Y}
+    (hP : IsPolytope R P) (hQ : IsPolytope R Q) :
+    IsPolytope R (P ×ˢ Q) := by
+  classical
+  obtain ⟨s, rfl⟩ := hP
+  obtain ⟨t, rfl⟩ := hQ
+  use s ×ˢ t
+  simpa only [Finset.coe_product] using
+    (convexHull_prod (R := R) (s : Set X) (t : Set Y)).symm
+
 variable (R X) in
 @[simp] protected lemma empty : IsPolytope R (∅ : Set X) := by
   use ∅; simp
