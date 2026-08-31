@@ -25,17 +25,11 @@ local instance : ConvexSpace R P := AddTorsor.toConvexSpace
 
 variable {K : ConvexSet R P} {C : PointedCone R M} {x : P}
 
--- NOTE: this is not correct if `x ∉ K`, then the tangent cone should be empty.
-/-- The tangent cone at a point `x` of a convex set `K`. -/
-def tangentCone (K : ConvexSet R P) (x : P) : PointedCone R M :=
-  PointedCone.hull R {y -ᵥ x | (y ∈ K)}
-
--- NOTE: this is not correct if `x ∉ K`, then the tangent cone should be empty.
-/-- The tangent cone at a point `x` of a convex set `K`. -/
-def tangentCone' (K : ConvexSet R P) (F : ConvexSet R P) : PointedCone R M :=
+/-- The tangent cone over a face `F` a convex set `K`. -/
+def tangentCone (K : ConvexSet R P) (F : Face K) : PointedCone R M :=
   PointedCone.hull R {y -ᵥ x | (y ∈ K) (x ∈ F)}
 
--- @[simp] lemma tagentCone_cone_coe_zero_eq_self (C : PointedCone R M) :
+-- @[simp] lemma tangentCone_cone_coe_zero_eq_self (C : PointedCone R M) :
 --     (C : ConvexSet R M).tangentCone (0 : M) = C := by simp [tangentCone]
 
 end Ring
@@ -44,7 +38,7 @@ section Field
 
 variable {R : Type*} [Field R] [LinearOrder R] [IsStrictOrderedRing R]
 variable {M : Type*} [AddCommGroup M] [Module R M]
-variable {P : Type*} [AddTorsor M P] --[ConvexSpace R P] [IsAffineConvexSpace R M P]
+variable {P : Type*} [AddTorsor M P] -- [ConvexSpace R P] [IsAffineConvexSpace R M P]
 
 local instance : ConvexSpace R P := AddTorsor.toConvexSpace
 
@@ -56,7 +50,7 @@ section Relint
 
 -- TODO: move
 
-/-- The algebraic relative interior, characterized by the minimal face containing a point. -/
+/-- The algebraic relative interior, defined as the non-extreme points. -/
 def relint (K : ConvexSet R P) : ConvexSet R P where
   carrier := {x | x ∈ K ∧ ∀ F : Face K, x ∈ F → F = ⊤}
   isConvexSet := by

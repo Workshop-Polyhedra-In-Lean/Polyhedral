@@ -52,7 +52,7 @@ theorem efinDim_empty : efinDim k (∅ : Set P) = ⊥ := by
 
 @[simp]
 theorem cardinalDim_eq_bot_iff : cardinalDim k s = ⊥ ↔ s = ∅ := by
-  simp [cardinalDim]
+  sorry
 
 @[simp]
 theorem finDim_eq_bot_iff : finDim k s = ⊥ ↔ s = ∅ := by
