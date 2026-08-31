@@ -110,51 +110,62 @@ theorem exists_affineIndependent''' (s : Set P) [FiniteDimensional k V] :
 
 
 /-!
-TODO
-- split the ↔ in finDim_eq_iff and delete it (✓)
-- get review by Vlad
-- make corollaries of finDim_eq_iff for dim 1 (✓), 2
+TODO:
+- prove corollaries of finDim_eq_iff for dim 1
 - (later) refactor proofs about affine spaces to go into AffineSpace/Dimension.lean
 -/
 
--- TODO: Should this be stated in the AffineSubspace dimension file instead and this is a corollary?
-theorem finDim_n_then_affineSpan_spanned_by_np1_points{n : ℕ} [FiniteDimensional k V]
-  (h : finDim k s = n) :
-    ∃ t ⊆ s, s ⊆ affineSpan k t ∧ AffineIndependent k ((↑) : t → P) ∧ t.ncard = n + 1 := by
-  obtain ⟨t, ht1, ht2, ht3, ht4⟩ := exists_affineIndependent''' k s
-  rw [h] at ht4
-  exact ⟨t, ht1, ht2 ▸ subset_affineSpan .., ht3, ht4⟩
+theorem finDim_eq_iff {n : ℕ} [FiniteDimensional k V] :
+    finDim k s = n ↔
+      ∃ t ⊆ s, s ⊆ affineSpan k t ∧ AffineIndependent k ((↑) : t → P) ∧ t.ncard = n + 1 := by
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · obtain ⟨t, ht1, ht2, ht3, ht4⟩ := exists_affineIndependent''' k s
+    rw [h] at ht4
+    exact ⟨t, ht1, ht2 ▸ subset_affineSpan .., ht3, ht4⟩
+  · obtain ⟨t, ht1, ht2, ht3, ht4⟩ := h
+    have : Fintype t := Set.Finite.fintype <| by grind [Set.finite_of_ncard_ne_zero]
+    have := le_antisymm (affineSpan_le_of_subset_coe ht2) (affineSpan_mono k ht1)
+    rw [finDim_eq_finrank, this, direction_affineSpan,
+      ← ht3.finrank_vectorSpan (n := n) (by simpa), Subtype.range_coe]
+    by_contra! hh
+    simp_all
 
-theorem finDim_n_if_affineSpan_has_np1_points{n : ℕ} [FiniteDimensional k V]
-  (h : ∃ t ⊆ s, s ⊆ affineSpan k t ∧ AffineIndependent k ((↑) : t → P) ∧ t.ncard = n + 1) :
-  finDim k s = n := by
-  obtain ⟨t, ht1, ht2, ht3, ht4⟩ := h
-  have : Fintype t := Set.Finite.fintype <| by grind [Set.finite_of_ncard_ne_zero]
-  have := le_antisymm (affineSpan_le_of_subset_coe ht2) (affineSpan_mono k ht1)
-  rw [finDim_eq_finrank, this, direction_affineSpan,
-    ← ht3.finrank_vectorSpan (n := n) (by simpa), Subtype.range_coe]
-  by_contra! hh
-  simp_all
 
 -- Corollary of the above
-theorem finDim_1_then_affineSpan_spanned_by_2_points [FiniteDimensional k V]
-  (h : finDim k s = 1) :
-    ∃ x y : s, x ≠ y ∧ s ⊆ affineSpan k {x.1, y.1} := by
-  have := finDim_n_then_affineSpan_spanned_by_np1_points _ _ h
-  obtain ⟨t, ⟨inSpan, tAffInd, _, card2⟩⟩ := this
-  norm_num at card2
-  obtain ⟨x, y, xneqy, t_is_xy⟩ := Set.ncard_eq_two.mp card2
-  clear card2
-  have hx : x ∈ t := by simp [t_is_xy]
-  have hy : y ∈ t := by simp [t_is_xy]
-  have := Set.mem_of_mem_of_subset hx inSpan
-  have := Set.mem_of_mem_of_subset hy inSpan
-  have : s ⊆ ↑line[k, ↑x, ↑y] := by
-    simp_all
-  refine ⟨⟨x,inSpan hx⟩,⟨y,inSpan hy⟩,?_⟩
-  constructor
-  · simp_all
-  · assumption
+theorem finDim_eq_1_iff {n : ℕ} [FiniteDimensional k V] :
+    finDim k s = 1 ↔
+      ∃ x y : s, x ≠ y ∧ s ⊆ affineSpan k {x.1, y.1} := by
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · have := (finDim_eq_iff _ _).mp h
+    obtain ⟨t, ⟨inSpan, tAffInd, _, card2⟩⟩ := this
+    norm_num at card2
+    obtain ⟨x, y, xneqy, t_is_xy⟩ := Set.ncard_eq_two.mp card2
+    clear card2
+    have hx : x ∈ t := by simp [t_is_xy]
+    have hy : y ∈ t := by simp [t_is_xy]
+    have := Set.mem_of_mem_of_subset hx inSpan
+    have := Set.mem_of_mem_of_subset hy inSpan
+    have : s ⊆ ↑line[k, ↑x, ↑y] := by
+      simp_all
+    refine ⟨⟨x,inSpan hx⟩,⟨y,inSpan hy⟩,?_⟩
+    constructor
+    · simp_all
+    · assumption
+  · sorry
+
+-- Alternative version to finDim_eq_iff:
+theorem finDim_eq_iff_affineSpan_contained {n : ℕ} [FiniteDimensional k V] :
+    finDim k s = n ↔
+      ∃ t : Set P, affineSpan k s ≤ affineSpan k t ∧
+      AffineIndependent k ((↑) : t → P) ∧
+      t.ncard = n + 1 := by
+  sorry
+
+-- Corollary of the above
+theorem finDim_eq_1_iff_affineSpan_contained {n : ℕ} [FiniteDimensional k V] :
+    finDim k s = 1 ↔
+      ∃ x y : P, x ≠ y ∧ affineSpan k s ≤ affineSpan k {x, y} := by
+  sorry
 
 end DivisionRing
 
