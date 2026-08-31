@@ -34,16 +34,25 @@ variable [Semiring R] [PartialOrder R] [IsStrictOrderedRing R] [ConvexSpace R X]
 -- Should this be a Coe instance? Look at Polyhedron.toConvexSet impl, add @[coe]
 def Polytope.toConvexSet (p : Polytope R X) : ConvexSet R X := ⟨p.carrier, p.isPolytope.isConvexSet⟩
 
-lemma isConvexSet {P : Set X} (hP : IsPolytope R P) : IsConvexSet R P := by
-  obtain ⟨_, rfl⟩ := hP
-  exact IsConvexSet.convexHull
+-- lemma isConvexSet {P : Set X} (hP : IsPolytope R P) : 2=2 := by
+--   obtain ⟨_, rfl⟩ := hP
+--   exact IsConvexSet.convexHull
 
 end Semiring
 
-section Ring
+section DivisionRing
 
-variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R] [ConvexSpace R X]
-variable [AddCommGroup M] [Module R M] [AddTorsor R X]
+variable [DivisionRing R] [PartialOrder R] [IsStrictOrderedRing R] [ConvexSpace R X]
+
+variable [AddCommGroup M] [Module R M] [AddTorsor M X] [IsAffineConvexSpace R M X]
+
+-- def IsPolytope (s : Set X) : Prop := ∃ t : Finset X, s = convexHull R t
+
+theorem affineSpan_finiteDimensional {P : Set X} (hP : IsPolytope R P) :
+  FiniteDimensional R (affineSpan R P).direction := by
+  obtain ⟨t, rfl⟩ := hP
+  rw [affineSpan_convexHull_eq]
+  exact finiteDimensional_direction_affineSpan_of_finite _ t.finite_toSet
 
 def Polytope.vertices (p : Polytope R X) : Set (Face p.toConvexSet) :=
   { f : Face p.toConvexSet | cardinalDim R f.carrier = 0 }
@@ -56,6 +65,6 @@ def Polytope.edgeGraph (p : Polytope R X) : SimpleGraph p.vertices where
   symm.symm := by grind
   loopless.irrefl := by simp +contextual [Polytope.edges, Polytope.vertices]
 
-end Ring
+end DivisionRing
 
 end Convexity

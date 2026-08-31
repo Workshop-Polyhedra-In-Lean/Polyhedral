@@ -163,20 +163,42 @@ theorem finDim_eq_1_iff_affineSpan_contained {n : ℕ} [FiniteDimensional k V] :
       ∃ x y : P, x ≠ y ∧ affineSpan k s ≤ affineSpan k {x, y} := by
   sorry
 
-end DivisionRing
+-- variable [Field k] [Module k V] [LinearOrder k] [IsStrictOrderedRing k]
 
-section Field
+-- -- TODO: read and consider the doc comment, should this be stated for a
+-- -- [ConvexSpace k P] type class instead?
+-- attribute [local instance] AddTorsor.toConvexSpace
 
-variable [Field k] [Module k V] [LinearOrder k] [IsStrictOrderedRing k]
+-- theorem _root_.AffineSubspace.isConvexSet (t : AffineSubspace k P) : IsConvexSet k (t : Set P) :=
+--   IsConvexSet.of_convexCombPair_mem fun a b ha hb hab x hx y hy ↦ by
+--     rw [AddTorsor.convexCombPair_eq_lineMap, AffineMap.lineMap_apply]
+--     exact t.smul_vsub_vadd_mem a hx hy hy
 
--- TODO: read and consider the doc comment, should this be stated for a
--- [ConvexSpace k P] type class instead?
-attribute [local instance] AddTorsor.toConvexSpace
 
-theorem _root_.AffineSubspace.isConvexSet (t : AffineSubspace k P) : IsConvexSet k (t : Set P) :=
-  IsConvexSet.of_convexCombPair_mem fun a b ha hb hab x hx y hy ↦ by
-    rw [AddTorsor.convexCombPair_eq_lineMap, AffineMap.lineMap_apply]
-    exact t.smul_vsub_vadd_mem a hx hy hy
+
+
+
+section Convex
+
+variable [PartialOrder k] [IsStrictOrderedRing k] [ConvexSpace k P] [IsAffineConvexSpace k V P]
+-- it seems like IsAffineConvexSpace is the generality we need here
+-- because convex sets require an ordering on the ring and we don't have that for general affine spaces
+
+/-- An affine subspace is convex: it is closed under affine combinations of its points, and
+convex combinations are affine combinations. -/
+theorem _root_.AffineSubspace.isConvexSet (t : AffineSubspace k P) : IsConvexSet k (t : Set P) := by
+  intro w hw
+  have hle : affineSpan k (w.weights.support : Set P) ≤ t := by
+    simpa using affineSpan_mono k hw
+  refine hle ?_
+  rw [sConvexComb_eq_convexComb (V := V), AddTorsor.convexCombination,
+    ← Finset.attach_affineCombination_coe]
+  have hsum : ∑ x ∈ w.weights.support.attach,
+      (⇑w.weights ∘ ((↑) : w.weights.support → P)) x = 1 := by
+    simp only [Function.comp_apply, Finset.sum_attach]
+    simpa [Finsupp.sum] using w.total
+  have hmem := affineCombination_mem_affineSpan hsum ((↑) : w.weights.support → P)
+  rwa [Subtype.range_coe] at hmem
 
 @[simp]
 theorem _root_.AffineSubspace.convexHull_eq (t : AffineSubspace k P) :
@@ -190,6 +212,8 @@ theorem _root_.affineSpan_convexHull_eq :
   have := convexHull_min (subset_affineSpan k s) (AffineSubspace.isConvexSet _ _)
   grw [affineSpan_mono k this, affineSpan_le_of_subset_coe le_rfl]
 
-end Field
+end Convex
+
+end DivisionRing
 
 end Convexity
