@@ -28,6 +28,8 @@ is similary defined using `Module.finrank`.
   be re-stated?
 -/
 
+attribute [-simp] SetLike.bot_eq_empty -- This simp lemma is a mistake
+
 namespace AffineSubspace
 
 universe u v v' a a'
@@ -47,8 +49,13 @@ theorem direction_eq_bot_iff : s.direction = ⊥ ↔ (s : Set A).Subsingleton :=
 
 -- TODO: Should live with definiton of Singleton until it goes upstream
 @[simp]
-theorem singleton_ne_bot (x : A) : ({x} : AffineSubspace R A) ≠ ⊥ := by
-  simp [← coe_eq_bot_iff]
+theorem singleton_ne_bot (x : A) : ({x} : AffineSubspace R A) ≠ ⊥ :=
+  ne_of_mem_of_not_mem' rfl (notMem_bot _ _ _)
+
+-- TODO: Should live with definiton of Singleton until it goes upstream
+@[simp]
+theorem singleton_ne_empty (x : A) : ({x} : AffineSubspace R A) ≠ ∅ :=
+  ne_of_mem_of_not_mem' rfl (notMem_bot _ _ _)
 
 -- TODO: Useful below but looks like it shouldn't be
 @[simp]
@@ -240,6 +247,23 @@ theorem findim_le_zero_iff_subsingleton [StrongRankCondition R] [IsDomain R]
   · simp [hs]
   simp [findim_eq_finrank, hs, Module.finrank_zero_iff, Submodule.subsingleton_iff_eq_bot]
 
+@[simp]
+theorem dim_eq_zero_iff [IsDomain R] [Module.IsTorsionFree R V] : dim s = 0 ↔ ∃ x : A, s = {x} := by
+  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
+  · have h₁ : (s : Set A).Nonempty := dim_ne_bot_iff.mp (by simp [h])
+    have h₂ := dim_le_zero_iff_subsingleton.mp (le_of_eq h)
+    obtain ⟨x, hx⟩ := Set.exists_eq_singleton_iff_nonempty_subsingleton.mpr ⟨h₁, h₂⟩
+    exact ⟨x, (AffineSubspace.ext_iff _ _).mpr hx⟩
+  · obtain ⟨x, rfl⟩ := h
+    simp [dim]
+
+@[simp]
+theorem findim_eq_zero_iff [StrongRankCondition R] [IsDomain R] [Module.IsTorsionFree R V]
+    [Module.Finite R s.direction] : findim s = 0 ↔ ∃ x : A, s = {x} := by
+  rcases eq_or_ne s ⊥ with rfl | hs
+  · simpa using fun x ↦ Ne.symm (singleton_ne_bot _)
+  simp [findim, show s.dim ≠ ⊥ by simpa, WithBot.unbot_eq_iff]
+
 end Ring
 
 section DivisionRing
@@ -255,22 +279,6 @@ theorem findim_strictMono [Module.Finite R t.direction] (h : s < t) : findim s <
   rw [findim_eq_finrank hs, findim_eq_finrank (ne_bot_of_gt h), Nat.cast_lt]
   refine Submodule.finrank_lt_finrank_of_lt (direction_lt_of_nonempty h ?_)
   exact (nonempty_iff_ne_bot _).mpr hs
-
-@[simp]
-theorem dim_eq_zero_iff : dim s = 0 ↔ ∃ x : A, s = {x} := by
-  refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
-  · have h₁ : (s : Set A).Nonempty := dim_ne_bot_iff.mp (by simp [h])
-    have h₂ := dim_le_zero_iff_subsingleton.mp (le_of_eq h)
-    obtain ⟨x, hx⟩ := Set.exists_eq_singleton_iff_nonempty_subsingleton.mpr ⟨h₁, h₂⟩
-    exact ⟨x, (AffineSubspace.ext_iff _ _).mpr hx⟩
-  · obtain ⟨x, rfl⟩ := h
-    simp [dim]
-
-@[simp]
-theorem findim_eq_zero_iff [Module.Finite R s.direction] : findim s = 0 ↔ ∃ x : A, s = {x} := by
-  rcases eq_or_ne s ⊥ with rfl | hs
-  · simpa using fun x ↦ Ne.symm (singleton_ne_bot _)
-  simp [findim, show s.dim ≠ ⊥ by simpa, WithBot.unbot_eq_iff]
 
 -------------------------------------------------------------------------------------------
 section MathlibPR43230
@@ -303,17 +311,13 @@ theorem exists_affineIndependent_of_finiteDimensional'' (s : Set A)
   · simp_all
   rw [findim_eq_finrank (by simpa [← Set.nonempty_iff_ne_empty]), ← ht2, direction_affineSpan,
     WithBot.succ_natCast]
-  have : FiniteDimensional R (vectorSpan R (Set.range ((↑) : t → A))) := by
-    rwa [Subtype.range_coe, ← direction_affineSpan, ht2, direction_affineSpan]
+  rw [← direction_affineSpan, ← ht2, direction_affineSpan, ← Subtype.range_coe (s := t)] at F
   have := finite_set_of_fin_dim_affineIndependent' R ht3
-  have := finite_of_fin_dim_affineIndependent' ht3
   have := Set.Finite.fintype this
-  have : t.ncard ≠ 0 := by
-    grind [Set.ncard_eq_zero, affineSpan_eq_bot, Set.not_nonempty_empty]
+  have : t.ncard ≠ 0 := by grind [Set.ncard_eq_zero, affineSpan_eq_bot, Set.not_nonempty_empty]
   have := ht3.finrank_vectorSpan (n := t.ncard - 1) (by simp [Nat.sub_one_add_one this])
   rw [Subtype.range_coe] at this
   lia
--------------------------------------------------------------------------------------------
 
 @[simp]
 theorem finrank_vectorSpan_pair {x y : A} (h : x ≠ y) :
@@ -325,7 +329,6 @@ theorem rank_vectorSpan_pair {x y : A} (h : x ≠ y) :
     Module.rank R (vectorSpan R {x, y}) = 1 :=
   Module.rank_eq_one_iff_finrank_eq_one.mpr (finrank_vectorSpan_pair h)
 
--- TOOD: Derive from a exists_affineIndependent analog?
 theorem dim_eq_one_iff :
     dim s = 1 ↔ ∃ x y : s, x ≠ y ∧ s = affineSpan R {x.1, y.1} := by
   rcases eq_or_ne s ⊥ with rfl | hs
@@ -334,7 +337,7 @@ theorem dim_eq_one_iff :
   refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
   · have := Module.finite_of_rank_eq_one h
     rw [direction_eq_vectorSpan] at this
-    obtain ⟨t, h₁, _, _, h₂⟩ := exists_affineIndependent_of_finiteDimensional'' (R := R) (s : Set A)
+    obtain ⟨t, h₁, _, _, h₂⟩ := exists_affineIndependent_of_finiteDimensional (R := R) (s : Set A)
     obtain ⟨x, y, _, ht⟩ :=
       Set.ncard_eq_two.mp (by simpa [findim_eq_map_dim_toNat, dim_eq_rank hs, h] using h₂)
     exact ⟨⟨x, h₁ (by simp [ht])⟩, ⟨y, h₁ (by simp [ht])⟩, by simp_all⟩
