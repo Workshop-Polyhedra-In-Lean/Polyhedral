@@ -159,6 +159,23 @@ lemma smul_pos_of_mem_homogenize {P : ConvexSet R A} {x} (h : x ∈ homogenize W
   (mem_hull_iff_mem_pos_smul_of_convex_nonzero
     (P.isConvexSet.image hom.ofPoint.isAffineMap) hx).mp h
 
+/-- The dehomogenization of the ray spanned by an embedded point is the singleton of that
+point. -/
+@[simp] lemma dehomogenize_hull_singleton_ofPoint (p : A) :
+    dehomogenize A (R ∙₊ hom.ofPoint p) = ({p} : ConvexSet R A) := by
+  ext q
+  constructor
+  · intro hq
+    have hq' : hom.ofPoint q ∈ R ∙₊ hom.ofPoint p := hq
+    simp only [Submodule.mem_span_singleton, Subtype.exists, Nonneg.mk_smul, exists_prop] at hq'
+    obtain ⟨c, -, hc⟩ := hq'
+    have hw := congrArg hom.weight hc
+    simp only [map_smul, hom.weight_one, smul_eq_mul, mul_one] at hw
+    rw [hw, one_smul] at hc
+    exact hom.ofPoint_injective hc ▸ rfl
+  · rintro rfl
+    exact subset_hull rfl
+
 -- TODO: This lemma should be proven for general sets (homogenizing to SubMulAction) and then
 --  applied here as a special case.
 variable (W) in
