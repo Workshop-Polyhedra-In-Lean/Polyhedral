@@ -47,7 +47,7 @@ The dehomogenization of an H-polyhedral cone is an H-polyhedron: each functional
 cutting out the cone descends to the affine map `f ∘ ofPoint`, and the submodule pulls back
 to an affine subspace.
 -/
-lemma ConvexSet.dehomogenize_isHPolyhedron (C : PointedCone 𝕜 W)
+lemma ConvexSetimagedehomogenize_isHPolyhedron (C : PointedCone 𝕜 W)
     (hC : IsHPolyhedral .id C) :
     IsHPolyhedron 𝕜 (PointedCone.dehomogenize A C : Set A) := by
   classical
@@ -211,6 +211,12 @@ lemma Affine.IsHomogenization.exists_linear_extension (h : A →ᵃ[𝕜] 𝕜) 
   have hv : hom.ofVector v = hom.ofPoint (v +ᵥ x₀) - hom.ofPoint x₀ := by simp
   rw [hv, map_sub, hFx, hFx]
   simp
+
+/- Every affine functional extends to a unique linear functional on the homogenization space which
+agrees with it on points and with its linear part on vectors.
+-/
+-- def Affine.IsHomogenization.linear_extension (h : A →ᵃ[𝕜] 𝕜) : W →ₗ[𝕜] 𝕜 :=
+
 
 
 variable (W) in
@@ -495,7 +501,8 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd {H : Set A}
 
 #click_suggestions
 omit [AddCommGroup W] [Module 𝕜 W] [IsModuleConvexSpace 𝕜 W] in
-/-- ALTERNATIVE ATTEMPT `H → V` direction -/
+/-- ALTERNATIVE ATTEMPT `H → V` direction
+verbose and in little steps -/
 theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
     (hH : IsHPolyhedron 𝕜 H) :
     ∃ P : Set A, IsPolytope 𝕜 P ∧
@@ -510,36 +517,43 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
   -- 1. obtain the affine functions `F` and subspace `S` describing the H-polyhedron `H`
   obtain ⟨F, S, hH⟩ := hH
   -- 2. homogenize the functions to get linear functions `F_hom`:
-  -- let F_hom := -- hom.extend 𝕜 '' F
+  choose extend_function hext hextlin using hom.exists_linear_extension
+  let F_hom := Finset.image extend_function F
+  -- 3. add the linear constraint for the "upper" half-space to get `F'_hom`
+  let F'_hom := insert hom.weight F_hom
 
-
-
-  -- 3. homogenize the subspace to get `S_hom`:
-
+  -- 4. homogenize the subspace to get `S_hom`:
   let S_hom : Submodule 𝕜 W := Submodule.span 𝕜 (hom.ofPoint '' S)
-
-  -- 4. intersect `C_hom` with the "upper" half-space to get the H-cone `C'_hom`
-  -- let C'_hom := PointedCone.inter (PointedCone.halfSpace 𝕜 W hom.weight 1)
-  -- (PointedCone.hull 𝕜 ↑F_hom)
-
-  let C'_hom : PointedCone 𝕜 W := sorry --?
-
-
-  -- 5. intersect `S_hom` with the "horizontal" hyperplane to get the subspace `S'_hom`
-  let S'_hom : Submodule 𝕜 W :=
-    -- PointedCone.inter (PointedCone.halfSpace 𝕜 W hom.weight 0) (PointedCone.hull 𝕜 ↑F_hom)
-    sorry
-  -- ALTERNATIVE: "translate" the subspace `S` to the hyperplane `weight = 1` by adding a point of weight one
+  -- 5. Form the H-cone `C_hom` in the homogenization space `W` defined by
+  -- the constraints `F'_hom` and the subspace `S_hom`.
+  let C'''_hom : Set W := -- PointedCone 𝕜 W :=
+--  let C_hom : PointedCone 𝕜 W :=
+--    { carrier :=
+--      { x : W | ∀ f ∈ F'_hom, 0 ≤ f x } ⊓ (S_hom : Set W),
+--    -- pedestrian definition of the H-cone in the homogenization space
+--      zero_mem' := by
+--        simp only [C'''_hom, Set.mem_ofPred_eq, Submodule.coe_zero, Submodule.mem_span]
+--        constructor
+--        · intro f hf
+--          rcases hf with rfl | ⟨g, hg, rfl⟩
+--          · simp [hext g]
+--       smul_mem' := _ }
 
   -- 6. Fun fact: Dehomogenizing `C'_hom` gives back the original H-polyhedron `H`.
-  -- AS A POINT SET; NOT AS AN OBJECT -- OF TYPE `IsHPolyhedron` (which would require a proof of convexity)
-  have dehomogenize_gives_back_H : True := by
-    -- PointedCone.dehomogenize W (C'_hom) = H := by
+  -- AS A POINT SET; NOT AS AN OBJECT
+   -- -- OF TYPE `IsHPolyhedron` (which would require a proof of convexity)
+  have dehomogenize_gives_back_H :
+    True := by
+    --PointedCone.dehomogenize W (C'_hom) = (H : ConvexSet A) := by
     sorry
 
   -- 7. Apply the Minkowski-Weyl theorem for polyhedral cones to `C'_hom`
   -- to get a finite set of generators `G` and a subspace `S_hom` such that
   -- `C'_hom = PointedCone.hull 𝕜 G
+
+ --FG.exists_dualfg_inf_submodule {C : PointedCone 𝕜 N} (hC : C.FG) {S : Submodule 𝕜 N}
+ --   (hS : S.FG) (hCS : C ≤ S) : ∃ D : PointedCone 𝕜 N, D.DualFG p ∧ D ⊓ S = C
+
   let G_hom : Set W := sorry
 
   -- 8. Split the generators `G_hom` into the generators `G_hom_pos` with positive weight
