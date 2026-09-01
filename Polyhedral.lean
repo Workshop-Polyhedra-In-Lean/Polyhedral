@@ -3,9 +3,9 @@ import Polyhedral.Mathlib.Algebra.Group.Pointwise.SetLike.Scalar
 import Polyhedral.Mathlib.Algebra.Module.LinearMap
 import Polyhedral.Mathlib.Algebra.Module.Submodule.Basic
 import Polyhedral.Mathlib.Algebra.Module.Submodule.Dual.Basic
-import Polyhedral.Mathlib.Algebra.Module.Submodule.Dual.Field
 import Polyhedral.Mathlib.Algebra.Module.Submodule.Dual.DualClosed
 import Polyhedral.Mathlib.Algebra.Module.Submodule.Dual.DualFinite
+import Polyhedral.Mathlib.Algebra.Module.Submodule.Dual.Field
 import Polyhedral.Mathlib.Algebra.Module.Submodule.FG
 import Polyhedral.Mathlib.Algebra.Module.Submodule.Hyperplane
 import Polyhedral.Mathlib.Algebra.Module.Submodule.Map
@@ -33,7 +33,11 @@ import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.Face.Rank
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.MinkowskiWeyl
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Lineal
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.LinearMap
+import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.VPolyhedral.Basic
+import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.VPolyhedral.Faces
+import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.VPolyhedral.Lattice
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Rank
+import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Ray
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Relint
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Restrict
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.SubMulActionWithZero
@@ -54,6 +58,7 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Lattice
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Vertex
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Hull
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Lattice
@@ -75,6 +80,3 @@ import Polyhedral.Mathlib.LinearAlgebra.Dual.Basis
 import Polyhedral.Mathlib.Logic.Function.Const
 import Polyhedral.Mathlib.RingTheory.Finiteness.Cofinite
 import Polyhedral.Mathlib.RingTheory.Finiteness.Corank
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Polyhedral.Basic
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Polyhedral.Faces
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Polyhedral.Lattice
