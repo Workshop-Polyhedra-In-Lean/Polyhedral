@@ -46,15 +46,24 @@ variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R] [ConvexSpace R X]
 variable [AddCommGroup M] [Module R M] [AddTorsor R X]
 
 def Polytope.vertices (p : Polytope R X) : Set (Face p.toConvexSet) :=
-  { f : Face p.toConvexSet | cardinalDim R f.carrier = 0 }
+  { v : Face p.toConvexSet | IsAtom v}
 
 def Polytope.edges (p : Polytope R X) : Set (Face p.toConvexSet) :=
-  { f : Face p.toConvexSet | cardinalDim R f.carrier = 1 }
+  { f : Face p.toConvexSet | ∃ v w : p.vertices , f = v.1 ⊔ w.1 }
 
 def Polytope.edgeGraph (p : Polytope R X) : SimpleGraph p.vertices where
-  Adj x y := (x.1 ⊔ y.1) ∈ p.edges
+  Adj x y := x.1 ≠ y.1 ∧ (x.1 ⊔ y.1) ∈ p.edges
   symm.symm := by grind
-  loopless.irrefl := by simp +contextual [Polytope.edges, Polytope.vertices]
+  loopless.irrefl := by
+    simp +contextual [Polytope.edges]
+
+lemma graphEdge_exists_polytopeEdge (p : Polytope R X) (e : p.edges) : ∃ x y : p.vertices,
+  p.edgeGraph.Adj x y ∧ (x.1 ⊔ y.1) ∈ p.edges := by
+  sorry
+
+lemma polytopeEdge_exits_graphEdge (p : Polytope R X) (x : p.vertices) (y : p.vertices)
+  (hxy : p.edgeGraph.Adj x y) :  ∃ e : p.edges, e = x.1 ⊔ y.1  := by
+  sorry
 
 end Ring
 
