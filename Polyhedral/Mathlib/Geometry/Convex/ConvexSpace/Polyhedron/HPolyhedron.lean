@@ -395,7 +395,7 @@ open PointedCone in
 /-- An H-polyhedral cone with respect to any pairing is polyhedral: its defining functionals
 are in particular plain linear functionals (`DualFG.id`), so the full dual pairing machinery
 applies. -/
-lemma PointedCone.IsHPolyhedral.isPolyhedral {q : V' →ₗ[R] V →ₗ[R] R} {C : PointedCone R V}
+lemma PointedCone.IsHPolyhedral.isPolyhedral' {q : V' →ₗ[R] V →ₗ[R] R} {C : PointedCone R V}
     (hC : IsHPolyhedral q C) : IsPolyhedral C := by
   obtain ⟨D, S, hD, rfl⟩ := hC
   exact .of_dualfg_inf_submodule hD.id S

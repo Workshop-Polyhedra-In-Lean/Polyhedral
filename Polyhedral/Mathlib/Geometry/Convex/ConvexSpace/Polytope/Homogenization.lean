@@ -29,6 +29,7 @@ variable [hom : IsHomogenization R A W]
 
 open PointedCone
 
+variable (W) in
 /-- The homogenization of a polytope is a finitely generated cone. -/
 theorem IsPolytope.homogenize_fg {C : ConvexSet R A} (hCfg : IsPolytope R (C : Set A)) :
     (homogenize W C).FG := by
@@ -42,10 +43,11 @@ theorem IsPolytope.homogenize_fg {C : ConvexSet R A} (hCfg : IsPolytope R (C : S
   rw [hom.ofPoint.isAffineMap.image_convexHull t]
   exact (PointedCone.hull_convexHull (hom.ofPoint '' t)).symm
 
+variable (W) in
 /-- A convex set is a polytope iff its homogenization is a finitely generated cone. -/
 theorem IsPolytope.iff_homogenize_fg {C : ConvexSet R A} :
     IsPolytope R (C : Set A) ↔ (homogenize W C).FG := by classical
-  refine ⟨homogenize_fg, fun hfg ↦ ?_⟩
+  refine ⟨homogenize_fg W, fun hfg ↦ ?_⟩
   -- get cone generators that lie in the embedding of A
   obtain ⟨g, hg, hs⟩ := homogenize_fg_ofPoint_range hfg
   -- un-embed them
@@ -84,7 +86,7 @@ open Pointwise Submodule in
 /-- Dehomogenizing a finitely generated positive cone yields a polytope. -/
 theorem FG.dehomogenize_isPolytope {C : PointedCone R W} (h : C.FG)
     (hc : C ≤ hom.weight.positive) : IsPolytope R (dehomogenize A C : Set A) := by
-  rw [IsPolytope.iff_homogenize_fg (W := W)]
+  rw [IsPolytope.iff_homogenize_fg W]
   simpa [homogenize_dehomogenize_of_le_positive hc]
 
 end Field
