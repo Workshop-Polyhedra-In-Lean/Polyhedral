@@ -48,10 +48,10 @@ variable [AddCommGroup M] [Module R M] [AddTorsor M X] [IsAffineConvexSpace R M 
 
 -- def IsPolytope (s : Set X) : Prop := ∃ t : Finset X, s = convexHull R t
 
-theorem affineSpan_finiteDimensional {P : Set X} (hP : IsPolytope R P) :
-  FiniteDimensional R (affineSpan R P).direction := by
-  obtain ⟨t, rfl⟩ := hP
-  rw [affineSpan_convexHull_eq]
+instance (p : Polytope R X) :
+    FiniteDimensional R (affineSpan R p.carrier).direction := by
+  obtain ⟨t, ht⟩ := p.isPolytope
+  rw [ht, affineSpan_convexHull_eq]
   exact finiteDimensional_direction_affineSpan_of_finite _ t.finite_toSet
 
 def Polytope.vertices (p : Polytope R X) : Set (Face p.toConvexSet) :=
