@@ -45,7 +45,6 @@ variable [hom : Affine.IsHomogenization R A W]
 -- This definiton assigns ⊤ as the recession cone of ∅
 -- The ∀ could be an ∃ (we could prove it's equivalent for polytopes)
 -- For `ConvexSet`, the ∀a is not necessary
-#click_suggestions
 variable (R) in
 def Convex.Set.recessionCone (P : Set A) : PointedCone R V where
   carrier := { v : V | ∀ x ∈ P, ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P }
