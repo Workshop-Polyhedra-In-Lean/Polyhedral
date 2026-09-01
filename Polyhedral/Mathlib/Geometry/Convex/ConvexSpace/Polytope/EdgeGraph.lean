@@ -6,6 +6,7 @@ Authors:
 
 import Mathlib.Combinatorics.SimpleGraph.Basic
 import Mathlib.Geometry.Convex.Cone.Face.Lattice
+import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
 
 import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.AffineSubspace.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Face
