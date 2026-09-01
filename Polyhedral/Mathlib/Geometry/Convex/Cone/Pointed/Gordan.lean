@@ -125,9 +125,18 @@ and an `ℕ`-combination of the rays. Split the coefficients into integer and fr
 theorem exists_decomp (γ : V) (hγ : γ ∈ (cone K Λ r).latticePoints K Λ) :
     ∃ pn : ↥(parallelepiped K Λ r ∩ (Λ : Set V)) × (ι → ℕ),
       γ = (pn.1 : V) + ∑ i, pn.2 i • (r i : V) := by
-  obtain ⟨c, hc⟩ := (Submodule.mem_span_range_iff_exists_fun _).mp hγ.1
-  -- split γ into integral and fractional parts
-  sorry
+  obtain ⟨c, hc⟩ : ∃ c : ι → Nonneg K, ∑ i, (c i : K) • (r i : V) = γ :=
+    (Submodule.mem_span_range_iff_exists_fun _).mp hγ.1
+  set n : ι → ℕ := fun i ↦ ⌊(c i : K)⌋₊ with hn_def
+  set μ : ι → K := fun i ↦ Int.fract (c i : K) with hμ_def
+  have hsplit (i : ι) : (c i : K) = μ i + (n i : K) := by
+    rw [add_comm, hn_def, hμ_def, natCast_floor_eq_intCast_floor (c i).2]
+    exact (Int.floor_add_fract (c i : K)).symm
+  simp only [hsplit, add_smul, Nat.cast_smul_eq_nsmul, Finset.sum_add_distrib] at hc
+  refine ⟨(⟨ ∑ i, μ i • (r i : V), ?_, ?_, ⟩, n), hc.symm⟩
+  · exact ⟨μ, fun i ↦ ⟨Int.fract_nonneg _, Int.fract_lt_one _⟩, rfl⟩
+  · rw [eq_sub_of_add_eq hc]
+    exact Λ.sub_mem hγ.2 (Submodule.sum_mem _ fun i _ ↦ nsmul_mem (r i).2 _)
 
 /-- Uniqueness of `Gordan.exists_decomp`. Needs `K`-linear independence of the rays. -/
 theorem decomp_unique (hr : LinearIndependent K (Subtype.val ∘ r))
