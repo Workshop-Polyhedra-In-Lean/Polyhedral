@@ -40,6 +40,20 @@ lemma IsAffineIndependentFinset.isSimplex {t : Finset X}
     IsSimplex (R := R) (convexHull R (↑t : Set X)) :=
   ⟨t, ht, rfl⟩
 
+lemma IsSimplex.empty (s : Set X) (hs : s = ∅) :
+  IsSimplex (R:=R) s := by
+  use ∅
+  simp only [Finset.coe_empty, convexHull_empty]
+  rw [and_iff_left hs]
+  intro a₁ a₂ ha
+  apply StdSimplex.ext
+  apply Finsupp.ext
+  intro a
+  exact isEmptyElim a
+
+
+
+
 end Semiring
 
 end Convexity
