@@ -7,6 +7,8 @@ Authors: Anouk Brose, Mei Han, Jesus de Loera, Justus Springer, Santiago Morales
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Basic
 import Polyhedral.Mathlib.Algebra.Module.Lattice.Basic
 import Mathlib.Algebra.Order.Floor.Ring
+import Mathlib.Algebra.EuclideanDomain.Int
+import Mathlib.Data.Int.Interval
 
 /-!
 # Gordan's lemma
@@ -52,6 +54,80 @@ lemma parallelepiped_subset_cone : parallelepiped K Λ r ⊆ (cone K Λ r : Set 
   have h : μ i • (r i : V) = (⟨μ i, (hμ i).1⟩ : {c : K // 0 ≤ c}) • (r i : V) := rfl
   rw [h]
   exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨i, rfl⟩)
+
+omit [LinearOrder K] [IsStrictOrderedRing K] [FloorRing K] in
+/-- A vector of the lattice `Λ` is the `K`-linear combination of a `ℤ`-basis `b` of `Λ` whose
+coefficients are the (integer) `b`-coordinates of the vector. -/
+lemma coe_eq_sum_repr {I : Type*} [Fintype I] (b : Basis I ℤ Λ) (x : Λ) :
+    (x : V) = ∑ j, ((b.repr x j : ℤ) : K) • (b j : V) := by
+  simp only [Int.cast_smul_eq_zsmul]
+  conv_lhs => rw [← b.sum_repr x]
+  push_cast
+  rfl
+
+omit [LinearOrder K] [IsStrictOrderedRing K] [FloorRing K] in
+/-- Step 3b (expansion). Substituting `r i = ∑ j, a i j • v j` and swapping the two sums turns a
+`K`-combination of the rays into a `K`-combination of the basis vectors. -/
+lemma sum_smul_rays_eq {I : Type*} [Fintype I] (v : I → V) (a : ι → I → ℤ) (μ : ι → K)
+    (hr : ∀ i, (r i : V) = ∑ j, ((a i j : ℤ) : K) • v j) :
+    ∑ i, μ i • (r i : V) = ∑ j, (∑ i, μ i * ((a i j : ℤ) : K)) • v j := sorry
+
+omit [FloorRing K] in
+/-- Step 3c (the bound). If an integer `n` is a combination `∑ i, μ i * a i` of integers `a i` with
+coefficients `μ i ∈ [0, 1)`, then `|n| ≤ ∑ i, |a i|`. -/
+lemma abs_le_sum_abs_of_mem_Ico {n : ℤ} {a : ι → ℤ} {μ : ι → K}
+    (hμ : ∀ i, μ i ∈ Set.Ico (0 : K) 1) (h : (n : K) = ∑ i, μ i * ((a i : ℤ) : K)) :
+    |n| ≤ ∑ i, |a i| := sorry
+
+omit [FloorRing K] in
+/-- **Step 3.** Suppose the vectors `v` are `K`-linearly independent, every lattice point is an
+integer combination of them, and the rays expand as `r i = ∑ j, a i j • v j`. Then every lattice
+point of the half-open parallelepiped has integer `v`-coordinates bounded by `B j = ∑ i, |a i j|`,
+i.e. `P ∩ Λ` is contained in the image of the integer box `∏ j, [-B j, B j]` under
+`c ↦ ∑ j, c j • v j`.
+
+The three ingredients are: expanding the rays (`Gordan.sum_smul_rays_eq`), comparing the two
+`v`-expansions of a point via `K`-linear independence, and the bound coming from `0 ≤ μ i < 1`
+(`Gordan.abs_le_sum_abs_of_mem_Ico`). -/
+lemma parallelepiped_inter_lattice_subset_box {I : Type*} [Fintype I] (v : I → V)
+    (hv : LinearIndependent K v)
+    (hΛ : ∀ x ∈ Λ, ∃ c : I → ℤ, x = ∑ j, ((c j : ℤ) : K) • v j)
+    (a : ι → I → ℤ) (hr : ∀ i, (r i : V) = ∑ j, ((a i j : ℤ) : K) • v j) :
+    parallelepiped K Λ r ∩ (Λ : Set V) ⊆
+      (fun c : I → ℤ ↦ ∑ j, ((c j : ℤ) : K) • v j) ''
+        {c : I → ℤ | ∀ j, c j ∈ Set.Icc (-∑ i, |a i j|) (∑ i, |a i j|)} := by
+  rintro x ⟨⟨μ, hμ, rfl⟩, hxΛ⟩
+  obtain ⟨c, hc⟩ := hΛ _ hxΛ
+  have hcoord : ∀ j, ((c j : ℤ) : K) = ∑ i, μ i * ((a i j : ℤ) : K) :=
+    Fintype.linearIndependent_iffₛ.mp hv _ _ <| by
+      rw [← sum_smul_rays_eq K Λ r v a μ hr, ← hc]
+  exact ⟨c, ⟨fun j ↦ abs_le.mp (abs_le_sum_abs_of_mem_Ico K hμ (hcoord j)), hc.symm⟩⟩
+
+/-- The hard part: finiteness of the parallelepiped intersected with the lattice.
+
+Informal proof. Choose a `ℤ`-basis `v` of `Λ`; it is `K`-linearly independent, so `Λ`-membership
+is the same as having integer coordinates w.r.t. `v`, and those coordinates are unique even over
+`K`. Write each ray as `r i = ∑ j, a i j • v j` with `a i j : ℤ`. A point of the parallelepiped is
+`x = ∑ i, μ i • r i = ∑ j (∑ i, μ i * a i j) • v j` with `0 ≤ μ i < 1`; if moreover `x ∈ Λ`, then
+its coordinates `c j` are integers, and comparing the two `v`-expansions of `x` gives
+`c j = ∑ i, μ i * a i j`, whence `|c j| ≤ ∑ i, |a i j| =: B j`. So `P ∩ Λ` is contained in the
+image of the finite box of integer vectors `|c j| ≤ B j`. -/
+theorem parallelepiped_inter_lattice_finite [Λ.IsLattice' K] :
+    (parallelepiped K Λ r ∩ (Λ : Set V)).Finite := by
+  classical
+  -- **Step 0.** Pick a `ℤ`-basis `b` of `Λ`, indexed by a finite type `I`, whose vectors
+  -- `v j := b j` are moreover `K`-linearly independent.
+  obtain ⟨I, b, hbK⟩ := Submodule.IsLattice'.exists_basis_linearIndependent K Λ
+  have : Finite I := Module.Finite.finite_basis b
+  cases nonempty_fintype I
+  -- **Steps 1-3.** Every lattice point, and in particular every ray, is an integer combination
+  -- of the basis vectors, so Step 3 applies with `a i j := b.repr (r i) j`.
+  have key := parallelepiped_inter_lattice_subset_box K Λ r (fun j ↦ (b j : V)) hbK
+    (fun x hx ↦ ⟨fun j ↦ b.repr ⟨x, hx⟩ j, coe_eq_sum_repr K Λ b ⟨x, hx⟩⟩)
+    (fun i j ↦ b.repr (r i) j) (fun i ↦ coe_eq_sum_repr K Λ b (r i))
+  -- **Step 4.** A box of integer vectors over a finite index type is finite, hence so is its
+  -- image, hence so is `P ∩ Λ`.
+  exact ((Set.Finite.pi' fun j ↦ Set.finite_Icc _ _).image _).subset key
 
 -- The hard part: Finiteness of parallelepiped intersected with the lattice.
 theorem parallelepiped_inter_lattice_finite [Λ.IsLattice' K] :
