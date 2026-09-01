@@ -55,72 +55,62 @@ lemma parallelepiped_subset_cone : parallelepiped K Λ r ⊆ (cone K Λ r : Set 
   rw [h]
   exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨i, rfl⟩)
 
-omit [LinearOrder K] [IsStrictOrderedRing K] [FloorRing K] in
-/-- A vector of the lattice `Λ` is the `K`-linear combination of a `ℤ`-basis `b` of `Λ` whose
-coefficients are the (integer) `b`-coordinates of the vector. -/
-lemma coe_eq_sum_repr {I : Type*} [Fintype I] (b : Basis I ℤ Λ) (x : Λ) :
-    (x : V) = ∑ j, ((b.repr x j : ℤ) : K) • (b j : V) := by
-  simp only [Int.cast_smul_eq_zsmul]
-  conv_lhs => rw [← b.sum_repr x]
-  push_cast
-  rfl
-
-omit [LinearOrder K] [IsStrictOrderedRing K] [FloorRing K] in
-/-- Step 3b (expansion). Substituting `r i = ∑ j, a i j • v j` and swapping the two sums turns a
-`K`-combination of the rays into a `K`-combination of the basis vectors. -/
-lemma sum_smul_rays_eq {I : Type*} [Fintype I] (v : I → V) (a : ι → I → ℤ) (μ : ι → K)
-    (hr : ∀ i, (r i : V) = ∑ j, ((a i j : ℤ) : K) • v j) :
-    ∑ i, μ i • (r i : V) = ∑ j, (∑ i, μ i * ((a i j : ℤ) : K)) • v j := sorry
-
-omit [FloorRing K] in
-/-- Step 3c (the bound). If an integer `n` is a combination `∑ i, μ i * a i` of integers `a i` with
-coefficients `μ i ∈ [0, 1)`, then `|n| ≤ ∑ i, |a i|`. -/
-lemma abs_le_sum_abs_of_mem_Ico {n : ℤ} {a : ι → ℤ} {μ : ι → K}
-    (hμ : ∀ i, μ i ∈ Set.Ico (0 : K) 1) (h : (n : K) = ∑ i, μ i * ((a i : ℤ) : K)) :
-    |n| ≤ ∑ i, |a i| := sorry
-
-omit [FloorRing K] in
-/-- **Step 3.** Suppose the vectors `v` are `K`-linearly independent, every lattice point is an
-integer combination of them, and the rays expand as `r i = ∑ j, a i j • v j`. Then every lattice
-point of the half-open parallelepiped has integer `v`-coordinates bounded by `B j = ∑ i, |a i j|`,
-i.e. `P ∩ Λ` is contained in the image of the integer box `∏ j, [-B j, B j]` under
-`c ↦ ∑ j, c j • v j`.
-
-The three ingredients are: expanding the rays (`Gordan.sum_smul_rays_eq`), comparing the two
-`v`-expansions of a point via `K`-linear independence, and the bound coming from `0 ≤ μ i < 1`
-(`Gordan.abs_le_sum_abs_of_mem_Ico`). -/
-lemma parallelepiped_inter_lattice_subset_box {I : Type*} [Fintype I] (v : I → V)
-    (hv : LinearIndependent K v)
-    (hΛ : ∀ x ∈ Λ, ∃ c : I → ℤ, x = ∑ j, (c j : K) • v j)
-    (a : ι → I → ℤ) (hr : ∀ i, (r i : V) = ∑ j, (a i j : K) • v j) :
-    parallelepiped K Λ r ∩ (Λ : Set V) ⊆
-      (fun c : I → ℤ ↦ ∑ j, (c j : K) • v j) ''
-        {c : I → ℤ | ∀ j, c j ∈ Set.Icc (-∑ i, |a i j|) (∑ i, |a i j|)} := by
-  rintro x ⟨⟨μ, hμ, rfl⟩, hxΛ⟩
-  obtain ⟨c, hc⟩ := hΛ _ hxΛ
-  have hcoord : ∀ j, (c j : K) = ∑ i, μ i * (a i j : K) :=
-    Fintype.linearIndependent_iffₛ.mp hv _ _ <| by
-      rw [← sum_smul_rays_eq K Λ r v a μ hr, ← hc]
-  exact ⟨c, ⟨fun j ↦ abs_le.mp (abs_le_sum_abs_of_mem_Ico K hμ (hcoord j)), hc.symm⟩⟩
-
-/-- The hard part: finiteness of the parallelepiped intersected with the lattice.
-
-Informal proof. Choose a `ℤ`-basis `v` of `Λ`; it is `K`-linearly independent, so `Λ`-membership
-is the same as having integer coordinates w.r.t. `v`, and those coordinates are unique even over
-`K`. Write each ray as `r i = ∑ j, a i j • v j` with `a i j : ℤ`. A point of the parallelepiped is
-`x = ∑ i, μ i • r i = ∑ j (∑ i, μ i * a i j) • v j` with `0 ≤ μ i < 1`; if moreover `x ∈ Λ`, then
-its coordinates `c j` are integers, and comparing the two `v`-expansions of `x` gives
-`c j = ∑ i, μ i * a i j`, whence `|c j| ≤ ∑ i, |a i j| =: B j`. So `P ∩ Λ` is contained in the
-image of the finite box of integer vectors `|c j| ≤ B j`. -/
+/-- Finiteness of the parallelepiped intersected with the lattice. -/
 theorem parallelepiped_inter_lattice_finite [Λ.IsLattice' K] :
     (parallelepiped K Λ r ∩ (Λ : Set V)).Finite := by
-  obtain ⟨I, b, hbK⟩ := Submodule.IsLattice'.exists_basis_linearIndependent K Λ
-  have : Finite I := Module.Finite.finite_basis b
+  obtain ⟨I, v, hv⟩ := Submodule.IsLattice'.exists_basis_linearIndependent K Λ
+  have : Finite I := Module.Finite.finite_basis v
   have := Fintype.ofFinite I
-  have key := parallelepiped_inter_lattice_subset_box K Λ r (fun j ↦ (b j : V)) hbK
-    (fun x hx ↦ ⟨fun j ↦ b.repr ⟨x, hx⟩ j, coe_eq_sum_repr K Λ b ⟨x, hx⟩⟩)
-    (fun i j ↦ b.repr (r i) j) (fun i ↦ coe_eq_sum_repr K Λ b (r i))
-  exact ((Set.Finite.pi' fun j ↦ Set.finite_Icc _ _).image _).subset key
+  let a i j := v.repr (r i) j
+  let box : Set V := (fun c ↦ ∑ j, c j • v j) ''
+      {c : I → ℤ | ∀ j, c j ∈ Set.Icc (-∑ i, |a i j|) (∑ i, |a i j|)}
+  apply Set.Finite.subset (s := box)
+  · exact ((Set.Finite.pi' fun j ↦ Set.finite_Icc _ _).image _)
+  rintro x ⟨⟨μ, hμ, hx⟩, hxΛ⟩
+  let c (i : I) := v.repr ⟨x, hxΛ⟩ i
+  have hc : x = ∑ j, (c j : K) • (v j).1 := by
+    have := congr($(v.sum_repr ⟨x, hxΛ⟩).1).symm
+    dsimp at this
+    rw [this]
+    push_cast
+    congr
+    ext i
+    rw [Int.cast_smul_eq_zsmul]
+  have hr (i : ι) : r i = ∑ j, a i j • (v j).1 := by
+    rw [← v.sum_repr (r i)]
+    push_cast
+    rfl
+  have hcoord : ∀ j, c j = ∑ i, μ i * a i j :=
+    Fintype.linearIndependent_iffₛ.mp hv _ _ <| by
+      rw [← hc]
+      rw [hx]
+      rw [Fintype.sum_congr _ _ (fun _ ↦ by rw [hr])]
+      simp_rw [Finset.smul_sum, Finset.sum_smul]
+      rw [Finset.sum_comm]
+      simp_rw [← zsmul_eq_mul', smul_assoc]
+      congr
+      ext i
+      congr
+      ext j
+      apply smul_comm
+  refine ⟨c, ⟨fun j ↦ abs_le.mp ?_, ?_⟩⟩
+  · rw [← Int.cast_le (R := K)]
+    rw [Int.cast_abs, hcoord]
+    grw [Finset.abs_sum_le_sum_abs]
+    simp_rw [abs_mul]
+    push_cast
+    apply Finset.sum_le_sum
+    intro i _
+    apply mul_le_of_le_one_left
+    · exact abs_nonneg _
+    · rw [abs_eq_self.mpr (hμ i).1]
+      exact (hμ i).2.le
+  conv at hc =>
+    rhs
+    enter [2]
+    ext j
+    rw [Int.cast_smul_eq_zsmul]
+  exact hc.symm
 
 -- useful lemmas:
 #check Int.self_sub_floor
