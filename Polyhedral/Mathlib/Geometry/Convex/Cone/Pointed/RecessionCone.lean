@@ -80,9 +80,7 @@ lemma PointedCone.recessionCone_eq_self (C : PointedCone R V) :
   ext x
   constructor
   · intro hx
-    specialize hx 0 C.zero_mem
-    specialize hx 1
-    simpa using hx
+    simpa using hx 0 C.zero_mem 1
   · intro hx y hy a ha
     have hax : a • x ∈ C := C.smul_mem ha hx
     exact C.add_mem hax hy
