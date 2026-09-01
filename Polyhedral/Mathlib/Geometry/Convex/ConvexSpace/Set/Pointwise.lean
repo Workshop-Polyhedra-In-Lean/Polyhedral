@@ -4,12 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Martin Winter
 -/
 
-import Mathlib.Geometry.Convex.Cone.Pointed
-import Mathlib.Geometry.Convex.ConvexSpace.Module
-import Mathlib.Geometry.Convex.ConvexSpace.AffineSpace
-import Mathlib.LinearAlgebra.AffineSpace.AffineMap
-
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.AffineMap
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.AffineSpace
 
