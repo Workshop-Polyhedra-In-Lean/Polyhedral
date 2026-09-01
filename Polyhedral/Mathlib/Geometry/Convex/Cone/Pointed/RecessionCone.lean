@@ -74,6 +74,20 @@ lemma Convex.Set.recessionCone_vadd_self {P : Set A} :
   · intro hx
     exact ⟨0, (P.recessionCone R).zero_mem, x, hx, zero_vadd _ _⟩
 
+/-- The recession cone of a cone is the cone itself. -/
+lemma PointedCone.recessionCone_eq_self (C : PointedCone R V) :
+    (C : Set V).recessionCone R = C := by
+  ext x
+  constructor
+  · intro hx
+    specialize hx 0 C.zero_mem
+    specialize hx 1
+    simpa using hx
+  · intro hx y hy a ha
+    have hax : a • x ∈ C := C.smul_mem ha hx
+    exact C.add_mem hax hy
+
+
 /-- The recession cone of a nonempty polytope is trivial: any nonzero direction admits a
 linear functional positive on it, which is bounded on the convex hull of the finitely many
 generators. -/
