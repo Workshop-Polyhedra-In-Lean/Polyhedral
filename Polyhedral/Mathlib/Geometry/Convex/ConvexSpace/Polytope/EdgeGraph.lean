@@ -6,6 +6,7 @@ Authors:
 
 import Mathlib.Combinatorics.SimpleGraph.Basic
 import Mathlib.Geometry.Convex.Cone.Face.Lattice
+import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
 
 import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.AffineSubspace.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Face
@@ -34,16 +35,22 @@ variable [Semiring R] [PartialOrder R] [IsStrictOrderedRing R] [ConvexSpace R X]
 -- Should this be a Coe instance? Look at Polyhedron.toConvexSet impl, add @[coe]
 def Polytope.toConvexSet (p : Polytope R X) : ConvexSet R X := ⟨p.carrier, p.isPolytope.isConvexSet⟩
 
-lemma isConvexSet {P : Set X} (hP : IsPolytope R P) : IsConvexSet R P := by
-  obtain ⟨_, rfl⟩ := hP
-  exact IsConvexSet.convexHull
 
 end Semiring
 
-section Ring
+section AffineConvex
 
-variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R] [ConvexSpace R X]
-variable [AddCommGroup M] [Module R M] [AddTorsor R X]
+variable [DivisionRing R] [PartialOrder R] [IsStrictOrderedRing R] [ConvexSpace R X]
+
+variable [AddCommGroup M] [Module R M] [AddTorsor M X] [IsAffineConvexSpace R M X]
+
+-- def IsPolytope (s : Set X) : Prop := ∃ t : Finset X, s = convexHull R t
+
+instance (p : Polytope R X) :
+    FiniteDimensional R (affineSpan R p.carrier).direction := by
+  obtain ⟨t, ht⟩ := p.isPolytope
+  rw [ht, affineSpan_convexHull_eq]
+  exact finiteDimensional_direction_affineSpan_of_finite _ t.finite_toSet
 
 def Polytope.vertices (p : Polytope R X) : Set (Face p.toConvexSet) :=
   { v : Face p.toConvexSet | IsAtom v}
@@ -65,6 +72,6 @@ lemma polytopeEdge_exits_graphEdge (p : Polytope R X) (x : p.vertices) (y : p.ve
   (hxy : p.edgeGraph.Adj x y) :  ∃ e : p.edges, e = x.1 ⊔ y.1  := by
   sorry
 
-end Ring
+end AffineConvex
 
 end Convexity

@@ -302,7 +302,7 @@ end MathlibPR43230
 -- TODO should be stated for `dim` in terms of cardinal and then re-derived for findim?
 -- TODO: Weaken V being finite dimensional to (affineSpan R s).direction being finite.
 theorem exists_affineIndependent_of_finiteDimensional'' (s : Set A)
-    [FiniteDimensional R (vectorSpan R s)] :
+    [F : FiniteDimensional R (vectorSpan R s)] :
     ∃ t ⊆ s, affineSpan R t = affineSpan R s ∧ AffineIndependent R ((↑) : t → A) ∧
       t.ncard = (affineSpan R s).findim.succ := by
   obtain ⟨t, ht1, ht2, ht3⟩ := exists_affineIndependent R V s
@@ -337,7 +337,7 @@ theorem dim_eq_one_iff :
   refine ⟨fun h ↦ ?_, fun h ↦ ?_⟩
   · have := Module.finite_of_rank_eq_one h
     rw [direction_eq_vectorSpan] at this
-    obtain ⟨t, h₁, _, _, h₂⟩ := exists_affineIndependent_of_finiteDimensional (R := R) (s : Set A)
+    obtain ⟨t, h₁, _, _, h₂⟩ := exists_affineIndependent_of_finiteDimensional'' (R := R) (s : Set A)
     obtain ⟨x, y, _, ht⟩ :=
       Set.ncard_eq_two.mp (by simpa [findim_eq_map_dim_toNat, dim_eq_rank hs, h] using h₂)
     exact ⟨⟨x, h₁ (by simp [ht])⟩, ⟨y, h₁ (by simp [ht])⟩, by simp_all⟩
