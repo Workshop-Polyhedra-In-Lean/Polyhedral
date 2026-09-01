@@ -22,7 +22,8 @@ variable [DivisionRing k] [Module k V]
 variable [PartialOrder k] [IsStrictOrderedRing k] [ConvexSpace k P] [IsAffineConvexSpace k V P]
 
 -- it seems like IsAffineConvexSpace is the generality we need here
--- because a convex space requires an ordering on the ring and we don't have that for general affine spaces
+-- because a convex space requires an ordering on the ring and we
+-- don't have that for general affine spaces
 
 -- Slop ↓
 /-- An affine subspace is convex: it is closed under affine combinations of its points, and
