@@ -17,7 +17,7 @@ namespace Polytope
 
 /-- A polytope is simplicial if every facet is a simplex. -/
 def IsSimplicial (P : Polytope R X) : Prop :=
-  ∀ F : (P : ConvexSet R X).Face, IsCoatom F → IsSimplex (R := R) (F : Set X)
+  ∀ F : (P : ConvexSet R X).Face, IsCoatom F → IsSimplex R (F : Set X)
 
 end Polytope
 
