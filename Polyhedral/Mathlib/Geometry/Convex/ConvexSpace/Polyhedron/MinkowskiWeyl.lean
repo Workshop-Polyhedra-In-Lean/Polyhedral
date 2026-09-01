@@ -522,32 +522,39 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
   -- let C'_hom := PointedCone.inter (PointedCone.halfSpace 𝕜 W hom.weight 1)
   -- (PointedCone.hull 𝕜 ↑F_hom)
 
+  let C'_hom : PointedCone 𝕜 W := sorry --?
+
+
   -- 5. intersect `S_hom` with the "horizontal" hyperplane to get the subspace `S'_hom`
-  let S'_hom :=
-
-
-   PointedCone.inter (PointedCone.halfSpace 𝕜 W hom.weight 1)
-  -- (PointedCone.hull 𝕜 ↑F_hom)
+  let S'_hom : Submodule 𝕜 W :=
+    -- PointedCone.inter (PointedCone.halfSpace 𝕜 W hom.weight 0) (PointedCone.hull 𝕜 ↑F_hom)
+    sorry
+  -- ALTERNATIVE: "translate" the subspace `S` to the hyperplane `weight = 1` by adding a point of weight one
 
   -- 6. Fun fact: Dehomogenizing `C'_hom` gives back the original H-polyhedron `H`.
   -- AS A POINT SET; NOT AS AN OBJECT -- OF TYPE `IsHPolyhedron` (which would require a proof of convexity)
-  have dehomogenize_gives_back_H : PointedCone.dehomogenize A C'_hom = H := by
+  have dehomogenize_gives_back_H : True := by
+    -- PointedCone.dehomogenize W (C'_hom) = H := by
     sorry
-
 
   -- 7. Apply the Minkowski-Weyl theorem for polyhedral cones to `C'_hom`
   -- to get a finite set of generators `G` and a subspace `S_hom` such that
   -- `C'_hom = PointedCone.hull 𝕜 G
-  let G := sorry
+  let G_hom : Set W := sorry
 
-  -- 8. Split the generators `G` into the generators `G_pos` with positive weight
-  -- and the generators `G_zero` with zero weight.
-  let G_pos :=  { g ∈ G | hom.weight g > 0 }
-  let G_zero := { g ∈ V | hom.weight g = 0 }
-  have hG_split : G = G_pos ∪ G_zero := by
-    -- everything in C'_hom is either positive weight or zero weight
+  -- 8. Split the generators `G_hom` into the generators `G_hom_pos` with positive weight
+  -- and the generators `G_hom_zero` with zero weight.
+  let G_hom_pos :=  { g ∈ G_hom | hom.weight g > 0 }
+  let G_hom_zero := { g ∈ G_hom | hom.weight g = 0 }
+  have hG_split : G_hom = G_hom_pos ∪ G_hom_zero := by
+    -- everything in C'_hom has either positive weight or zero weight
     sorry
 
+  -- 9. Normalize the positive-weight generators to weight one to get a finite set of points `P`
+  let G := { x : A | ∃ g ∈ G_hom_pos, hom.ofPoint x = (hom.weight g)⁻¹ • g }
+  let P := ConvexSet.convexHull 𝕜 G
+  have hP : IsPolytope 𝕜 (P : Set A) := by
+    sorry
 
 
 
