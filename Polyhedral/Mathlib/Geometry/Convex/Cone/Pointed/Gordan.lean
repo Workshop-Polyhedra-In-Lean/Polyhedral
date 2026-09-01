@@ -91,14 +91,14 @@ The three ingredients are: expanding the rays (`Gordan.sum_smul_rays_eq`), compa
 (`Gordan.abs_le_sum_abs_of_mem_Ico`). -/
 lemma parallelepiped_inter_lattice_subset_box {I : Type*} [Fintype I] (v : I → V)
     (hv : LinearIndependent K v)
-    (hΛ : ∀ x ∈ Λ, ∃ c : I → ℤ, x = ∑ j, ((c j : ℤ) : K) • v j)
-    (a : ι → I → ℤ) (hr : ∀ i, (r i : V) = ∑ j, ((a i j : ℤ) : K) • v j) :
+    (hΛ : ∀ x ∈ Λ, ∃ c : I → ℤ, x = ∑ j, (c j : K) • v j)
+    (a : ι → I → ℤ) (hr : ∀ i, (r i : V) = ∑ j, (a i j : K) • v j) :
     parallelepiped K Λ r ∩ (Λ : Set V) ⊆
-      (fun c : I → ℤ ↦ ∑ j, ((c j : ℤ) : K) • v j) ''
+      (fun c : I → ℤ ↦ ∑ j, (c j : K) • v j) ''
         {c : I → ℤ | ∀ j, c j ∈ Set.Icc (-∑ i, |a i j|) (∑ i, |a i j|)} := by
   rintro x ⟨⟨μ, hμ, rfl⟩, hxΛ⟩
   obtain ⟨c, hc⟩ := hΛ _ hxΛ
-  have hcoord : ∀ j, ((c j : ℤ) : K) = ∑ i, μ i * ((a i j : ℤ) : K) :=
+  have hcoord : ∀ j, (c j : K) = ∑ i, μ i * (a i j : K) :=
     Fintype.linearIndependent_iffₛ.mp hv _ _ <| by
       rw [← sum_smul_rays_eq K Λ r v a μ hr, ← hc]
   exact ⟨c, ⟨fun j ↦ abs_le.mp (abs_le_sum_abs_of_mem_Ico K hμ (hcoord j)), hc.symm⟩⟩
@@ -114,24 +114,13 @@ its coordinates `c j` are integers, and comparing the two `v`-expansions of `x` 
 image of the finite box of integer vectors `|c j| ≤ B j`. -/
 theorem parallelepiped_inter_lattice_finite [Λ.IsLattice' K] :
     (parallelepiped K Λ r ∩ (Λ : Set V)).Finite := by
-  classical
-  -- **Step 0.** Pick a `ℤ`-basis `b` of `Λ`, indexed by a finite type `I`, whose vectors
-  -- `v j := b j` are moreover `K`-linearly independent.
   obtain ⟨I, b, hbK⟩ := Submodule.IsLattice'.exists_basis_linearIndependent K Λ
   have : Finite I := Module.Finite.finite_basis b
-  cases nonempty_fintype I
-  -- **Steps 1-3.** Every lattice point, and in particular every ray, is an integer combination
-  -- of the basis vectors, so Step 3 applies with `a i j := b.repr (r i) j`.
+  have := Fintype.ofFinite I
   have key := parallelepiped_inter_lattice_subset_box K Λ r (fun j ↦ (b j : V)) hbK
     (fun x hx ↦ ⟨fun j ↦ b.repr ⟨x, hx⟩ j, coe_eq_sum_repr K Λ b ⟨x, hx⟩⟩)
     (fun i j ↦ b.repr (r i) j) (fun i ↦ coe_eq_sum_repr K Λ b (r i))
-  -- **Step 4.** A box of integer vectors over a finite index type is finite, hence so is its
-  -- image, hence so is `P ∩ Λ`.
   exact ((Set.Finite.pi' fun j ↦ Set.finite_Icc _ _).image _).subset key
-
--- The hard part: Finiteness of parallelepiped intersected with the lattice.
-theorem parallelepiped_inter_lattice_finite [Λ.IsLattice' K] :
-    (parallelepiped K Λ r ∩ (Λ : Set V)).Finite := sorry
 
 -- useful lemmas:
 #check Int.self_sub_floor
