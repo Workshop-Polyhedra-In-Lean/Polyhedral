@@ -81,7 +81,7 @@ lemma IsHPolyhedron.mem_recessionCone_iff_exists {P : Set A} (hP : IsHPolyhedron
   rw [Convex.Set.mem_recessionCone]
   exact hP.forall_smul_vadd_mem_iff_exists hne
 
-/-- Translating a set along its recession cone leaves it unchanged. -/
+/-- Minkowski addition of a set P and its recession cone leaves P unchanged. -/
 lemma Convex.Set.recessionCone_vadd_self {P : Set A} :
     (P.recessionCone R : Set V) +ᵥ P = P := by
   ext x
@@ -128,6 +128,7 @@ lemma Convexity.IsPolytope.recessionCone_eq_bot {P : Set A} (hP : IsPolytope R P
   have := hray (t.sup' hte h + 1) (by linarith)
   linarith
 
+-- this lemma does not seem to be used.
 #click_suggestions
 lemma IsHPolyhedron.recessionCone_isHPolyhedral {P : Set A} (hP : IsHPolyhedron R P) :
     IsHPolyhedral .id (P.recessionCone R) := by

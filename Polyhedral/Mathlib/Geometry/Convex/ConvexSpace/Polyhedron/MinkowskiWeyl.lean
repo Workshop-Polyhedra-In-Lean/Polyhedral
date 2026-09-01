@@ -529,14 +529,16 @@ lemma IsHPolyhedron.recessionCone_isPolyhedral {H : Set A} (hH : IsHPolyhedron �
 end Homogenize
 
 -- TODO: It would be nice to not need the explicit coercion Cone → Set
+-- TODO: Update the verbal theorem statement.
 /--
-Every *H-polyhedron* can be decomposed as the Minkowski sum of
-a *V-polytope*, a *finitely generated cone*, and a *submodule*.
-`H → V` direction of the *Minkowski-Weyl* theorem.
+`H → V` direction of the *Minkowski-Weyl* Theorem.
+Every *H-polyhedron* H can be decomposed as the Minkowski sum of
+a *V-polytope* P, a *finitely generated cone*, and a *submodule*.
+The finitely generated cone and the submodule together form the
+recession cone in this theorem.
 
-As in the definition of *H-polyhedron*, we allow this *submodule*
-to be neither finitely nor co-finitely generated, which is only
-relevant in infinite dimension.
+As in the definition of *H-polyhedron*, this *submodule* need not have finite dimension
+or finite codimension (which is only relevant in infinite dimension).
 -/
 lemma isVPolyhedron_of_isHPolyhedron {H : Set A} (hH : IsHPolyhedron 𝕜 H) :
     ∃P : Set A, (IsPolytope 𝕜 P) ∧ H = (H.recessionCone 𝕜 : Set V) +ᵥ P := by

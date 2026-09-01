@@ -26,16 +26,15 @@ variable {A : Type*} [AddTorsor V A]
 
 variable (R) in
 /--
-An *H-polyhedron* is a set can be defined as the restriction of an
+An *H-polyhedron* is the intersection of an
 affine subspace with a finite number of affine inequalities.
 -/
 def IsHPolyhedron (P : Set A) : Prop :=
     ∃ H : Finset (A →ᵃ[R] R), ∃ S : AffineSubspace R A,
       P = (⋂ h ∈ H, h ⁻¹' Set.Ici (0 : R)) ∩ S
 
-
 namespace PointedCone
-variable (p : V' →ₗ[R] V →ₗ[R] R)
+variable (p : V' →ₗ[R] V →ₗ[R] R) -- bilinear map for duality, e.g. the standard dual pairing
 
 /--
 A cone is *H-polyhedral* if it is the intersection of a submodule and
@@ -392,6 +391,7 @@ theorem PointedCone.IsPolyhedral.isHPolyhedral (q : V →ₗ[R] V' →ₗ[R] R) 
 variable {V' : Type*} [AddCommGroup V'] [Module R V']
 
 open PointedCone in
+-- TODO: Remove (?)
 /-- An H-polyhedral cone with respect to any pairing is polyhedral: its defining functionals
 are in particular plain linear functionals (`DualFG.id`), so the full dual pairing machinery
 applies. -/
