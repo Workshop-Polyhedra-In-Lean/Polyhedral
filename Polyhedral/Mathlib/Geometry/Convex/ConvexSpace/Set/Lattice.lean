@@ -115,6 +115,15 @@ variable (R) in
 /-- The convex hull of a set `s`, bundled as a `ConvexSet`. -/
 def convexHull (s : Set X) : ConvexSet R X := ⟨Convexity.convexHull R s, .convexHull⟩
 
+@[simp]
+lemma coe_convexHull (s : Set X) : convexHull R s = Convexity.convexHull R s := rfl
+
+@[simp]
+lemma coe_eq_convexHull_iff {K : ConvexSet R X} {s : Set X} :
+    K = Convexity.convexHull R s ↔ K = convexHull R s := by
+  nth_rw 2 [← SetLike.coe_set_eq]
+  rfl
+
 instance : Max (ConvexSet R X) where
   max K₁ K₂ := convexHull R (K₁ ∪ K₂)
 
@@ -227,9 +236,7 @@ instance : DistribMulAction R (ConvexSet R X) := .ofSetLike ..
 
 noncomputable section AddTorsor
 
-variable [AddTorsor X Y]
-
-local instance : ConvexSpace R Y := AddTorsor.toConvexSpace
+variable [AddTorsor X Y] [ConvexSpace R Y] [IsAffineConvexSpace R X Y]
 
 instance : VAdd X (ConvexSet R Y) where
   vadd v K := ⟨_, K.isConvexSet.translate v⟩
@@ -242,6 +249,9 @@ instance : VAdd (ConvexSet R X) (ConvexSet R Y) where
   vadd K₁ K₂ := ⟨_, K₁.isConvexSet.vadd K₂.isConvexSet⟩
 
 instance : IsConcreteVAdd (ConvexSet R X) X (ConvexSet R Y) Y := ⟨fun _ _ => rfl⟩
+
+instance : VSub (ConvexSet R X) (ConvexSet R Y) where
+  vsub K₁ K₂ := ⟨_, K₁.isConvexSet.vsub K₂.isConvexSet⟩
 
 end AddTorsor
 
@@ -257,9 +267,7 @@ namespace ConvexSet
 variable {R A : Type*}
 variable [PartialOrder R] [Ring R] [IsStrictOrderedRing R]
 variable {V : Type*} [AddCommGroup V] [Module R V]
-variable [AddTorsor V A]
-
-attribute [local instance] AddTorsor.toConvexSpace
+variable [AddTorsor V A] [ConvexSpace R A]
 
 variable {C : ConvexSet R A}
 

@@ -20,10 +20,9 @@ section Field
 
 variable [Field R] [LinearOrder R] [IsOrderedRing R]
 variable [AddCommGroup V] [Module R V]
-variable [AddCommGroup W] [Module R W]
-variable [AddTorsor V A]
+variable [AddCommGroup W] [Module R W] [ConvexSpace R W]
+variable [AddTorsor V A] [ConvexSpace R A] [IsAffineConvexSpace R V A]
 
-attribute [local instance] AddTorsor.toConvexSpace
 variable [IsModuleConvexSpace R W]
 
 variable [hom : Affine.IsHomogenization R A W]
@@ -53,7 +52,7 @@ theorem homogenize_isFaceOf {F P : ConvexSet R A} (he : F.IsFaceOf P) :
     have hhom : (P.homogenize W).Salient := homogenize_salient
     by_cases hnf : (F : Set A).Nonempty
     · have cF := F.isConvexSet.image hom.ofPoint.isAffineMap
-      apply (PointedCone.mem_hull_iff_of_convex (hnf.image _) cF _).mpr
+      apply (Set.ext_iff.mp (PointedCone.hull_eq_smul (hnf.image _) cF) _).mpr
       by_cases hv0 : v = 0
       · exact ⟨0, le_rfl, mem_smul_set.mpr (by simpa [hv0] using nonempty_def.mp hnf)⟩
       · by_cases hw0 : w = 0

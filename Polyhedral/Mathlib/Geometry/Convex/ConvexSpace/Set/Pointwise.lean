@@ -11,6 +11,7 @@ import Mathlib.LinearAlgebra.AffineSpace.AffineMap
 
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.AffineMap
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.AffineSpace
 
 /-! This file proves basic pointwise properties of convex sets. -/
 
@@ -64,14 +65,18 @@ section Ring
 
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
-variable [AddTorsor V A]
-variable [ConvexSpace R A] [IsAffineConvexSpace R V A]
+variable [AddTorsor V A] [ConvexSpace R A] [IsAffineConvexSpace R V A]
 
-/- Minkowski vector addition preserves convexity. -/
+/- Minkowski addition preserves convexity. -/
 protected lemma IsConvexSet.vadd {K₁ : Set V} {K₂ : Set A}
     (hK₁ : IsConvexSet R K₁) (hK₂ : IsConvexSet R K₂) : IsConvexSet R (K₁ +ᵥ K₂) := by
   rw [← Set.vadd_image_prod]
   exact (hK₁.prod hK₂).image (by fun_prop)
+
+protected lemma IsConvexSet.vsub {K₁ K₂ : Set A}
+    (hK₁ : IsConvexSet R K₁) (hK₂ : IsConvexSet R K₂) : IsConvexSet R (K₁ -ᵥ K₂) := by
+  -- TODO: use `AddTorsor.sConvexComb_eq_affineCombination`
+  sorry
 
 /- Translation preserves convexity. -/
 lemma IsConvexSet.translate (t : V) {K : Set A} (hK : IsConvexSet R K) :
