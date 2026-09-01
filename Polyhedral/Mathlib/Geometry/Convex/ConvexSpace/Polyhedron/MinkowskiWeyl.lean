@@ -168,7 +168,8 @@ end Homogenize
 /- Minkowski-Weyl for polyhedra -/
 open Convex
 
--- def IsHPolyhedron.vertices {P : Set A} (hP : IsHPolyhedron R P) : Finset { v ∈ Set A | IsFace 0 hP v}
+-- def IsHPolyhedron.vertices {P : Set A}
+-- (hP : IsHPolyhedron R P) : Finset { v ∈ Set A | IsFace 0 hP v}
 
 -- TODO: This should be a more general theorem in Mathlib
 /--
@@ -490,6 +491,67 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd {H : Set A}
   rintro _ ⟨v, hv, y, hy, rfl⟩
   rw [← Convex.Set.recessionCone_vadd_self (R := 𝕜) (P := H)]
   exact Set.mem_vadd.mpr ⟨v, hv, y, hPH hy, rfl⟩
+
+
+#click_suggestions
+omit [AddCommGroup W] [Module 𝕜 W] [IsModuleConvexSpace 𝕜 W] in
+/-- ALTERNATIVE ATTEMPT `H → V` direction -/
+theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
+    (hH : IsHPolyhedron 𝕜 H) :
+    ∃ P : Set A, IsPolytope 𝕜 P ∧
+    ∃ C : PointedCone 𝕜 V, IsPolyhedral C ∧
+    H = (C : Set V) +ᵥ P := by
+  classical
+  let W := CanonicalHomogenization 𝕜 A
+  let hom : Affine.IsHomogenization 𝕜 A W := inferInstance
+  -- TODO: We shouldn't need to specify R, V by name
+  let := IsModuleConvexSpace.ofAddTorsor (R := 𝕜) (V := W)
+
+  -- 1. obtain the affine functions `F` and subspace `S` describing the H-polyhedron `H`
+  obtain ⟨F, S, hH⟩ := hH
+  -- 2. homogenize the functions to get linear functions `F_hom`:
+  -- let F_hom := -- hom.extend 𝕜 '' F
+
+
+
+  -- 3. homogenize the subspace to get `S_hom`:
+
+  let S_hom : Submodule 𝕜 W := Submodule.span 𝕜 (hom.ofPoint '' S)
+
+  -- 4. intersect `C_hom` with the "upper" half-space to get the H-cone `C'_hom`
+  -- let C'_hom := PointedCone.inter (PointedCone.halfSpace 𝕜 W hom.weight 1)
+  -- (PointedCone.hull 𝕜 ↑F_hom)
+
+  -- 5. intersect `S_hom` with the "horizontal" hyperplane to get the subspace `S'_hom`
+  let S'_hom :=
+
+
+   PointedCone.inter (PointedCone.halfSpace 𝕜 W hom.weight 1)
+  -- (PointedCone.hull 𝕜 ↑F_hom)
+
+  -- 6. Fun fact: Dehomogenizing `C'_hom` gives back the original H-polyhedron `H`.
+  -- AS A POINT SET; NOT AS AN OBJECT -- OF TYPE `IsHPolyhedron` (which would require a proof of convexity)
+  have dehomogenize_gives_back_H : PointedCone.dehomogenize A C'_hom = H := by
+    sorry
+
+
+  -- 7. Apply the Minkowski-Weyl theorem for polyhedral cones to `C'_hom`
+  -- to get a finite set of generators `G` and a subspace `S_hom` such that
+  -- `C'_hom = PointedCone.hull 𝕜 G
+  let G := sorry
+
+  -- 8. Split the generators `G` into the generators `G_pos` with positive weight
+  -- and the generators `G_zero` with zero weight.
+  let G_pos :=  { g ∈ G | hom.weight g > 0 }
+  let G_zero := { g ∈ V | hom.weight g = 0 }
+  have hG_split : G = G_pos ∪ G_zero := by
+    -- everything in C'_hom is either positive weight or zero weight
+    sorry
+
+
+
+
+  sorry
 
 /--
 The recession cone of an H-polyhedron is a polyhedral cone.
