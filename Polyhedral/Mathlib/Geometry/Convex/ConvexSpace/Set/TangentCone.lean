@@ -560,19 +560,19 @@ theorem tangentCone_eq_tangentCone_singleton_sup_lineal {F₀ : ConvexSet R P}
   · exact sup_le (tangentCone_mono_right (Set.singleton_subset_iff.mpr hx₀) K)
       (PointedCone.lineal_le (K.tangentCone F₀))
 
-/-- **Faces of `K.tangentCone F₀` correspond exactly to faces of `K` above `F`** — the payoff of
-`IsFaceOf.tangentCone` / `tangentCone_vadd_inf` / `mem_iff_mem_tangentCone` — *provided* `F` is
-the *smallest* face of `K` containing `F₀` (`hmin`), not merely some face containing it: for an
-arbitrary face `G` of the tangent cone, `Face.vadd_inf G` always contains `F₀` (taking `0 ∈ G` as
-the witness direction), so `hmin` is exactly what's needed to place `F ≤ Face.vadd_inf G`. Without
-minimality there would be no reason for an arbitrary `G` to land above `F` at all. -/
-def tangentCone_ici_orderIso (F₀ : ConvexSet R P) (hF₀K : F₀.IsFaceOf K) {F : Face K}
-    (h : F₀ ≤ (F : ConvexSet R P)) (hmin : ∀ G : Face K, F₀ ≤ (G : ConvexSet R P) → F ≤ G)
+/-- **Faces of `K.tangentCone F₀` correspond exactly to faces of `K` above `F₀`**, when `F₀`
+itself is already a face of `K` (`hF₀K`) — the payoff of `IsFaceOf.tangentCone` /
+`tangentCone_vadd_inf` / `mem_iff_mem_tangentCone`. (There is no room here for `F₀` to be some
+smaller convex set with `F₀ ≤ F` for a genuinely bigger minimal containing face `F`: since `F₀` is
+already a face, it is trivially its own smallest containing face — any `G : Face K` with
+`F₀ ≤ G` and `G ≤ F₀` forces `G = F₀`. So the target is `Set.Ici` of `F₀` itself, bundled as a
+face via `hF₀K`, not a separate `F`.) -/
+def tangentCone_ici_orderIso (F₀ : ConvexSet R P) (hF₀K : F₀.IsFaceOf K)
     (hF₀ne : (F₀ : Set P).Nonempty) :
-    PointedCone.Face (K.tangentCone F₀) ≃o Set.Ici F where
-  toFun G := ⟨Face.vadd_inf G, hmin _ (fun x hx => (mem_Face_vadd_inf G).mpr
-    ⟨hF₀K.le hx, x, hx, by rw [vsub_self]; exact G.toPointedCone.zero_mem⟩)⟩
-  invFun G := G.1.tangentCone (h.trans (G.2 : F ≤ G.1)) hF₀ne
+    PointedCone.Face (K.tangentCone F₀) ≃o Set.Ici (⟨F₀, hF₀K⟩ : Face K) where
+  toFun G := ⟨Face.vadd_inf G, fun x hx => (mem_Face_vadd_inf G).mpr
+    ⟨hF₀K.le hx, x, hx, by rw [vsub_self]; exact G.toPointedCone.zero_mem⟩⟩
+  invFun G := G.1.tangentCone (G.2 : (⟨F₀, hF₀K⟩ : Face K) ≤ G.1) hF₀ne
   left_inv G := by
     apply PointedCone.Face.toPointedCone_eq_iff.mp
     change (Face.vadd_inf G : ConvexSet R P).tangentCone F₀ = (G : PointedCone R M)
@@ -580,9 +580,10 @@ def tangentCone_ici_orderIso (F₀ : ConvexSet R P) (hF₀K : F₀.IsFaceOf K) {
   right_inv G := by
     apply Subtype.ext
     ext y
-    change y ∈ Face.vadd_inf (G.1.tangentCone (h.trans (G.2 : F ≤ G.1)) hF₀ne) ↔ y ∈ G.1
+    change y ∈ Face.vadd_inf
+      (G.1.tangentCone (G.2 : (⟨F₀, hF₀K⟩ : Face K) ≤ G.1) hF₀ne) ↔ y ∈ G.1
     rw [mem_Face_vadd_inf]
-    exact (mem_iff_mem_tangentCone G.1 (h.trans (G.2 : F ≤ G.1)) hF₀ne).symm
+    exact (mem_iff_mem_tangentCone G.1 (G.2 : (⟨F₀, hF₀K⟩ : Face K) ≤ G.1) hF₀ne).symm
   map_rel_iff' {G₁ G₂} := by
     constructor
     · intro hG
