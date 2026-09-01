@@ -49,26 +49,10 @@ variable [hom : Affine.IsHomogenization R A W]
 variable (R) in
 def Convex.Set.recessionCone (P : Set A) : PointedCone R V where
   carrier := { v : V | ∀ x ∈ P, ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P }
-  add_mem' := by
-    -- TODO: golf
-    intro a b ha hb
-    simp only [mem_ofPred_eq, smul_add] at ha hb ⊢
-    intro x hx c hc
-    have hb' := hb x hx c hc
-    have ha' := ha (c•b +ᵥ x) hb' c
-    rw [add_vadd]
-    exact ha' hc
-  zero_mem' := by
-    simp only [mem_ofPred_eq, smul_zero, zero_vadd]
-    intro x hx a ha
-    exact hx
-  smul_mem' := by
-    -- TODO: golf
-    intro ⟨c, hc⟩ x h
-    simp only [mem_ofPred_eq, Nonneg.mk_smul] at ⊢ h
-    intro y hy a ha
-    rw [smul_smul]
-    exact h y hy (a * c) (show 0 ≤ a * c by exact Right.mul_nonneg ha hc)
+  add_mem' {_ b} ha hb x hx c hc := by simp [add_vadd, ha (c • b +ᵥ x) (hb x hx c hc) c hc]
+  zero_mem' _ hx _ _ := by simp [hx]
+  smul_mem' := fun ⟨c, hc⟩ _ h y hy a ha ↦ by
+    simp [smul_smul, h y hy (a * c) (Right.mul_nonneg ha hc)]
 
 lemma Convex.Set.mem_recessionCone {P : Set A} {v : V} :
     v ∈ P.recessionCone R ↔ ∀ x ∈ P, ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P := Iff.rfl
