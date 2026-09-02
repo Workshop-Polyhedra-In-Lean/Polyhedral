@@ -538,20 +538,10 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
   -- 4. homogenize the subspace to get `S_hom`:
   let S_hom : Submodule 𝕜 W := Submodule.span 𝕜 (hom.ofPoint '' S)
   -- 5. Form the H-cone `C0_hom` in `W` defined by the constraints `F'_hom`
-  let C0_hom : PointedCone 𝕜 W :=
-    { carrier :=  -- dual .id? F'_hom,
-        { x : W | ∀ f ∈ F'_hom, 0 ≤ f x },  -- pedestrian definition
-      zero_mem' := by
-        -- simp only [Set.mem_ofPred_eq, Submodule.coe_zero, Submodule.mem_span]
-        intro f hf
-        simp only [map_zero, Std.le_refl]
-      smul_mem' := by
-        sorry
-      add_mem' := by
-        sorry
-    }
+  let C0_hom : PointedCone 𝕜 W := dual .id F'_hom
+ --- carrier = { x : W | ∀ f ∈ F'_hom, 0 ≤ f x },  -- pedestrian definition
   have hC0_hom.dualFG : C0_hom.DualFG .id := by
-    sorry
+    use F'_hom
 
   -- 5. Form the H-cone `C_hom` by intersecting `C0_hom` with the subspace `S_hom`.
   let C_hom : PointedCone 𝕜 W := C0_hom ⊓ S_hom
@@ -565,7 +555,7 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
   -- to get a finite set of generators `G_hom` and a subspace `S2` such that
   -- `C_hom = PointedCone.hull 𝕜 G_hom ⊔ S2`
   obtain D_hom := Minkowski_Weil_for_cones_how_it_would_be_handy (hC := hC0_hom.dualFG) (S := S_hom)
-  obtain ⟨_, hC_hom_FG, S2, h_representation⟩ := D_hom
+  obtain ⟨D_hom, hC_hom_FG, S2, h_representation⟩ := D_hom
   obtain ⟨G_hom, hG_hom⟩  := hC_hom_FG
 
   -- 8. Split the generators `G_hom` into the generators `G_hom_pos` with positive weight
@@ -578,12 +568,13 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
 
   -- 9. Normalize the positive-weight generators to weight one to get a finite set of points `G`
   let G_old''XX := { x : A | ∃ g ∈ G_hom_pos, hom.ofPoint x = (hom.weight g)⁻¹ • g }
-  let G := hom.ofPoint ⁻¹' G_hom_pos.image (fun g => (hom.weight g)⁻¹ • g)
+  let G := (G_hom_pos.image (fun g => (hom.weight g)⁻¹ • g)).preimage
+   (hom.ofPoint) (hom.ofPoint_injective.injOn)
   let Rays := hom.ofVector ⁻¹' G_hom_zero
-  let linealityspace : PointedCone 𝕜 V := sorry -- hom.ofVector ⁻¹' S2 -- !!!
-  let P : Set A := ConvexSet.convexHull 𝕜 G
+  let linealityspace : Submodule 𝕜 V := S2.map hom.ofVector.leftInverse
+  let P : Set A := Convexity.convexHull 𝕜 G
   have hP : IsPolytope 𝕜 P := by
-    sorry
+    use G
   let C := PointedCone.hull 𝕜 Rays ⊔ linealityspace
 
   -- 10. We have now constructed the cone `C` and the polytope `P`.
@@ -594,21 +585,41 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
     constructor
     -- show H ⊆ C +ᵥ P
     · intro x hx
-      let x_hom : W := hom.ofPoint x
-      have hx' : x_hom ∈ C_hom := by -- do we need this? (AI-generated)
-        rw [Submodule.mem_inf]
-        constructor
-        · sorry
-        · sorry
+      set x_hom : W := hom.ofPoint x with hxdef
+      have hx' : x_hom ∈ C0_hom := by -- do we need this? (AI-generated)
+        sorry
           --- exact Submodule.mem_span_of_mem (Set.mem_image_of_mem _ (hH.2 hx))
+      have hx22 : x_hom ∈ S_hom := by
+        sorry
+      have hx_hom : x_hom ∈ C_hom := by
+        rw [Submodule.mem_inf]
+        exact ⟨hx', hx22⟩
+      have hC_hom_rep : x_hom ∈ D_hom ⊔ S2 := by
+        rw [← h_representation]
+        exact hx_hom
       -- show that x ∈ C +ᵥ P
-      -- since x ∈ C_hom, `x = (∑ μ_j r_j + s) +ᵥ (∑ λ_i g_i)`
+      -- since x_hom ∈ C_hom, `x_hom = (∑ μ_j r_j + s) +ᵥ (∑ λ_i g_i)`
       -- for some r_j ∈ Rays, s ∈ linealityspace, g_i ∈ G_hom_pos, μ_j ≥ 0, λ_i ≥ 0.
+      obtain ⟨z, hz, s, hs, z_plus_s_is_x⟩ := mem_sup.mp hC_hom_rep
+      rw [← hG_hom] at hz
+      obtain ⟨μ, ⟨hμ, hμ₂⟩ ⟩ := Submodule.mem_span_finset.mp hz
       -- We can normalize the g_i to weight one to get points in G.
       -- Since `x` as well as the points in `G` have weight 1,
       -- and all other points have weight 0,  `∑ λ_i = 1`, and thus
       -- `x` is a convex combination of points in G plus a point in C:
       -- x_hom = c +ᵥ p for some c ∈ C and p ∈ P
+      let P_pos := μ.support
+      have sum_pos1: ∑ g ∈ G_hom_pos, μ g * g.weight = 1 := by
+        have sum_1: ∑ g ∈ G_hom, μ g * g.weight = 1 := by
+          have x.weight_eq_one : x_hom.weight = 1 := by
+            rw [hxdef]
+            exact hom.weight_one x
+          have sum_1' : ∑ g ∈ G_hom, μ g * g.weight = z.weight := by
+            -- rw [hxdef]
+            sorry
+          sorry
+
+        sorry
       sorry
     -- Converse direction: show C +ᵥ P ⊆ H
     · intro x hx
