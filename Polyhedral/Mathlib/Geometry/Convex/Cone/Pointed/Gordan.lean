@@ -61,64 +61,22 @@ theorem parallelepiped_inter_lattice_finite [Λ.IsLattice' K] :
   obtain ⟨I, v, hv⟩ := Submodule.IsLattice'.exists_basis_linearIndependent K Λ
   have : Finite I := Module.Finite.finite_basis v
   have := Fintype.ofFinite I
-  let a i j := v.repr (r i) j
   let box : Set V := (fun c ↦ ∑ j, c j • v j) ''
-      {c : I → ℤ | ∀ j, c j ∈ Set.Icc (-∑ i, |a i j|) (∑ i, |a i j|)}
-  apply Set.Finite.subset (s := box)
-  · exact ((Set.Finite.pi' fun j ↦ Set.finite_Icc _ _).image _)
+      {c : I → ℤ | ∀ j, c j ∈ Set.Icc (-∑ i, |v.repr (r i) j|) (∑ i, |v.repr (r i) j|)}
+  apply Set.Finite.subset (s := box) ((Set.Finite.pi' fun j ↦ Set.finite_Icc _ _).image _)
   rintro x ⟨⟨μ, hμ, hx⟩, hxΛ⟩
   let c (i : I) := v.repr ⟨x, hxΛ⟩ i
-  have hc : x = ∑ j, (c j : K) • (v j).1 := by
-    have := congr($(v.sum_repr ⟨x, hxΛ⟩).1).symm
-    dsimp at this
-    rw [this]
-    push_cast
-    congr
-    ext i
-    rw [Int.cast_smul_eq_zsmul]
-  have hr (i : ι) : r i = ∑ j, a i j • (v j).1 := by
-    rw [← v.sum_repr (r i)]
-    push_cast
-    rfl
-  have hcoord : ∀ j, c j = ∑ i, μ i * a i j :=
-    Fintype.linearIndependent_iffₛ.mp hv _ _ <| by
-      rw [← hc]
-      rw [hx]
-      rw [Fintype.sum_congr _ _ (fun _ ↦ by rw [hr])]
-      simp_rw [Finset.smul_sum, Finset.sum_smul]
-      rw [Finset.sum_comm]
-      simp_rw [← zsmul_eq_mul', smul_assoc]
-      congr
-      ext i
-      congr
-      ext j
-      apply smul_comm
-  refine ⟨c, ⟨fun j ↦ abs_le.mp ?_, ?_⟩⟩
-  · rw [← Int.cast_le (R := K)]
-    rw [Int.cast_abs, hcoord]
-    grw [Finset.abs_sum_le_sum_abs]
-    simp_rw [abs_mul]
-    push_cast
-    apply Finset.sum_le_sum
-    intro i _
-    apply mul_le_of_le_one_left
-    · exact abs_nonneg _
-    · rw [abs_eq_self.mpr (hμ i).1]
-      exact (hμ i).2.le
-  conv at hc =>
-    rhs
-    enter [2]
-    ext j
-    rw [Int.cast_smul_eq_zsmul]
-  exact hc.symm
-
--- useful lemmas:
-#check Int.self_sub_floor
-#check Int.floor_add_fract
-#check Int.fract_nonneg
-#check Int.fract_lt_one
-#check Int.cast_smul_eq_zsmul
-#check natCast_zsmul
+  have key (y : Λ) : y.1 = ∑ j, v.repr y j • (v j : V) := by
+    simp_rw [← Submodule.coe_smul, ← Submodule.coe_sum, v.sum_repr]
+  have hxc : x = ∑ j, c j • (v j).1 := key ⟨x, hxΛ⟩
+  have hr (i : ι) : r i = ∑ j, v.repr (r i) j • (v j).1 := key (r i)
+  have hcμ : ∀ j, c j = ∑ i, μ i * v.repr (r i) j := Fintype.linearIndependent_iffₛ.mp hv _ _ <| by
+    simpa only [Int.cast_smul_eq_zsmul, ← hxc, hx, hr, Finset.smul_sum,
+      Finset.sum_smul, mul_smul] using Finset.sum_comm
+  refine ⟨c, fun j ↦ abs_le.mp ?_, hxc.symm⟩
+  grw [← Int.cast_le (R := K), Int.cast_abs, hcμ, Finset.abs_sum_le_sum_abs]
+  push_cast [abs_mul, abs_of_nonneg (hμ _).1]
+  exact Finset.sum_le_sum fun i _ ↦ mul_le_of_le_one_left (abs_nonneg _) (hμ i).2.le
 
 /-- Every lattice point of the cone is the sum of a lattice point of the half-open parallelepiped
 and an `ℕ`-combination of the rays. Split the coefficients into integer and fractional parts. -/
@@ -130,8 +88,8 @@ theorem exists_decomp (γ : V) (hγ : γ ∈ (cone K Λ r).latticePoints K Λ) :
   set n : ι → ℕ := fun i ↦ ⌊(c i : K)⌋₊ with hn_def
   set μ : ι → K := fun i ↦ Int.fract (c i : K) with hμ_def
   have hsplit (i : ι) : (c i : K) = μ i + (n i : K) := by
-    rw [add_comm, hn_def, hμ_def, natCast_floor_eq_intCast_floor (c i).2]
-    exact (Int.floor_add_fract (c i : K)).symm
+    rw [hn_def, hμ_def, natCast_floor_eq_intCast_floor (c i).2]
+    exact (Int.fract_add_floor (c i : K)).symm
   simp only [hsplit, add_smul, Nat.cast_smul_eq_nsmul, Finset.sum_add_distrib] at hc
   refine ⟨(⟨ ∑ i, μ i • (r i : V), ?_, ?_, ⟩, n), hc.symm⟩
   · exact ⟨μ, fun i ↦ ⟨Int.fract_nonneg _, Int.fract_lt_one _⟩, rfl⟩
