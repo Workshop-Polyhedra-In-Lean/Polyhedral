@@ -599,7 +599,6 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
         rw [Submodule.mem_inf]
         constructor
         · sorry
-          --- exact hC0_hom.dualFG.to_dual.mpr (fun f hf => hH.1 f (Finset.mem_insert_of_mem (Finset.mem_image_of_mem extend_function hf)) x hx)
         · sorry
           --- exact Submodule.mem_span_of_mem (Set.mem_image_of_mem _ (hH.2 hx))
       -- show that x ∈ C +ᵥ P
@@ -614,13 +613,17 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
     -- Converse direction: show C +ᵥ P ⊆ H
     · intro x hx
       obtain ⟨c, hc, p, hp, rfl⟩ := Set.mem_vadd.mp hx
-      -- let x ∈ C +ᵥ P, then x = c +ᵥ p for some c ∈ C and p ∈ P
-      -- we need to show that x ∈ H
+      -- let x ∈ C +ᵥ P. Then x = c +ᵥ p for some c ∈ C and p ∈ P
+      -- We start by showing that p ∈ H
       have hp_in_H : p ∈ H := by
         rw [← dehomogenize_gives_back_H]
-        sorry -- exact PointedCone.dehomogenize_mem.mpr (PointedCone.hull_mem _ (Set.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp ...)))))))))))))))))))))))))))))))))))
+        sorry
+      -- adding c does not lead out of H
+      have hp_pos : (hom.ofPoint p).weight >= 0 := by
+        sorry
+
+      -- the rest is AI-generated stuff:
       have hc' : hom.ofVector c ∈ C_hom := by
-        -- adding c does not lead out of H
         sorry
       have hp' : hom.ofPoint p ∈ C_hom := by
         sorry
@@ -630,12 +633,6 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
         rw [← dehomogenize_gives_back_H]
         sorry -- exact PointedCone.dehomogenize_mem.mpr hcp'
       exact hcp
-      -- Since p ∈ P, we have p = ∑ λ_i g_i for some g_i ∈ G and λ_i ≥ 0 with ∑ λ_i = 1
-      -- Since c ∈ C, we have c = ∑ μ_j r_j + s for some r_j ∈ Rays and s ∈ linealityspace
-      -- then x = (∑ μ_j r_j + s) +ᵥ (∑ λ_i g_i)
-      -- we need to show that this is in H
-      -- since H is convex and contains all the generators, it should contain this combination
-
   use P
   -- rw [hP]
   constructor
