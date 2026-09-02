@@ -89,6 +89,12 @@ lemma weight_one (a₀ : A) : hom.weight (hom.ofPoint a₀) = 1 := by
   convert Set.ext_iff.mp hom.ofPoint_range_eq_preimage_weight_one (hom.ofPoint a₀)
   simp [exists_apply_eq_apply, Set.mem_preimage, Set.mem_singleton_iff, true_iff]
 
+lemma weight_one_iff (a : W) : hom.weight a = 1 ↔ ∃ a₀ : A, a = hom.ofPoint a₀ := by
+  refine ⟨fun ha ↦ ?_, by rintro ⟨a₀, rfl⟩; exact hom.weight_one a₀⟩
+  have := Set.ext_iff.mp hom.ofPoint_range_eq_preimage_weight_one a
+  simp at this
+  tauto
+
 variable [Nontrivial R] in
 theorem ofPoint_ne_zero (x : A) : hom.ofPoint x ≠ (0 : W) := by
   intro hn

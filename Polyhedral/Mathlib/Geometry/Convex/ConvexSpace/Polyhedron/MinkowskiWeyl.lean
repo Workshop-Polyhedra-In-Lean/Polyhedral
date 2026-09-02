@@ -66,6 +66,27 @@ variable (W) in
 def Convexity.ConvexSet.homogenize_closure (S : ConvexSet 𝕜 A) : PointedCone 𝕜 W :=
     homogenize W S ⊔ ((S : Set A).recessionCone 𝕜).map hom.ofVector
 
+lemma dehomogenize_sup_vector_left (C : PointedCone 𝕜 V) (P : PointedCone 𝕜 W) :
+    PointedCone.dehomogenize A (C.map hom.ofVector ⊔ P)
+    = (C : Set V) +ᵥ (PointedCone.dehomogenize A P : Set A) := by
+  ext x
+  simp only [PointedCone.dehomogenize, ConvexSet.dehomogenize, sup_comm, mk_eq, mem_preimage,
+    SetLike.mem_coe]
+  constructor
+  · intro hx
+    obtain ⟨y, hy, z, hz, hyz⟩ := Submodule.mem_sup.mp hx
+    obtain ⟨c, hc, rfl⟩ := PointedCone.mem_map.mp hz
+    have hw : hom.weight y = 1 := by
+      have := congrArg hom.weight hyz
+      simpa [hom.weight_zero, hom.weight_one] using this
+    obtain ⟨y', hy'⟩ := (hom.weight_one_iff _).mp hw
+    refine ⟨c, hc, y', by simp_all, ?_⟩
+    rw [hy', add_comm, ← vadd_eq_add, ← AffineMap.map_vadd] at hyz
+    exact hom.ofPoint_injective hyz
+  · rintro ⟨c, hc, y, hy, rfl⟩
+    rw [AffineMap.map_vadd, vadd_eq_add, add_comm]
+    exact Submodule.add_mem_sup hy (PointedCone.mem_map.mpr ⟨c, hc, rfl⟩)
+
 /--
 Dehomogenizing the sum of a cone embedded at weight zero and the homogenization of a
 convex set yieds the pointwise sum.
@@ -84,6 +105,7 @@ lemma dehomogenize_map_ofVector_sup_homogenize (C : PointedCone 𝕜 V) (P : Con
     have hw : hom.weight z = 1 := by
       have := congrArg hom.weight hyz
       simpa [hom.weight_zero, hom.weight_one] using this
+    have := Set.mem_smul.mp <| smul_pos_of_mem_homogenize hz (by rintro rfl; simp at hw)
     obtain ⟨r, hr, _, ⟨y', hy', rfl⟩, rfl⟩ :=
       Set.mem_smul.mp <| smul_pos_of_mem_homogenize hz (by rintro rfl; simp at hw)
     have hr1 : r = 1 := by simpa [hom.weight_one] using hw
