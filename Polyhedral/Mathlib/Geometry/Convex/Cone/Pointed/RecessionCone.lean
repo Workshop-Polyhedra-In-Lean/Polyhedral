@@ -64,6 +64,42 @@ lemma IsHPolyhedron.mem_recessionCone_iff_exists {P : Set A} (hP : IsHPolyhedron
   rw [Convex.Set.mem_recessionCone]
   exact hP.forall_smul_vadd_mem_iff_exists hne
 
+/-- The sup of two recession cones is contained in the recession cone of the Minkowski sum -/
+lemma Convex.Set.sup_recessionCone_le_recessionCone_vadd
+    {P : Set V} {Q : Set A} :
+    P.recessionCone R ⊔ Q.recessionCone R ≤ (P +ᵥ Q).recessionCone R := by
+  intro v hv
+  rw [Submodule.mem_sup] at hv
+  rcases hv with ⟨y, hy, z, hz, rfl⟩
+  intro a ha r hr
+  rw [Set.mem_vadd] at ha
+  rcases ha with ⟨p, hp, q, hq, rfl⟩
+  have h1 : r • y +ᵥ p ∈ P := hy p hp r hr
+  have h2 : r • z +ᵥ q ∈ Q := hz q hq r hr
+  have : (r • y +ᵥ p) +ᵥ (r • z +ᵥ q) ∈ P +ᵥ Q := Set.vadd_mem_vadd h1 h2
+  simpa [← add_vadd, add_comm, add_assoc]
+
+/-- The recession cone cannot shrink when adding a set -/
+lemma Convex.Set.recessionCone_le_recessionCone_vadd_left
+    {P : Set V} {Q : Set A} :
+    P.recessionCone R ≤ (P +ᵥ Q).recessionCone R :=
+  le_trans le_sup_left sup_recessionCone_le_recessionCone_vadd
+
+/-- The recession cone cannot shrink when adding a set -/
+lemma Convex.Set.recessionCone_le_recessionCone_vadd_right
+    {P : Set V} {Q : Set A} :
+    Q.recessionCone R ≤ (P +ᵥ Q).recessionCone R :=
+  le_trans le_sup_right sup_recessionCone_le_recessionCone_vadd
+
+-- TODO this probably needs MW to be proven, so it cannot be used to prove MW.
+lemma Convex.Set.recessionCone_vadd {P : Set V} {Q : Set A}
+    (hP : IsHPolyhedron R P) (hQ : IsHPolyhedron R Q) :
+    (P +ᵥ Q).recessionCone R = P.recessionCone R ⊔ Q.recessionCone R := by
+  ext v
+  constructor
+  · sorry
+  · apply sup_recessionCone_le_recessionCone_vadd
+
 /-- Minkowski addition of a set P and its recession cone leaves P unchanged. -/
 lemma Convex.Set.recessionCone_vadd_self {P : Set A} :
     (P.recessionCone R : Set V) +ᵥ P = P := by
