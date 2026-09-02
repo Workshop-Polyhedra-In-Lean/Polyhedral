@@ -91,6 +91,17 @@ lemma Convex.Set.recessionCone_le_recessionCone_vadd_right
     Q.recessionCone R ≤ (P +ᵥ Q).recessionCone R :=
   le_trans le_sup_right sup_recessionCone_le_recessionCone_vadd
 
+-- TODO prove this without using MW
+lemma Convexity.IsPolytope.recessionCone_vadd_eq_left
+    {P : Set V} {Q : Set A}
+    (hQ : IsPolytope R Q) (hne : Q.Nonempty)
+    (hP : IsConvexSet R P) :
+    (P +ᵥ Q).recessionCone R = P.recessionCone R := by
+  ext v
+  constructor
+  · sorry
+  · apply Convex.Set.recessionCone_le_recessionCone_vadd_left
+
 -- TODO this probably needs MW to be proven, so it cannot be used to prove MW.
 lemma Convex.Set.recessionCone_vadd {P : Set V} {Q : Set A}
     (hP : IsHPolyhedron R P) (hQ : IsHPolyhedron R Q) :
