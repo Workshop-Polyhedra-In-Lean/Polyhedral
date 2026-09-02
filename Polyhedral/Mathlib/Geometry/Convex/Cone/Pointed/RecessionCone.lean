@@ -104,11 +104,9 @@ lemma Convex.Set.recessionCone_vadd {P : Set V} {Q : Set A}
 lemma Convex.Set.recessionCone_vadd_self {P : Set A} :
     (P.recessionCone R : Set V) +ᵥ P = P := by
   ext x
-  constructor
-  · rintro ⟨v, hv, y, hy, rfl⟩
-    simpa using (Convex.Set.mem_recessionCone.mp hv) y hy 1 zero_le_one
-  · intro hx
-    exact ⟨0, (P.recessionCone R).zero_mem, x, hx, zero_vadd _ _⟩
+  refine ⟨fun ⟨v, hv, y, hy, h⟩ ↦ ?_,
+    fun hx ↦ ⟨0, (P.recessionCone R).zero_mem, x, hx, zero_vadd _ _⟩⟩
+  simpa [h] using (Convex.Set.mem_recessionCone.mp hv) y hy 1 zero_le_one
 
 /-- The recession cone of a cone is the cone itself. -/
 lemma PointedCone.recessionCone_eq_self (C : PointedCone R V) :
@@ -130,31 +128,27 @@ lemma Convexity.IsPolytope.recessionCone_eq_bot {P : Set A} (hP : IsPolytope R P
   rw [eq_bot_iff]
   intro v hv
   rw [Submodule.mem_bot]
-  by_contra hv0
+  by_contra! hv0
   obtain ⟨f, hf⟩ : ∃ f : Module.Dual R V, f v ≠ 0 := by
-    by_contra hcon
-    push Not at hcon
+    by_contra! hcon
     exact hv0 ((Module.forall_dual_apply_eq_zero_iff R v).mp hcon)
   obtain ⟨x₀, hx₀⟩ := hne
   set g : Module.Dual R V := (f v)⁻¹ • f with hg
-  have hgv : g v = 1 := by simp [hg, inv_mul_cancel₀ hf]
   set h : A →ᵃ[R] R := g.toAffineMap.comp (AffineEquiv.vaddConst R x₀).symm.toAffineMap
     with hhdef
-  have happ : ∀ y : A, h y = g (y -ᵥ x₀) := fun y => by simp [hhdef]
   obtain ⟨t, rfl⟩ := hP
   have hte : t.Nonempty := by
-    rcases Finset.eq_empty_or_nonempty t with rfl | hte
+    obtain rfl | hte := Finset.eq_empty_or_nonempty t
     · simp at hx₀
     · exact hte
   have hbound : ∀ y ∈ Convexity.convexHull R (t : Set A), h y ≤ t.sup' hte h := by
     intro y hy
-    refine convexHull_min (fun s hs => ?_)
+    exact convexHull_min (fun s hs => Finset.le_sup' h hs)
       ((isConvexSet_Iic (t.sup' hte h)).preimage h.isAffineMap) hy
-    exact Finset.le_sup' h hs
   have hray : ∀ a : R, 0 ≤ a → a ≤ t.sup' hte h := by
     intro a ha
     have hb := hbound _ ((Convex.Set.mem_recessionCone.mp hv) x₀ hx₀ a ha)
-    rwa [happ, vadd_vsub, map_smul, smul_eq_mul, hgv, mul_one] at hb
+    simp_all
   have h0 : (0 : R) ≤ t.sup' hte h := hray 0 le_rfl
   have := hray (t.sup' hte h + 1) (by linarith)
   linarith

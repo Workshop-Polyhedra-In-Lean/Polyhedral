@@ -47,7 +47,7 @@ The dehomogenization of an H-polyhedral cone is an H-polyhedron: each functional
 cutting out the cone descends to the affine map `f ∘ ofPoint`, and the submodule pulls back
 to an affine subspace.
 -/
-lemma ConvexSet.dehomogenize_isHPolyhedron (C : PointedCone 𝕜 W)
+lemma ConvexSetimagedehomogenize_isHPolyhedron (C : PointedCone 𝕜 W)
     (hC : IsHPolyhedral .id C) :
     IsHPolyhedron 𝕜 (PointedCone.dehomogenize A C : Set A) := by
   classical
@@ -65,6 +65,27 @@ variable (W) in
 /-- The closure of the homogenization of a convex set includes its recession cone. -/
 def Convexity.ConvexSet.homogenize_closure (S : ConvexSet 𝕜 A) : PointedCone 𝕜 W :=
     homogenize W S ⊔ ((S : Set A).recessionCone 𝕜).map hom.ofVector
+
+lemma dehomogenize_sup_vector_left (C : PointedCone 𝕜 V) (P : PointedCone 𝕜 W) :
+    PointedCone.dehomogenize A (C.map hom.ofVector ⊔ P)
+    = (C : Set V) +ᵥ (PointedCone.dehomogenize A P : Set A) := by
+  ext x
+  simp only [PointedCone.dehomogenize, ConvexSet.dehomogenize, sup_comm, mk_eq, mem_preimage,
+    SetLike.mem_coe]
+  constructor
+  · intro hx
+    obtain ⟨y, hy, z, hz, hyz⟩ := Submodule.mem_sup.mp hx
+    obtain ⟨c, hc, rfl⟩ := PointedCone.mem_map.mp hz
+    have hw : hom.weight y = 1 := by
+      have := congrArg hom.weight hyz
+      simpa [hom.weight_zero, hom.weight_one] using this
+    obtain ⟨y', hy'⟩ := (hom.weight_one_iff _).mp hw
+    refine ⟨c, hc, y', by simp_all, ?_⟩
+    rw [hy', add_comm, ← vadd_eq_add, ← AffineMap.map_vadd] at hyz
+    exact hom.ofPoint_injective hyz
+  · rintro ⟨c, hc, y, hy, rfl⟩
+    rw [AffineMap.map_vadd, vadd_eq_add, add_comm]
+    exact Submodule.add_mem_sup hy (PointedCone.mem_map.mpr ⟨c, hc, rfl⟩)
 
 /--
 Dehomogenizing the sum of a cone embedded at weight zero and the homogenization of a
@@ -84,6 +105,7 @@ lemma dehomogenize_map_ofVector_sup_homogenize (C : PointedCone 𝕜 V) (P : Con
     have hw : hom.weight z = 1 := by
       have := congrArg hom.weight hyz
       simpa [hom.weight_zero, hom.weight_one] using this
+    have := Set.mem_smul.mp <| smul_pos_of_mem_homogenize hz (by rintro rfl; simp at hw)
     obtain ⟨r, hr, _, ⟨y', hy', rfl⟩, rfl⟩ :=
       Set.mem_smul.mp <| smul_pos_of_mem_homogenize hz (by rintro rfl; simp at hw)
     have hr1 : r = 1 := by simpa [hom.weight_one] using hw
@@ -211,6 +233,12 @@ lemma Affine.IsHomogenization.exists_linear_extension (h : A →ᵃ[𝕜] 𝕜) 
   have hv : hom.ofVector v = hom.ofPoint (v +ᵥ x₀) - hom.ofPoint x₀ := by simp
   rw [hv, map_sub, hFx, hFx]
   simp
+
+/- Every affine functional extends to a unique linear functional on the homogenization space which
+agrees with it on points and with its linear part on vectors.
+-/
+-- def Affine.IsHomogenization.linear_extension (h : A →ᵃ[𝕜] 𝕜) : W →ₗ[𝕜] 𝕜 :=
+
 
 
 variable (W) in
@@ -493,9 +521,23 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd {H : Set A}
   exact Set.mem_vadd.mpr ⟨v, hv, y, hPH hy, rfl⟩
 
 
+
+theorem Minkowski_Weil_for_cones_how_it_would_be_handy {C : PointedCone 𝕜 V} (hC : C.DualFG p)
+  (S : Submodule 𝕜 V) : PointedCone.IsPolyhedral (C ⊓ S) := by
+  sorry
+-- This theorem would include the identification of the lineality space of `C ⊓ S`,
+-- which would then form the subspace S2 as part of the representation `C ⊓ S = C2 ⊔ S2`.
+-- (Beside identifying the generators of C2)
+
+-- (The following is what we currently have:)
+theorem XX_FG.exists_dualfg_inf_submodule {C : PointedCone 𝕜 V} (hC : C.FG) {S : Submodule 𝕜 V}
+  (hS : S.FG) (hCS : C ≤ S) : ∃ D : PointedCone 𝕜 V, D.DualFG p ∧ D ⊓ S = C := by
+  sorry
+
 #click_suggestions
 omit [AddCommGroup W] [Module 𝕜 W] [IsModuleConvexSpace 𝕜 W] in
-/-- ALTERNATIVE ATTEMPT `H → V` direction -/
+/-- ALTERNATIVE ATTEMPT `H → V` direction
+verbose and in little steps -/
 theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
     (hH : IsHPolyhedron 𝕜 H) :
     ∃ P : Set A, IsPolytope 𝕜 P ∧
@@ -510,48 +552,129 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
   -- 1. obtain the affine functions `F` and subspace `S` describing the H-polyhedron `H`
   obtain ⟨F, S, hH⟩ := hH
   -- 2. homogenize the functions to get linear functions `F_hom`:
-  -- let F_hom := -- hom.extend 𝕜 '' F
+  choose extend_function hext hextlin using hom.exists_linear_extension
+  let F_hom := Finset.image extend_function F
+  -- 3. add the linear constraint for the "upper" half-space to get `F'_hom`
+  let F'_hom := insert hom.weight F_hom
 
-
-
-  -- 3. homogenize the subspace to get `S_hom`:
-
+  -- 4. homogenize the subspace to get `S_hom`:
   let S_hom : Submodule 𝕜 W := Submodule.span 𝕜 (hom.ofPoint '' S)
+  -- 5. Form the H-cone `C0_hom` in `W` defined by the constraints `F'_hom`
+  let C0_hom : PointedCone 𝕜 W := dual .id F'_hom
+ --- carrier = { x : W | ∀ f ∈ F'_hom, 0 ≤ f x },  -- pedestrian definition
+  have hC0_hom.dualFG : C0_hom.DualFG .id := by
+    use F'_hom
 
-  -- 4. intersect `C_hom` with the "upper" half-space to get the H-cone `C'_hom`
-  -- let C'_hom := PointedCone.inter (PointedCone.halfSpace 𝕜 W hom.weight 1)
-  -- (PointedCone.hull 𝕜 ↑F_hom)
+  -- 5. Form the H-cone `C_hom` by intersecting `C0_hom` with the subspace `S_hom`.
+  let C_hom : PointedCone 𝕜 W := C0_hom ⊓ S_hom
 
-  -- 5. intersect `S_hom` with the "horizontal" hyperplane to get the subspace `S'_hom`
-  let S'_hom :=
-
-
-   PointedCone.inter (PointedCone.halfSpace 𝕜 W hom.weight 1)
-  -- (PointedCone.hull 𝕜 ↑F_hom)
-
-  -- 6. Fun fact: Dehomogenizing `C'_hom` gives back the original H-polyhedron `H`.
-  -- AS A POINT SET; NOT AS AN OBJECT -- OF TYPE `IsHPolyhedron` (which would require a proof of convexity)
-  have dehomogenize_gives_back_H : PointedCone.dehomogenize A C'_hom = H := by
+  -- 6. Fun fact: Dehomogenizing `C_hom` gives back the original H-polyhedron `H`.
+  have dehomogenize_gives_back_H :
+    PointedCone.dehomogenize A (C_hom) = H := by
     sorry
 
+  -- 7. Apply the Minkowski-Weyl theorem for polyhedral cones to `C_hom`
+  -- to get a finite set of generators `G_hom` and a subspace `S2` such that
+  -- `C_hom = PointedCone.hull 𝕜 G_hom ⊔ S2`
+  obtain D_hom := Minkowski_Weil_for_cones_how_it_would_be_handy (hC := hC0_hom.dualFG) (S := S_hom)
+  obtain ⟨D_hom, hC_hom_FG, S2, h_representation⟩ := D_hom
+  obtain ⟨G_hom, hG_hom⟩  := hC_hom_FG
 
-  -- 7. Apply the Minkowski-Weyl theorem for polyhedral cones to `C'_hom`
-  -- to get a finite set of generators `G` and a subspace `S_hom` such that
-  -- `C'_hom = PointedCone.hull 𝕜 G
-  let G := sorry
-
-  -- 8. Split the generators `G` into the generators `G_pos` with positive weight
-  -- and the generators `G_zero` with zero weight.
-  let G_pos :=  { g ∈ G | hom.weight g > 0 }
-  let G_zero := { g ∈ V | hom.weight g = 0 }
-  have hG_split : G = G_pos ∪ G_zero := by
-    -- everything in C'_hom is either positive weight or zero weight
+  -- 8. Split the generators `G_hom` into the generators `G_hom_pos` with positive weight
+  -- and the generators `G_hom_zero` with zero weight.
+  let G_hom_pos :=  { g ∈ G_hom | hom.weight g > 0 }
+  let G_hom_zero := { g ∈ G_hom | hom.weight g = 0 }
+  have hG_split : G_hom = G_hom_pos ∪ G_hom_zero := by -- needed?
+    -- everything in C'_hom has either positive weight or zero weight
     sorry
 
+  -- 9. Normalize the positive-weight generators to weight one to get a finite set of points `G`
+  let G_old''XX := { x : A | ∃ g ∈ G_hom_pos, hom.ofPoint x = (hom.weight g)⁻¹ • g }
+  let G := (G_hom_pos.image (fun g => (hom.weight g)⁻¹ • g)).preimage
+   (hom.ofPoint) (hom.ofPoint_injective.injOn)
+  let Rays := hom.ofVector ⁻¹' G_hom_zero
+  let linealityspace : Submodule 𝕜 V := S2.map hom.ofVector.leftInverse
+  let P : Set A := Convexity.convexHull 𝕜 G
+  have hP : IsPolytope 𝕜 P := by
+    use G
+  let C := PointedCone.hull 𝕜 Rays ⊔ linealityspace
+
+  -- 10. We have now constructed the cone `C` and the polytope `P`.
+  -- It remains to show that `H = C +ᵥ P`
+
+  have hH_eq : H = (C : Set V) +ᵥ P := by
+    rw [Subset.antisymm_iff]
+    constructor
+    -- show H ⊆ C +ᵥ P
+    · intro x hx
+      set x_hom : W := hom.ofPoint x with hxdef
+      have hx' : x_hom ∈ C0_hom := by -- do we need this? (AI-generated)
+        sorry
+          --- exact Submodule.mem_span_of_mem (Set.mem_image_of_mem _ (hH.2 hx))
+      have hx22 : x_hom ∈ S_hom := by
+        sorry
+      have hx_hom : x_hom ∈ C_hom := by
+        rw [Submodule.mem_inf]
+        exact ⟨hx', hx22⟩
+      have hC_hom_rep : x_hom ∈ D_hom ⊔ S2 := by
+        rw [← h_representation]
+        exact hx_hom
+      -- show that x ∈ C +ᵥ P
+      -- since x_hom ∈ C_hom, `x_hom = (∑ μ_j r_j + s) +ᵥ (∑ λ_i g_i)`
+      -- for some r_j ∈ Rays, s ∈ linealityspace, g_i ∈ G_hom_pos, μ_j ≥ 0, λ_i ≥ 0.
+      obtain ⟨z, hz, s, hs, z_plus_s_is_x⟩ := mem_sup.mp hC_hom_rep
+      rw [← hG_hom] at hz
+      obtain ⟨μ, ⟨hμ, hμ₂⟩ ⟩ := Submodule.mem_span_finset.mp hz
+      -- We can normalize the g_i to weight one to get points in G.
+      -- Since `x` as well as the points in `G` have weight 1,
+      -- and all other points have weight 0,  `∑ λ_i = 1`, and thus
+      -- `x` is a convex combination of points in G plus a point in C:
+      -- x_hom = c +ᵥ p for some c ∈ C and p ∈ P
+      let P_pos := μ.support
+      have sum_pos1: ∑ g ∈ G_hom_pos, μ g * g.weight = 1 := by
+        have sum_1: ∑ g ∈ G_hom, μ g * g.weight = 1 := by
+          have x.weight_eq_one : x_hom.weight = 1 := by
+            rw [hxdef]
+            exact hom.weight_one x
+          have sum_1' : ∑ g ∈ G_hom, μ g * g.weight = z.weight := by
+            -- rw [hxdef]
+            sorry
+          sorry
+
+        sorry
+      sorry
+    -- Converse direction: show C +ᵥ P ⊆ H
+    · intro x hx
+      obtain ⟨c, hc, p, hp, rfl⟩ := Set.mem_vadd.mp hx
+      -- let x ∈ C +ᵥ P. Then x = c +ᵥ p for some c ∈ C and p ∈ P
+      -- We start by showing that p ∈ H
+      have hp_in_H : p ∈ H := by
+        rw [← dehomogenize_gives_back_H]
+        sorry
+      -- adding c does not lead out of H
+      have hp_pos : (hom.ofPoint p).weight >= 0 := by
+        sorry
+
+      -- the rest is AI-generated stuff:
+      have hc' : hom.ofVector c ∈ C_hom := by
+        sorry
+      have hp' : hom.ofPoint p ∈ C_hom := by
+        sorry
+      have hcp' : hom.ofPoint (c +ᵥ p) ∈ C_hom := by
+        sorry
+      have hcp : c +ᵥ p ∈ H := by
+        rw [← dehomogenize_gives_back_H]
+        sorry -- exact PointedCone.dehomogenize_mem.mpr hcp'
+      exact hcp
+  use P
+  -- rw [hP]
+  constructor
+  · exact hP
+  · use C
+    sorry
+    -- ...
 
 
-
-  sorry
 
 /--
 The recession cone of an H-polyhedron is a polyhedral cone.
