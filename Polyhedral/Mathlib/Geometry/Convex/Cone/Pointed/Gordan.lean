@@ -131,6 +131,7 @@ noncomputable def decompEquiv (hr : LinearIndependent K (Subtype.val ∘ r)) :
 def generators : Set V :=
   (parallelepiped K Λ r ∩ (Λ : Set V)) ∪ Set.range (Subtype.val ∘ r)
 
+omit [FloorRing K] in
 theorem generators_finite [Λ.IsLattice' K] : (generators K Λ r).Finite :=
   (parallelepiped_inter_lattice_finite K Λ r).union (Set.finite_range _)
 
