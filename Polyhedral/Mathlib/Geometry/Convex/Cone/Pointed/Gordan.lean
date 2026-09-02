@@ -55,6 +55,7 @@ lemma parallelepiped_subset_cone : parallelepiped K Λ r ⊆ (cone K Λ r : Set 
   rw [h]
   exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨i, rfl⟩)
 
+omit [FloorRing K] in
 /-- Finiteness of the parallelepiped intersected with the lattice. -/
 theorem parallelepiped_inter_lattice_finite [Λ.IsLattice' K] :
     (parallelepiped K Λ r ∩ (Λ : Set V)).Finite := by
