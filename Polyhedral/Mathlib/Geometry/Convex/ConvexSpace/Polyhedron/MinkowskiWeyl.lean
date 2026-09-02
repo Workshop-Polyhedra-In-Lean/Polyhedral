@@ -605,6 +605,26 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
   -- 10. We have now constructed the cone `C` and the polytope `P`.
   -- It remains to show that `H = C +ᵥ P`
 
+  -- Intermediate result: All elements of `S2` have weight zero
+  have S2_weight_eq_zero : ∀ s ∈ S2, hom.weight s = 0 := by
+    intro s hs
+    have hs' : ∀ s ∈ S2, s ∈ C0_hom ⊓ S_hom := by
+          intro s hs
+          rw [h_representation]
+          exact Submodule.mem_sup_right hs
+        -- NOTE: This could be proved directly above
+    have hs'' : ∀ s ∈ S2, s ∈ C0_hom := by
+          intro s hs
+          exact (mem_inf.mp (hs' s hs)).1
+    have hs_nonneg : 0 ≤ hom.weight s := hC0_nonneg s (hs'' s hs)
+    have hs_neg_nonneg : 0 ≤ hom.weight (-s) :=
+          hC0_nonneg (-s) (hs'' (-s) (by simp [Submodule.neg_mem _ hs]))
+    have hs_neg : hom.weight (-s) = - hom.weight s := by
+          simp [LinearMap.map_neg]
+    rw [hs_neg] at hs_neg_nonneg
+    linarith
+
+  -- We show that `H = C +ᵥ P`:
   have hH_eq : H = (C : Set V) +ᵥ P := by
     rw [Subset.antisymm_iff]
     constructor
@@ -631,45 +651,22 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
       -- We can normalize the g_i to weight one to get points in G.
       -- Since `x` as well as the points in `G` have weight 1,
       -- and all other points have weight 0,  `∑ λ_i = 1`, and thus
-      -- `x` is a convex combination of points in G plus a point in C:
+      -- `x` is a convex combination of (normalized) points in G plus a point in C:
       -- x_hom = c +ᵥ p for some c ∈ C and p ∈ P
       let P_pos := μ.support
-      have S2_weight_eq_zero : ∀ s ∈ S2, hom.weight s = 0 := by
-        intro s hs
-        have hs' : ∀ s ∈ S2, s ∈ C0_hom ⊓ S_hom := by
-          intro s hs
-          rw [h_representation]
-          exact Submodule.mem_sup_right hs
-        -- NOTE: This could be proved directly above
-        have hs'' : ∀ s ∈ S2, s ∈ C0_hom := by
-          intro s hs
-          exact (mem_inf.mp (hs' s hs)).1
-        have hs_nonneg : 0 ≤ hom.weight s := hC0_nonneg s (hs'' s hs)
-        have hs_neg_nonneg : 0 ≤ hom.weight (-s) :=
-          hC0_nonneg (-s) (hs'' (-s) (by simp [Submodule.neg_mem _ hs]))
-        have hs_neg : hom.weight (-s) = - hom.weight s := by
-          simp [LinearMap.map_neg]
-        rw [hs_neg] at hs_neg_nonneg
-        linarith
       have sum_pos1: ∑ g ∈ G_hom_pos, μ g * g.weight = 1 := by
         have sum_1: ∑ g ∈ G_hom, μ g * g.weight = 1 := by
-          have x.weight_eq_one : x_hom.weight = 1 := by
-            rw [hxdef]
+          have : s.weight = 0 := by exact S2_weight_eq_zero s hs
+          have : (z + s).weight = 1 := by
+            rw [z_plus_s_is_x, hxdef]
             exact hom.weight_one x
+          have : (z + s).weight = z.weight + s.weight := by rw [LinearMap.map_add]
+          have z.weight_eq_one : z.weight = 1 := by
+            linarith
+          -- rw [← LinearMap.map_add]
           have sum_1' : ∑ g ∈ G_hom, μ g * g.weight = z.weight := by
             -- rw [hxdef]
             sorry
-          have S2_weight_eq_zero : ∀ s ∈ S2, s.weight = 0 := by
-            intro s hs
-            have hs' : s ∈ C0_hom ⊓ S_hom := by
-              rw [h_representation]
-              exact Submodule.mem_sup_right hs
-
-            exact hom.weight s
-            sorry
-
-
-
           sorry
         sorry
       sorry
@@ -822,3 +819,7 @@ lemma IsHPolyhedron.vadd
 
 end Field
 end Homogenization
+
+-- Wishlist:
+-- * A bounded polyhedron is a polytope (i.e. the recession cone is trivial)
+-- *
