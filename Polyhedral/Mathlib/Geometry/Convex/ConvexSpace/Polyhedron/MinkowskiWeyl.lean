@@ -581,10 +581,61 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
   let G := hom.ofPoint ⁻¹' G_hom_pos.image (fun g => (hom.weight g)⁻¹ • g)
   let Rays := hom.ofVector ⁻¹' G_hom_zero
   let linealityspace : PointedCone 𝕜 V := sorry -- hom.ofVector ⁻¹' S2 -- !!!
-  let P := ConvexSet.convexHull 𝕜 G
-  have hP : IsPolytope 𝕜 (P : Set A) := by
+  let P : Set A := ConvexSet.convexHull 𝕜 G
+  have hP : IsPolytope 𝕜 P := by
     sorry
   let C := PointedCone.hull 𝕜 Rays ⊔ linealityspace
+
+  -- 10. We have now constructed the cone `C` and the polytope `P`.
+  -- It remains to show that `H = C +ᵥ P`
+
+  have hH_eq : H = (C : Set V) +ᵥ P := by
+    rw [Subset.antisymm_iff]
+    constructor
+    -- show H ⊆ C +ᵥ P
+    · intro x hx
+      let x_hom : W := hom.ofPoint x
+      have hx' : x_hom ∈ C_hom := by -- do we need this? (AI-generated)
+        rw [Submodule.mem_inf]
+        constructor
+        · sorry
+          --- exact hC0_hom.dualFG.to_dual.mpr (fun f hf => hH.1 f (Finset.mem_insert_of_mem (Finset.mem_image_of_mem extend_function hf)) x hx)
+        · sorry
+          --- exact Submodule.mem_span_of_mem (Set.mem_image_of_mem _ (hH.2 hx))
+      -- show that x ∈ C +ᵥ P
+      -- since x ∈ C_hom, `x = (∑ μ_j r_j + s) +ᵥ (∑ λ_i g_i)`
+      -- for some r_j ∈ Rays, s ∈ linealityspace, g_i ∈ G_hom_pos, μ_j ≥ 0, λ_i ≥ 0.
+      -- We can normalize the g_i to weight one to get points in G.
+      -- Since `x` as well as the points in `G` have weight 1,
+      -- and all other points have weight 0,  `∑ λ_i = 1`, and thus
+      -- `x` is a convex combination of points in G plus a point in C:
+      -- x_hom = c +ᵥ p for some c ∈ C and p ∈ P
+      sorry
+    -- Converse direction: show C +ᵥ P ⊆ H
+    · intro x hx
+      obtain ⟨c, hc, p, hp, rfl⟩ := Set.mem_vadd.mp hx
+      -- let x ∈ C +ᵥ P, then x = c +ᵥ p for some c ∈ C and p ∈ P
+      -- we need to show that x ∈ H
+      have hp_in_H : p ∈ H := by
+        rw [← dehomogenize_gives_back_H]
+        sorry -- exact PointedCone.dehomogenize_mem.mpr (PointedCone.hull_mem _ (Set.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp (Finset.mem_image_of_mem _ (Finset.mem_coe.mpr (Finset.mem_image_of_mem _ (Finset.mem_attach.mp ...)))))))))))))))))))))))))))))))))))
+      have hc' : hom.ofVector c ∈ C_hom := by
+        -- adding c does not lead out of H
+        sorry
+      have hp' : hom.ofPoint p ∈ C_hom := by
+        sorry
+      have hcp' : hom.ofPoint (c +ᵥ p) ∈ C_hom := by
+        sorry
+      have hcp : c +ᵥ p ∈ H := by
+        rw [← dehomogenize_gives_back_H]
+        sorry -- exact PointedCone.dehomogenize_mem.mpr hcp'
+      exact hcp
+      -- Since p ∈ P, we have p = ∑ λ_i g_i for some g_i ∈ G and λ_i ≥ 0 with ∑ λ_i = 1
+      -- Since c ∈ C, we have c = ∑ μ_j r_j + s for some r_j ∈ Rays and s ∈ linealityspace
+      -- then x = (∑ μ_j r_j + s) +ᵥ (∑ λ_i g_i)
+      -- we need to show that this is in H
+      -- since H is convex and contains all the generators, it should contain this combination
+
   use P
   -- rw [hP]
   constructor
