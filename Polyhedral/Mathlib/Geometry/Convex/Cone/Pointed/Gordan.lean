@@ -143,12 +143,25 @@ theorem exists_decomp_step_by_step (γ : V) (hγ : γ ∈ (cone K Λ r).latticeP
   -- use (⟨pn1, hpn1⟩, pn2)
   -- exact hc.symm
 
-
+omit [FloorRing K] in
 /-- Uniqueness of `Gordan.exists_decomp`. Needs `K`-linear independence of the rays. -/
 theorem decomp_unique (hr : LinearIndependent K (Subtype.val ∘ r))
     {pn qm : ↥(parallelepiped K Λ r ∩ (Λ : Set V)) × (ι → ℕ)}
     (h : (pn.1 : V) + ∑ i, pn.2 i • (r i : V) = (qm.1 : V) + ∑ i, qm.2 i • (r i : V)) :
-    pn = qm := sorry
+    pn = qm := by
+    obtain ⟨⟨p, ⟨a, ha, rfl⟩, hpΛ⟩, n⟩ := pn
+    obtain ⟨⟨q, ⟨b, hb, rfl⟩, hqΛ⟩, m⟩ := qm
+    simp only [← Nat.cast_smul_eq_nsmul K, ← Finset.sum_add_distrib, ← add_smul] at h
+    have hcoeff (i : ι) : a i - b i = (((m i : ℤ) - (n i : ℤ) : ℤ) : K) := by
+     push_cast; linarith [Fintype.linearIndependent_iffₛ.mp hr _ _ h i]
+    have h (i : ι) : |(((m i : ℤ) - (n i : ℤ) : ℤ) : K)| < 1 := by
+      rw [← hcoeff, abs_lt]
+      exact ⟨by linarith [(ha i).1, (hb i).2], by linarith [(ha i).2, (hb i).1]⟩
+    rw [← Int.cast_one] at h
+    simp only [← Int.cast_abs, Int.cast_lt, Int.abs_lt_one_iff] at h
+    simp only [h, Int.cast_zero, sub_eq_zero] at hcoeff
+    simp only [sub_eq_zero, Nat.cast_inj, ← funext_iff] at h
+    simp only [hcoeff, h]
 
 /-- `Gordan.exists_decomp` and `Gordan.decomp_unique` combined. -/
 theorem existsUnique_decomp (hr : LinearIndependent K (Subtype.val ∘ r)) (γ : V)
@@ -166,9 +179,6 @@ lemma decomp_mem (pn : ↥(parallelepiped K Λ r ∩ (Λ : Set V)) × (ι → �
   exact ⟨add_mem (parallelepiped_subset_cone K Λ r pn.1.2.1)
       (Submodule.sum_mem _ fun i _ ↦ nsmul_mem (hc i) _),
     add_mem pn.1.2.2 (Submodule.sum_mem _ fun i _ ↦ nsmul_mem (r i).2 _)⟩
-
-
-
 
 
 /-- `Gordan.existsUnique_decomp`, packaged as a bijection. -/
