@@ -1,72 +1,95 @@
 /-
 Copyright (c) 2026 Justus Springer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Justus Springer
+Authors: Justus Springer et al.
 -/
 
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
 
+/-!
+# Grounded Polytopes
+
+We define `IsGroundedPolytope` with respect to a set `S` as the convex hull of a
+finite set contained in `S`.
+Common examples are lattice polytopes, where `S` is a lattice such as `ℤᵈ`, rational polytopes,
+where `S = ℚᵈ`, {0,1}-polytopes where S= {0,1}, but
+there could also be more abstract examples such as vertices whose coordinates
+are all prime numbers.
+We don't think the name `IsGroundedPolytope` will be the best choice, and are thinking
+of renaming it to `IsPolytopeOn`,
+or have a defintion called `HasExtremePointsIn`.
+
+We prove basic lemmas about `IsGroundedPolytope`. When we consider lattice polytopes
+specifically, there will be many more interesting lemmas later on.
+See `Submodule.IsLattice'` in `Algebra/Module/Lattice/Basic.lean` for the current notion of lattice.
+
+
+-/
+
 namespace Convexity
 
-variable {R X Y V A : Type*}
+variable {R X : Type*}
 
 open ConvexSpace
 
 variable [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [ConvexSpace R X]
-variable (M : Set X)
+variable (S : Set X)
 
 variable (R) in
-/-- A set `s` is a *grounded polytope* in `M` if there exists a finite set `t` contained in `M`
-such that `s` is the convex hull of `t`. If `M` is a lattice, this is usually called a
+/-- A set `P` is a *grounded polytope* in `S` if there exists a finite set `t` contained in `S`
+such that `P` is the convex hull of `t`. If `S` is a lattice, this is usually called a
 *lattice polytope*. -/
-def IsGroundedPolytope (s : Set X) : Prop :=
-  ∃ t : Finset X, (t : Set X) ⊆ M ∧ s = convexHull R t
+def IsGroundedPolytope (P : Set X) : Prop :=
+  ∃ t : Finset X, (t : Set X) ⊆ S ∧ P = convexHull R t
 
 namespace IsGroundedPolytope
 
-lemma isPolytope (s : Set X)
-    (h : IsGroundedPolytope R M s) : IsPolytope R s := by
-  obtain ⟨t, _, hs⟩ := h
-  exact ⟨t, hs⟩
+/-- A grounded polytope is a polytope. -/
+lemma isPolytope (P : Set X)
+    (h : IsGroundedPolytope R S P) : IsPolytope R P := by
+  obtain ⟨t, _, hP⟩ := h
+  exact ⟨t, hP⟩
 
-protected lemma empty : IsGroundedPolytope R M ∅ := ⟨∅, by simp, by simp⟩
+protected lemma empty : IsGroundedPolytope R S ∅ := ⟨∅, by simp, by simp⟩
 
-protected lemma singleton (x : X) (h : x ∈ M) : IsGroundedPolytope R M {x} :=
+protected lemma singleton (x : X) (h : x ∈ S) : IsGroundedPolytope R S {x} :=
   ⟨{x}, by simpa, by simp⟩
 
 variable (R) in
-lemma convexHull_finite {v : Set X} (hv : v.Finite) (hvM : v ⊆ M) :
-    IsGroundedPolytope R M (convexHull R v) :=
-  ⟨hv.toFinset, by simpa, by simp⟩
+lemma convexHull_finite {s : Set X} (hs : s.Finite) (hsS : s ⊆ S) :
+    IsGroundedPolytope R S (convexHull R s) :=
+  ⟨hs.toFinset, by simpa, by simp⟩
 
-lemma convexHull_union {P Q : Set X} (hP : IsGroundedPolytope R M P)
-    (hQ : IsGroundedPolytope R M Q) :
-    IsGroundedPolytope R M (convexHull R (P ∪ Q)) := by classical
+/-- If `P` and `Q` are S-polytopes, then the convex hull of `P ∪ Q` is an S-polytope. -/
+lemma convexHull_union {P Q : Set X} (hP : IsGroundedPolytope R S P)
+    (hQ : IsGroundedPolytope R S Q) :
+    IsGroundedPolytope R S (convexHull R (P ∪ Q)) := by classical
   obtain ⟨t₁, ht₁, rfl⟩ := hP
   obtain ⟨t₂, ht₂, rfl⟩ := hQ
   exact ⟨t₁ ∪ t₂, by simp [ht₁, ht₂],
     by simp [convexHull_union_convexHull, convexHull_convexHull_union]⟩
 
-lemma mono_subset {P : Set X} {M N : Set X} (hP : IsGroundedPolytope R M P) (hMN : M ⊆ N) :
-    IsGroundedPolytope R N P := by
+/-- If `P` is an S-polytope and `S ⊆ T`, then `P` is a T-polytope. -/
+lemma mono_subset {P : Set X} {S T : Set X} (hP : IsGroundedPolytope R S P) (hST : S ⊆ T) :
+    IsGroundedPolytope R T P := by
   obtain ⟨t, h₁, h₂⟩ := hP
-  exact ⟨t, h₁.trans hMN, h₂⟩
+  exact ⟨t, h₁.trans hST, h₂⟩
 
-lemma inf_groundSet_nonempty_of_nonempty {P : Set X} (hP : IsGroundedPolytope R M P)
-    (h : P.Nonempty) : (P ⊓ M).Nonempty := by
-  obtain ⟨t, htM, hPt⟩ := hP
-  apply Set.Nonempty.mono (by simpa using ⟨hPt ▸ subset_convexHull_self, htM⟩)
+/-- If an S-polytope is non-empty, then it contains a point in `S`. -/
+lemma inf_ground_set_nonempty_of_nonempty {P : Set X} (hP : IsGroundedPolytope R S P)
+    (h : P.Nonempty) : (P ⊓ S).Nonempty := by
+  obtain ⟨t, htS, hPt⟩ := hP
+  apply Set.Nonempty.mono (by simpa using ⟨hPt ▸ subset_convexHull_self, htS⟩)
   by_contra! H
   simp only [H, convexHull_empty] at hPt
   exact Set.not_nonempty_empty (hPt ▸ h)
 
-lemma inf_groundSet_nonempty_iff {P : Set X} (hP : IsGroundedPolytope R M P) :
-    (P ⊓ M).Nonempty ↔ P.Nonempty :=
-  ⟨Set.Nonempty.left, hP.inf_groundSet_nonempty_of_nonempty M⟩
+/-- An S-polytope `P` contains a point in `S` if and only if `P` is non-empty. -/
+lemma inf_ground_set_nonempty_iff {P : Set X} (hP : IsGroundedPolytope R S P) :
+    (P ⊓ S).Nonempty ↔ P.Nonempty :=
+  ⟨Set.Nonempty.left, hP.inf_ground_set_nonempty_of_nonempty S⟩
 
 end IsGroundedPolytope
-
-open IsGroundedPolytope
 
 end Convexity
