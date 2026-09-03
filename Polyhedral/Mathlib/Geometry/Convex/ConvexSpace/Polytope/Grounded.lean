@@ -77,8 +77,8 @@ lemma mono_subset {P : Set X} {S T : Set X} (hP : IsGroundedPolytope R S P) (hST
   exact ⟨t, h₁.trans hST, h₂⟩
 
 /-- If an S-polytope is non-empty, then it contains a point in `S`. -/
-lemma inf_ground_set_nonempty_of_nonempty {P : Set X} (hP : IsGroundedPolytope R S P)
-    (h : P.Nonempty) : (P ⊓ S).Nonempty := by
+lemma inter_ground_set_nonempty_of_nonempty {P : Set X} (hP : IsGroundedPolytope R S P)
+    (h : P.Nonempty) : (P ∩ S).Nonempty := by
   obtain ⟨t, htS, hPt⟩ := hP
   apply Set.Nonempty.mono (by simpa using ⟨hPt ▸ subset_convexHull_self, htS⟩)
   by_contra! H
@@ -86,9 +86,9 @@ lemma inf_ground_set_nonempty_of_nonempty {P : Set X} (hP : IsGroundedPolytope R
   exact Set.not_nonempty_empty (hPt ▸ h)
 
 /-- An S-polytope `P` contains a point in `S` if and only if `P` is non-empty. -/
-lemma inf_ground_set_nonempty_iff {P : Set X} (hP : IsGroundedPolytope R S P) :
-    (P ⊓ S).Nonempty ↔ P.Nonempty :=
-  ⟨Set.Nonempty.left, hP.inf_ground_set_nonempty_of_nonempty S⟩
+lemma inter_ground_set_nonempty_iff {P : Set X} (hP : IsGroundedPolytope R S P) :
+    (P ∩ S).Nonempty ↔ P.Nonempty :=
+  ⟨Set.Nonempty.left, hP.inter_ground_set_nonempty_of_nonempty S⟩
 
 end IsGroundedPolytope
 
