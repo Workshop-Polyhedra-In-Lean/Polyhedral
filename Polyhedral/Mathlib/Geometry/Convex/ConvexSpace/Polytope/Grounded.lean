@@ -12,7 +12,7 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
 We define `IsGroundedPolytope` with respect to a set `S` as the convex hull of a
 finite set contained in `S`.
 Common examples are lattice polytopes, where `S` is a lattice such as `ℤᵈ`, rational polytopes,
-where `S = ℚᵈ`, {0,1}-polytopes where S= {0,1}, but
+where `S = ℚᵈ`, {0,1}-polytopes where `S= {0,1}ᵈ`, but
 there could also be more abstract examples such as vertices whose coordinates
 are all prime numbers.
 We don't think the name `IsGroundedPolytope` will be the best choice, and are thinking
