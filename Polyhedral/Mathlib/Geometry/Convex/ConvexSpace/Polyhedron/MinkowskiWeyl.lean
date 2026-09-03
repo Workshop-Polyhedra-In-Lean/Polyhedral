@@ -226,6 +226,7 @@ agrees with it on points and with its linear part on vectors.
 lemma Affine.IsHomogenization.exists_linear_extension (h : A →ᵃ[𝕜] 𝕜) :
     ∃ F : W →ₗ[𝕜] 𝕜, (∀ x : A, F (hom.ofPoint x) = h x) ∧
       ∀ v : V, F (hom.ofVector v) = h.linear v := by
+  classical -- added
   obtain ⟨F, hF, -⟩ := hom.extend 𝕜 h
   have hFx : ∀ x : A, F (hom.ofPoint x) = h x := fun x => congrFun hF x
   refine ⟨F, hFx, fun v => ?_⟩
@@ -534,6 +535,16 @@ theorem XX_FG.exists_dualfg_inf_submodule {C : PointedCone 𝕜 V} (hC : C.FG) {
   (hS : S.FG) (hCS : C ≤ S) : ∃ D : PointedCone 𝕜 V, D.DualFG p ∧ D ⊓ S = C := by
   sorry
 
+/-
+-- this would be a useful theorem
+variable (V) in
+variable [IsModuleConvexSpace 𝕜 V] in
+lemma hull_invariant_under_scaling (G : Finset V) (multiplier : V → 𝕜) :
+  (∀ g ∈ G, multiplier g > 0) ∧  multiplier.support = G →
+  PointedCone.hull 𝕜 G = PointedCone.hull 𝕜 (G.image (fun g => multiplier g • g)) by
+    sorry
+-/
+
 #click_suggestions
 omit [AddCommGroup W] [Module 𝕜 W] [IsModuleConvexSpace 𝕜 W] in
 -- don't understand: W does not appear in the theorem statement!
@@ -660,7 +671,35 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
       -- for some r_j ∈ Rays, s ∈ linealityspace, g_i ∈ G_hom_pos, μ_j ≥ 0, λ_i ≥ 0.
       obtain ⟨z_hom, hz_hom, s, hs, z_hom_plus_s_is_x_hom⟩ := mem_sup.mp hC_hom_rep
       rw [← hG_hom] at hz_hom
-      obtain ⟨μ, ⟨hμ, h_conv_combination_μ⟩ ⟩ := Submodule.mem_span_finset.mp hz_hom
+
+      /-
+      -- Alternative attempt following Moritz's proof:
+      have z_hom.weight_eq_one : z_hom.weight = 1 :=
+        sorry --- see below for the proof
+
+      have hex : ∀ g ∈ G_hom_pos, ∃ x : A, hom.ofPoint x = (g.weight)⁻¹ • g := by
+        intro g hg
+        rw [hG_hom_pos, Finset.mem_filter] at hg
+        have hgw_pos: g.weight > 0 := hg.2
+        have hgw'_pos: hom.weight g > 0 := by
+          exact hgw_pos
+        have h1 : (g.weight)⁻¹ • g ∈ Set.range hom.ofPoint := by
+          rw [hom.ofPoint_range_eq_preimage_weight_one]
+          simp [inv_mul_cancel₀ hgw_pos.ne']
+          exact
+        exact h1 -- strange behavior!!??
+        sorry
+      choose pt hpt using hex
+      set G : Finset A := G_hom_pos.attach.image (fun g => pt g.1 g.2) with hG
+      set P := ConvexSet.convexHull 𝕜 (G : Set A) with hP
+    --
+      have hhull : PointedCone.hull 𝕜 (hom.ofPoint '' ↑G) = PointedCone.hull 𝕜 ↑G_hom_pos := by
+        sorry --- This is a lengthy proof
+      have : hull 𝕜 (hom.ofPoint '' G) = homogenize V_hom P := by
+        rw [← hull_image_ofPoint_eq_homogenize_convexHull, hhull]
+      -/
+
+      obtain ⟨μ, ⟨hμ, h_positive_combination_μ⟩ ⟩ := Submodule.mem_span_finset.mp hz_hom
       -- We can normalize the g_i to weight one to get points in G.
       -- Since `x` as well as the points in `G` have weight 1,
       -- and all other points have weight 0,  `∑ λ_i = 1`, and thus
@@ -690,7 +729,7 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
           have h_lin: ∑ g ∈ G_hom, (μ g • g).weight = (∑ g ∈ G_hom, μ g • g).weight := by
             simp only [map_sum, LinearMap.map_smul_of_tower]
           rw [Finset.sum_congr rfl h_mul_eq_smul]
-          rw [h_lin, h_conv_combination_μ, z_hom.weight_eq_one]
+          rw [h_lin, h_positive_combination_μ, z_hom.weight_eq_one]
         have sum_0: ∑ g ∈ G_hom_zero, μ g * g.weight = 0 := by
           apply Finset.sum_eq_zero
           intro g hg
@@ -715,7 +754,7 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
       choose (z : A) hz using z_exists
 
       have : z ∈ P := by
-/- for showing that z ∈ Convexhull  G = P, get inspiration from above definition of hDsplit:
+/- for showing that z ∈ Convexhull G = P, get inspiration from above definition of hDsplit:
    have hDsplit : D = homogenize W (ConvexSet.convexHull 𝕜 (↑T : Set A)) ⊔ ... := by
     rw [← hull_image_ofPoint_eq_homogenize_convexHull, hhull, ← hG]
        -/
