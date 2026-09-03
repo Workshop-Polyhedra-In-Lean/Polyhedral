@@ -669,12 +669,20 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
       let P_pos := μ.support
       have sum_pos1: ∑ g ∈ G_hom_pos, μ g * g.weight = 1 := by
         have sum_1: ∑ g ∈ G_hom, μ g * g.weight = 1 := by
-          have : s.weight = 0 := by exact S2_weight_eq_zero s hs
-          have : (z_hom + s).weight = 1 := by
-            rw [z_hom_plus_s_is_x_hom, hx_hom_def]
-            exact hom.weight_one x
-          have : (z_hom + s).weight = z_hom.weight + s.weight := by rw [LinearMap.map_add]
-          have z_hom.weight_eq_one : z_hom.weight = 1 := by linarith
+          have s_weight_zero : s.weight = 0 := S2_weight_eq_zero s hs
+          --have : (z_hom + s).weight = 1 := by
+          --  rw [z_hom_plus_s_is_x_hom, hx_hom_def]
+          --  exact hom.weight_one x
+          --have : (z_hom + s).weight = z_hom.weight + s.weight := by rw [LinearMap.map_add]
+          have z_hom.weight_eq_one : z_hom.weight = 1 :=
+          calc
+            z_hom.weight = z_hom.weight + 0 := by rw [add_zero]
+            _ = z_hom.weight + s.weight     := by rw [s_weight_zero]
+            _ = (z_hom + s).weight          := by rw [LinearMap.map_add]
+            _ = x_hom.weight                := by rw [z_hom_plus_s_is_x_hom]
+            _ = hom.weight x_hom            := by rfl
+            _ = hom.weight (hom.ofPoint x)  := by rw [hx_hom_def]
+            _ = 1                           := hom.weight_one x
           have h_mul_eq_smul : ∀ g ∈ G_hom, μ g * g.weight = (μ g • g).weight := by
             intro g hg
             simp
