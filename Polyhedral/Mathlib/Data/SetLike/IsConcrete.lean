@@ -3,18 +3,22 @@ Copyright (c) 2026 Martin Winter. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Martin Winter
 -/
+module
 
-import Mathlib.Data.SetLike.Basic
+public import Mathlib.Data.SetLike.Basic
+public import Mathlib.Order.CompleteLattice.Defs
+
 import Mathlib.Data.Set.Basic
 import Mathlib.Data.Set.Insert
-import Mathlib.Data.Set.Lattice
+import Mathlib.Data.Set.Lattice.Image
 import Mathlib.Order.SetNotation
-import Mathlib.Order.CompleteLattice.Defs
 
 /-! This file defines properties of `SetLike` structures that are inherited from sets.
 
   Zulip: https://leanprover.zulipchat.com/#narrow/channel/287929-mathlib4/topic/More.20.60IsConcrete.60.20classes.20for.20.60SetLike.60
 -/
+
+@[expose] public section
 
 /- ## Concrete ## -/
 
@@ -70,12 +74,10 @@ variable {A B : Type*} [Zero B] [SetLike A B] [Bot A] [IsConcreteBot₀ A B]
 theorem mem_bot_iff_zero {x : B} : x ∈ (⊥ : A) ↔ x = 0 := by simp [← mem_coe]
 
 theorem eq_bot_iff_forall_eq_zer0 {a : A} : a = ⊥ ↔ ∀ x ∈ a, x = 0 := by
-  -- simp [← coe_set_eq]
-  sorry
+  simp [← coe_set_eq, coe_bot₀, Set.eq_singleton_iff_unique_mem, mem_coe]
 
-theorem eq_bot_of_forall_eq_zero {a : A} (h : ∀ x, x = 0) : a = ⊥ :=
-  -- eq_bot_iff_forall_notMem.mpr h
-  sorry
+theorem eq_bot_of_forall_eq_zero {a : A} (h : ∀ x ∈ a, x = 0) : a = ⊥ :=
+  eq_bot_iff_forall_eq_zer0.mpr h
 
 theorem forall_mem_bot_iff_zero {p : B → Prop} : (∀ x ∈ (⊥ : A), p x) ↔ p 0 := by simp
 
@@ -136,6 +138,18 @@ theorem le_eq_empty {a b : A} (h : b ≤ a) (e : a = ∅) : b = ∅ := by
 
 end LE
 
+section Bot
+
+variable [Bot A] [IsConcreteBot A B]
+
+include setLike in
+@[simp]
+lemma bot_eq_empty : (⊥ : A) = ∅ := by
+  rw [← SetLike.coe_set_eq, SetLike.coe_bot, SetLike.coe_empty]
+  exact Set.bot_eq_empty
+
+end Bot
+
 -- TODO: theorems about SetLike.nonempty once implemented
 
 end SetLike
@@ -169,7 +183,7 @@ theorem eq_top_of_forall {a : A} : (∀ x, x ∈ a) → a = ⊤ := eq_top_iff_fo
 variable (B) in
 theorem exists_mem_top_of_nonempty : ∀ [Nonempty B], ∃ x : B, x ∈ (⊤ : A) := by
   simp_rw [← mem_coe, coe_top]
-  exact Set.exists_mem_of_nonempty B
+  exact Set.exists_mem_univ_of_nonempty B
 
 theorem ne_top_iff_exists_notMem (a : A) : a ≠ ⊤ ↔ ∃ x, x ∉ a := by
   rw [← not_forall, ← eq_top_iff_forall]
@@ -219,7 +233,7 @@ theorem eq_univ_of_forall {a : A} : (∀ x, x ∈ a) → a = univ := eq_univ_iff
 variable (B) in
 theorem exists_mem_of_nonempty : ∀ [Nonempty B], ∃ x : B, x ∈ (univ : A) := by
   simp_rw [← mem_coe, coe_univ]
-  exact Set.exists_mem_of_nonempty B
+  exact Set.exists_mem_univ_of_nonempty B
 
 theorem ne_univ_iff_exists_notMem (a : A) : a ≠ univ ↔ ∃ x, x ∉ a := by
   rw [← not_forall, ← eq_univ_iff_forall]
@@ -668,7 +682,9 @@ variable [PartialOrder A] [IsConcreteLE A B]
 
 variable (A B) [Bot A] [IsConcreteBot₀ A B] in
 @[reducible] def _root_.CompleteSemilatticeSup.ofSetLike₀ : CompleteSemilatticeSup A where
-  isLUB_sSup := by sorry
+  isLUB_sSup _ := by
+    simp only [isLUB_iff_le_iff, ← coe_subset_coe, coe_sSup₀, Set.insert_subset_iff, mem_coe,
+      zero_mem, Set.iUnion_subset_iff, true_and, upperBounds, Set.mem_ofPred_eq, implies_true]
 
 end PartialOrder
 

@@ -3,14 +3,16 @@ Copyright (c) 2026 Martin Winter. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Martin Winter
 -/
+module
 
-import Mathlib.LinearAlgebra.AffineSpace.AffineSubspace.Basic
-
-import Polyhedral.Mathlib.Algebra.Group.Pointwise.SetLike.Basic
+public import Mathlib.LinearAlgebra.AffineSpace.AffineSubspace.Basic
+public import Polyhedral.Mathlib.Algebra.Group.Pointwise.SetLike.Basic
 
 /-!
 This file adds features for affine spaces.
 -/
+
+public section
 
 noncomputable section
 
@@ -27,12 +29,29 @@ variable [Ring R]
 variable [AddCommGroup V] [Module R V]
 variable [AddTorsor V A]
 
+instance : IsConcreteBot (AffineSubspace R A) A := ⟨rfl⟩
+
+instance : EmptyCollection (AffineSubspace R A) where
+  emptyCollection := {
+    carrier := ∅
+    smul_vsub_vadd_mem' _ _ _ _ := by simp }
+
+instance : IsConcreteEmpty (AffineSubspace R A) A := ⟨rfl⟩
+
+lemma AffineSubspace.affineSpan_empty : affineSpan R (∅ : Set A) = ∅ := by simp
+
 instance : Singleton A (AffineSubspace R A) where
   singleton x := {
     carrier := {x}
     smul_vsub_vadd_mem' _ _ _ _ := by simp +contextual }
 
 instance : IsConcreteSingleton (AffineSubspace R A) A := ⟨fun _ => rfl⟩
+
+@[simp]
+lemma AffineSubspace.affineSpan_singleton (x : A) : affineSpan R ({x} : Set A) = {x} := by
+  ext; simp
+
+instance : IsConcreteTop (AffineSubspace R A) A := ⟨rfl⟩
 
 end AddTorsor
 
