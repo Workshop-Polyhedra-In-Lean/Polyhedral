@@ -1,0 +1,22 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage{amsmath,amsfonts}
+\usepackage{hyperref}
+\usepackage[margins=2cm]{geometry}
+
+\newcommand\lean{\textit}
+
+\begin{document}
+
+Various types of polyhedral objects (polytopes, polyhedra, polyhedral
+cones)
+can be described in two complementary ways:
+A \emph{V-representation} ....
+
+The Minkowski--Weyl family of theorems says that these two types of
+representations define more or less the same classes of objects
+(sometimes under extra conditions).
+
+A the start of the workshop, 
+
+\end{document}

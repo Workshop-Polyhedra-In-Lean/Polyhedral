@@ -536,6 +536,8 @@ theorem XX_FG.exists_dualfg_inf_submodule {C : PointedCone 𝕜 V} (hC : C.FG) {
 
 #click_suggestions
 omit [AddCommGroup W] [Module 𝕜 W] [IsModuleConvexSpace 𝕜 W] in
+-- don't understand: W does not appear in the theorem statement!
+
 /-- ALTERNATIVE ATTEMPT `H → V` direction
 verbose and in little steps -/
 theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
@@ -544,9 +546,9 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
     ∃ C : PointedCone 𝕜 V, IsPolyhedral C ∧
     H = (C : Set V) +ᵥ P := by
   classical
-  let W := CanonicalHomogenization 𝕜 A
-  let hom : Affine.IsHomogenization 𝕜 A W := inferInstance
-  let := IsModuleConvexSpace.ofAddTorsor (R := 𝕜) (V := W)
+  let V_hom := CanonicalHomogenization 𝕜 A
+  let hom : Affine.IsHomogenization 𝕜 A V_hom := inferInstance
+  let := IsModuleConvexSpace.ofAddTorsor (R := 𝕜) (V := V_hom) -- affine space
 
   -- 1. obtain the affine functions `F` and subspace `S` describing the H-polyhedron `H`
   obtain ⟨F, S, hH⟩ := hH
@@ -557,19 +559,19 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
   set F'_hom := insert hom.weight F_hom with hF'_hom
 
   -- 4. homogenize the subspace to get `S_hom`:
-  let S_hom : Submodule 𝕜 W := Submodule.span 𝕜 (hom.ofPoint '' S)
-  -- 5. Form the H-cone `C0_hom` in `W` defined by the constraints `F'_hom`
-  let C0_hom : PointedCone 𝕜 W := dual .id F'_hom
+  let S_hom : Submodule 𝕜 V_hom := Submodule.span 𝕜 (hom.ofPoint '' S)
+  -- 5. Form the H-cone `C0_hom` in `V_hom` defined by the constraints `F'_hom`
+  let C0_hom : PointedCone 𝕜 V_hom := dual .id F'_hom
   have hC0_nonneg : ∀ z ∈ C0_hom, 0 ≤ hom.weight z := by
     intro z hz
     exact (PointedCone.mem_dual.mp hz) (x := hom.weight) (by simp [hF'_hom])
 
- --- carrier = { x : W | ∀ f ∈ F'_hom, 0 ≤ f x },  -- pedestrian definition
+ --- carrier = { x : V_hom | ∀ f ∈ F'_hom, 0 ≤ f x },  -- pedestrian definition
   have hC0_hom.dualFG : C0_hom.DualFG .id := by
     use F'_hom
 
   -- 5. Form the H-cone `C_hom` by intersecting `C0_hom` with the subspace `S_hom`.
-  let C_hom : PointedCone 𝕜 W := C0_hom ⊓ S_hom
+  let C_hom : PointedCone 𝕜 V_hom := C0_hom ⊓ S_hom
 
   -- 6. Fun fact: Dehomogenizing `C_hom` gives back the original H-polyhedron `H`.
   have dehomogenize_gives_back_H :
@@ -641,7 +643,7 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
     constructor
     -- show H ⊆ C +ᵥ P
     · intro x hx
-      set x_hom : W := hom.ofPoint x with hxdef
+      set x_hom : V_hom := hom.ofPoint x with hx_hom_def
       have hx' : x_hom ∈ C0_hom := by -- do we need this? (AI-generated)
         sorry
           --- exact Submodule.mem_span_of_mem (Set.mem_image_of_mem _ (hH.2 hx))
@@ -656,9 +658,9 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
       -- show that x ∈ C +ᵥ P
       -- since x_hom ∈ C_hom, `x_hom = (∑ μ_j r_j + s) +ᵥ (∑ λ_i g_i)`
       -- for some r_j ∈ Rays, s ∈ linealityspace, g_i ∈ G_hom_pos, μ_j ≥ 0, λ_i ≥ 0.
-      obtain ⟨z, hz, s, hs, z_plus_s_is_x⟩ := mem_sup.mp hC_hom_rep
-      rw [← hG_hom] at hz
-      obtain ⟨μ, ⟨hμ, hμ₂⟩ ⟩ := Submodule.mem_span_finset.mp hz
+      obtain ⟨z_hom, hz_hom, s, hs, z_hom_plus_s_is_x_hom⟩ := mem_sup.mp hC_hom_rep
+      rw [← hG_hom] at hz_hom
+      obtain ⟨μ, ⟨hμ, h_conv_combination_μ⟩ ⟩ := Submodule.mem_span_finset.mp hz_hom
       -- We can normalize the g_i to weight one to get points in G.
       -- Since `x` as well as the points in `G` have weight 1,
       -- and all other points have weight 0,  `∑ λ_i = 1`, and thus
@@ -668,12 +670,11 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
       have sum_pos1: ∑ g ∈ G_hom_pos, μ g * g.weight = 1 := by
         have sum_1: ∑ g ∈ G_hom, μ g * g.weight = 1 := by
           have : s.weight = 0 := by exact S2_weight_eq_zero s hs
-          have : (z + s).weight = 1 := by
-            rw [z_plus_s_is_x, hxdef]
+          have : (z_hom + s).weight = 1 := by
+            rw [z_hom_plus_s_is_x_hom, hx_hom_def]
             exact hom.weight_one x
-          have : (z + s).weight = z.weight + s.weight := by rw [LinearMap.map_add]
-          have z.weight_eq_one : z.weight = 1 := by
-            linarith
+          have : (z_hom + s).weight = z_hom.weight + s.weight := by rw [LinearMap.map_add]
+          have z_hom.weight_eq_one : z_hom.weight = 1 := by linarith
           have h_mul_eq_smul : ∀ g ∈ G_hom, μ g * g.weight = (μ g • g).weight := by
             intro g hg
             simp
@@ -681,7 +682,7 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
           have h_lin: ∑ g ∈ G_hom, (μ g • g).weight = (∑ g ∈ G_hom, μ g • g).weight := by
             simp only [map_sum, LinearMap.map_smul_of_tower]
           rw [Finset.sum_congr rfl h_mul_eq_smul]
-          rw [h_lin, hμ₂, z.weight_eq_one]
+          rw [h_lin, h_conv_combination_μ, z_hom.weight_eq_one]
         have sum_0: ∑ g ∈ G_hom_zero, μ g * g.weight = 0 := by
           apply Finset.sum_eq_zero
           intro g hg
@@ -700,9 +701,16 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
           simp [this]
         rw [hG_hom_nonpos] at sum_1
         simpa using sum_1
-      let z0 := sorry
-      have : z0 ∈ P := by
+      have z_exists : ∃ z : A, hom.ofPoint z = z_hom := by
+        sorry
+      -- choose (z : A) (hz : hom.ofPoint z = z_hom) using z_exists
+      choose (z : A) hz using z_exists
 
+      have : z ∈ P := by
+/- for showing that z ∈ Convexhull  G = P, get inspiration from above definition of hDsplit:
+   have hDsplit : D = homogenize W (ConvexSet.convexHull 𝕜 (↑T : Set A)) ⊔ ... := by
+    rw [← hull_image_ofPoint_eq_homogenize_convexHull, hhull, ← hG]
+       -/
         sorry
       sorry
     -- Converse direction: show C +ᵥ P ⊆ H
