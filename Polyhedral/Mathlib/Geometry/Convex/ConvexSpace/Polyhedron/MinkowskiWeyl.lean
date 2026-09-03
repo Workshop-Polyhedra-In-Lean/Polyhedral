@@ -744,8 +744,6 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
     sorry
     -- ...
 
-
-
 /--
 The recession cone of an H-polyhedron is a polyhedral cone.
 -/
