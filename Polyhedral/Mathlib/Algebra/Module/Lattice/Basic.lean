@@ -14,8 +14,11 @@ import Mathlib.Algebra.Module.Lattice
 # Lattices
 
 A generalization of mathlib's `Submodule.IsLattice` to make it useful for Polyhedral.
+This definition is used in the proof of Gordan's lemma, see
+`Polyhedral/Mathlib/Geometry/Convex/Cone/Pointed/Gordan.lean`.
 
-TODO: Upstream this to replace mathlib's definition. See Zulip discussion:
+We (The Ehrhart group from the workshop) will work on upstreaming this into mathlib,
+to replace the existing definition. See Zulip discussion:
 
 https://leanprover.zulipchat.com/#narrow/channel/116395-maths/topic/Definitions.20of.20lattices/with/620077176
 
@@ -90,9 +93,8 @@ variable (K : Type*) [Field K] [Algebra R K] [FaithfulSMul R K]
 variable {V : Type v} [AddCommGroup V] [Module R V] [Module K V] [IsScalarTower R K V]
 variable (M : Submodule R V)
 
--- put this somewhere else?
+-- This has been merged into mathlib: #43297
 theorem rank_span_le_rank : Module.rank K (span K (M : Set V)) ≤ Module.rank R M := by
-  -- AI slop, need refactor
   have : Nontrivial R := (algebraMap R K).domain_nontrivial
   obtain ⟨b, hbM, hbspan, hbli⟩ := exists_linearIndependent K (M : Set V)
   rw [← hbspan, rank_span_set hbli]

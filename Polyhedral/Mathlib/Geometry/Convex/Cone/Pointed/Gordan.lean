@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Justus Springer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Anouk Brose, Mei Han, Jesus de Loera, Justus Springer, Santiago Morales, ...
+Authors: Anouk Brose, Mei Han, Noah Gießing, Jesus de Loera, Justus Springer, Santiago Morales
 -/
 
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Basic
@@ -59,6 +59,7 @@ omit [FloorRing K] in
 /-- Finiteness of the parallelepiped intersected with the lattice. -/
 theorem parallelepiped_inter_lattice_finite [Λ.IsLattice' K] :
     (parallelepiped K Λ r ∩ (Λ : Set V)).Finite := by
+  -- Proof starts here
   obtain ⟨I, v, hv⟩ := Submodule.IsLattice'.exists_basis_linearIndependent K Λ
   have : Finite I := Module.Finite.finite_basis v
   have := Fintype.ofFinite I
@@ -97,71 +98,25 @@ theorem exists_decomp (γ : V) (hγ : γ ∈ (cone K Λ r).latticePoints K Λ) :
   · rw [eq_sub_of_add_eq hc]
     exact Λ.sub_mem hγ.2 (Submodule.sum_mem _ fun i _ ↦ nsmul_mem (r i).2 _)
 
-theorem exists_decomp_step_by_step (γ : V) (hγ : γ ∈ (cone K Λ r).latticePoints K Λ) :
-    ∃ pn : ↥(parallelepiped K Λ r ∩ (Λ : Set V)) × (ι → ℕ),
-      γ = (pn.1 : V) + ∑ i, pn.2 i • (r i : V) := by
-  obtain ⟨c, hc⟩ : ∃ c : ι → Nonneg K, ∑ i, (c i : K) • (r i : V) = γ :=
-    (Submodule.mem_span_range_iff_exists_fun _).mp hγ.1
-  have seehγ1 := hγ.1
-  have seehγ2 := hγ.2
-  set n : ι → ℕ := fun i ↦ ⌊(c i : K)⌋₊ with hn_def
-  set μ : ι → K := fun i ↦ Int.fract (c i : K) with hμ_def
-  have hsplit (i : ι) : (c i : K) = μ i + (n i : K) := by
-    rw [hn_def, hμ_def, natCast_floor_eq_intCast_floor (c i).2]
-    exact (Int.fract_add_floor (c i : K)).symm
-  simp only [hsplit, add_smul, Nat.cast_smul_eq_nsmul, Finset.sum_add_distrib] at hc
-  let pn1 : V := ∑ i, μ i • (r i : V)
-  have hpn1 : pn1 ∈ parallelepiped K Λ r ∩ (Λ : Set V) := by
-    constructor
-    · unfold parallelepiped -- * just to help read
-      use μ
-      exact ⟨fun i ↦ ⟨ Int.fract_nonneg _, Int.fract_lt_one _⟩, rfl⟩ -- covers full constructor
-      -- constructor
-      --· exact fun i ↦ ⟨ Int.fract_nonneg _, Int.fract_lt_one _⟩
-      -- * fun i replaces intro, bracket covers constructor replaces next 3 lines,
-      -- * and Set.mem_Ico.mpr unfolds on its own
-        -- intro i
-        -- apply Set.mem_Ico.mpr
-        -- exact ⟨Int.fract_nonneg _, Int.fract_lt_one _⟩
-        -- * brackets do constructor cases; the line above replaces next 3 lines
-        -- constructor
-        -- · apply Int.fract_nonneg _
-        -- · apply Int.fract_lt_one _
-      --· exact rfl
-    · have hpn1_sub : pn1 = γ  -  ∑ x, n x • (r x : V) := eq_sub_of_add_eq hc
-      rw [hpn1_sub]
-      exact Λ.sub_mem hγ.2 (Submodule.sum_mem _ fun i _ ↦ nsmul_mem (r i).2 _)
-      -- * above line replace next 3 lines
-      -- · exact hγ.2
-      -- · apply Submodule.sum_mem
-        -- exact fun i _ ↦ nsmul_mem (r i).2 _ -- * replaces next 2 lines
-        -- intro i _
-        -- apply nsmul_mem (r i).2 _
-  exact ⟨(⟨pn1, hpn1⟩, n), hc.symm⟩
-  -- * above line replaces next 3 lines
-  -- let pn2 : (ι → ℕ) := n
-  -- use (⟨pn1, hpn1⟩, pn2)
-  -- exact hc.symm
-
 omit [FloorRing K] in
 /-- Uniqueness of `Gordan.exists_decomp`. Needs `K`-linear independence of the rays. -/
 theorem decomp_unique (hr : LinearIndependent K (Subtype.val ∘ r))
     {pn qm : ↥(parallelepiped K Λ r ∩ (Λ : Set V)) × (ι → ℕ)}
     (h : (pn.1 : V) + ∑ i, pn.2 i • (r i : V) = (qm.1 : V) + ∑ i, qm.2 i • (r i : V)) :
     pn = qm := by
-    obtain ⟨⟨p, ⟨a, ha, rfl⟩, hpΛ⟩, n⟩ := pn
-    obtain ⟨⟨q, ⟨b, hb, rfl⟩, hqΛ⟩, m⟩ := qm
-    simp only [← Nat.cast_smul_eq_nsmul K, ← Finset.sum_add_distrib, ← add_smul] at h
-    have hcoeff (i : ι) : a i - b i = (((m i : ℤ) - (n i : ℤ) : ℤ) : K) := by
-     push_cast; linarith [Fintype.linearIndependent_iffₛ.mp hr _ _ h i]
-    have h (i : ι) : |(((m i : ℤ) - (n i : ℤ) : ℤ) : K)| < 1 := by
-      rw [← hcoeff, abs_lt]
-      exact ⟨by linarith [(ha i).1, (hb i).2], by linarith [(ha i).2, (hb i).1]⟩
-    rw [← Int.cast_one] at h
-    simp only [← Int.cast_abs, Int.cast_lt, Int.abs_lt_one_iff] at h
-    simp only [h, Int.cast_zero, sub_eq_zero] at hcoeff
-    simp only [sub_eq_zero, Nat.cast_inj, ← funext_iff] at h
-    simp only [hcoeff, h]
+  obtain ⟨⟨p, ⟨a, ha, rfl⟩, hpΛ⟩, n⟩ := pn
+  obtain ⟨⟨q, ⟨b, hb, rfl⟩, hqΛ⟩, m⟩ := qm
+  simp only [← Nat.cast_smul_eq_nsmul K, ← Finset.sum_add_distrib, ← add_smul] at h
+  have hcoeff (i : ι) : a i - b i = (((m i : ℤ) - (n i : ℤ) : ℤ) : K) := by
+    push_cast; linarith [Fintype.linearIndependent_iffₛ.mp hr _ _ h i]
+  have h (i : ι) : |(((m i : ℤ) - (n i : ℤ) : ℤ) : K)| < 1 := by
+    rw [← hcoeff, abs_lt]
+    exact ⟨by linarith [(ha i).1, (hb i).2], by linarith [(ha i).2, (hb i).1]⟩
+  rw [← Int.cast_one] at h
+  simp only [← Int.cast_abs, Int.cast_lt, Int.abs_lt_one_iff] at h
+  simp only [h, Int.cast_zero, sub_eq_zero] at hcoeff
+  simp only [sub_eq_zero, Nat.cast_inj, ← funext_iff] at h
+  simp only [hcoeff, h]
 
 /-- `Gordan.exists_decomp` and `Gordan.decomp_unique` combined. -/
 theorem existsUnique_decomp (hr : LinearIndependent K (Subtype.val ∘ r)) (γ : V)
