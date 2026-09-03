@@ -604,6 +604,16 @@ theorem ofPoint_range_eq_preimage_weight_one :
   simp [weight_eq_one_iff]
   simp [eq_comm]
 
+-- TODO: The theorem `extend` could be replaced by the definition and lemma below
+def _root_.AffineMap.extend (U : Type*) [AddCommGroup U] [Module k U]
+    (f : P →ᵃ[k] U) : (CanonicalHomogenization k P) →ₗ[k] U := lift.toFun f
+
+@[simp]
+lemma _root_.AffineMap.extend_ofPoint (U : Type*) [AddCommGroup U] [Module k U]
+    (f : P →ᵃ[k] U) : (f.extend U) ∘ ofPoint = f := by
+  ext x
+  simp [_root_.AffineMap.extend, lift_apply_ofPoint]
+
 theorem extend (U : Type*) [AddCommGroup U] [Module k U]
     (f : P →ᵃ[k] U) :
     ∃! (F : (CanonicalHomogenization k P) →ₗ[k] U), F ∘ ofPoint = f := by

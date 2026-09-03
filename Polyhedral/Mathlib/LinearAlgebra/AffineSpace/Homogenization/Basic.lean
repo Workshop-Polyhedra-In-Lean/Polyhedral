@@ -171,6 +171,61 @@ theorem weight_canonEquiv : CanonicalHomogenization.weight ∘ hom.canonEquiv = 
   ext
   simp [canonEquiv, CanonicalHomogenization.weight, CanonicalHomogenization.lift]
 
+-- /-- Auxiliary definition used for defining `IsHomogenization.lift`. -/
+-- def lift.aux (f : A →ᵃ[R] W) : CanonicalHomogenization R A → W :=
+--   Quotient.lift
+--     (fun
+--       | .mk v c p => f.linear v + c • f p
+--       | .ofVector v => f.linear v)
+--     (by
+--       rintro _ _ (h | _) <;>
+--         simp only [_root_.zero_smul, add_zero]
+--       replace h := congr(f.linear $h)
+--       rw [map_sub, map_smul, f.linearMap_vsub, vsub_eq_sub, smul_sub] at h
+--       linear_combination (norm := abel) h)
+
+-- omit hom in
+-- @[simp]
+-- private theorem lift.aux_mk {f : A →ᵃ[R] W} {v : V} {c : R} {p : A} :
+--     aux f (CanonicalHomogenization.mk (HomogenizationExpr.mk v c p)) = f.linear v + c • f p :=
+--   rfl
+
+-- omit hom in
+-- @[simp]
+-- private theorem lift.aux_ofPoint {f : A →ᵃ[R] W} {p : A} : aux f (CanonicalHomogenization.ofPoint p) = f p := by
+--   simp [CanonicalHomogenization.ofPoint]
+
+-- private theorem mk_induction_of_point (p : A) {motive : CanonicalHomogenization R A → Prop}
+--     (x : CanonicalHomogenization R A) (mk_mk : ∀ (v : V) (c : R), motive (.mk (.mk v c p))) :
+--     motive x := by
+--   rcases x with ⟨⟨v, c, q⟩ | v⟩
+--   · convert (transparency := .default) mk_mk (v + c • (q -ᵥ p)) c using 1
+--     refine Quot.sound <| .mk_mk ?_
+--     affine A
+--   · convert (transparency := .default) mk_mk v 0 using 1
+--     exact Quot.sound .ofVector_mk
+
+-- def lift (U : Type*) [AddCommGroup U] [Module R U] : (A →ᵃ[R] U) ≃+ (CanonicalHomogenization R A →ₗ[R] U) where
+--   -- ofPoint : (A →ᵃ[R] W) →ᵃ[R] (W →ₗ[R] U) := sorry
+--   -- ofPoint_injective : Injective ofPoint := sorry
+--   -- weight : (W →ₗ[R] U) →ₗ[R] R := sorry
+--   -- ofPoint_range_eq_preimage_weight_one : Set.range ofPoint = weight ⁻¹' {1} := sorry
+--   toFun f :=
+--     { toFun := lift.aux f
+--       map_add' x y := by
+--         obtain ⟨p⟩ : Nonempty A := inferInstance
+--         cases x using mk_induction_of_point p
+--         cases y using mk_induction_of_point p
+--         simp [mk_add_mk, _root_.add_smul]; abel
+--       map_smul' _ x := by
+--         obtain ⟨p⟩ : Nonempty A := inferInstance
+--         cases x using mk_induction_of_point p
+--         simp [smul_mk, mul_smul] }
+--   invFun f := f.toAffineMap.comp ofPoint
+--   left_inv f := by ext; simp
+--   right_inv f := hom_ext <| by simp
+--   map_add' f g := hom_ext <| by simp
+
 -- proving the universal property using the equiv
 /-- A homogenization `W` of `A` satisfies the universal property that every affine map from `A`
 into any vector space extends uniquely to a linear map from `W` to the vector space. -/

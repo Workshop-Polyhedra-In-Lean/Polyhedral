@@ -241,6 +241,34 @@ agrees with it on points and with its linear part on vectors.
 -- def Affine.IsHomogenization.linear_extension (h : A →ᵃ[𝕜] 𝕜) : W →ₗ[𝕜] 𝕜 :=
 
 
+-- We might need to pass the affine subspace to homogenize_dual
+variable (A) in
+def homogenize_dual (H : Finset (W →ₗ[𝕜] 𝕜)) : PointedCone 𝕜 W :=
+    PointedCone.dual .id (insert hom.weight H)
+lemma homogenize_dual_dualFG (H : Finset (W →ₗ[𝕜] 𝕜)) : (homogenize_dual A H).DualFG .id := by
+  sorry
+lemma homogenize_dual_weight_zero_eq_recessionCone (H : Finset (W →ₗ[𝕜] 𝕜) :
+    (homogenize_dual A H) ⊓ PointedCone.of_submodule (hom.weight.ker) =
+      (∩ h ∈ H, h ⁻¹' Set.Ici 0).recessionCone := by
+  sorry
+lemma IsHPolyhedron.exists_homogenize_dual {P : Set A} (hP : IsHPolyhedron 𝕜 P) :
+    ∃ H : Finset (W →ₗ[𝕜] 𝕜),
+      ConvexSet.dehomogenize A (homogenize_dual A H) = P := by
+  obtain ⟨ineqs, S, rfl⟩ := hP
+  have h := hom.exists_linear_extension
+  use ineqs
+  sorry
+
+-- IDEA: We could have general notation for an `∃ statement with witness`, which would
+--       have computable access to the witness in definitions.
+--       The Exists could have a head/tail coercion into ExistsWithWitness
+--       relying on choice for use in proofs, and (witness → predicate) could have a
+--       coercion into ExistsWithWitness to avoid `constructor` in proofs of ExistsWithWitness.
+--       Then we could use `IsHPolyhedron 𝕜 P with H` as an argument when we demand the
+--       that the actual inequalities are made explicit.
+-- lemma homogenize_dual_splits {P : Set A} {H : Finset (W →ₗ[𝕜] 𝕜)} (hP : IsHPolyhedron 𝕜 P with H) :
+--     (homogenize_dual A H).recessionCone
+
 
 variable (W) in
 omit [IsModuleConvexSpace 𝕜 W] in
@@ -364,6 +392,41 @@ theorem PointedCone.homogenize_sup_recessionCone_isHPolyhedral
         rw [hom.ofVector_range_eq_weight_ker]
         exact hw
       exact LinearMap.mem_range.mp hrange
+
+
+/--
+Minkowski-Weyl theorem for polyhedra, `H → V` direction.
+
+Proved as a chain of equalities.
+-/
+theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd' {H : ConvexSet 𝕜 A}
+    (hH : IsHPolyhedron 𝕜 H) :
+    ∃ P : Set A, IsPolytope 𝕜 P ∧ H = ((H : Set A).recessionCone 𝕜 : Set V) +ᵥ P := by
+  -- Build canonical homogenization:
+  let W := CanonicalHomogenization 𝕜 A
+  let hom : Affine.IsHomogenization 𝕜 A W := inferInstance
+  let := IsModuleConvexSpace.ofAddTorsor (R := 𝕜) (V := W)
+
+  -- Build polytope:
+  obtain ⟨G, hG⟩ := hH
+  let C_hom := homogenize_closure W H
+  have hC_H : C_hom.IsHPolyhedral 𝕜 := by sorry
+  have hC_V : C_hom.IsPolyhedral 𝕜 := IsVPolyhedral.of_isHPolyhedral hC_H
+  obtain ⟨D, S, hD, hS, h_V_sum⟩ := hC_V
+  obtain ⟨D₀, h0, Dₚ, hp, h_split⟩ := sorry D S hom.weight
+
+  -- Proof:
+  use dehomogenize A Dₚ
+  calc
+    H = dehomogenize A (homogenize_closure W H) := by -- homogenize and dehomogenize
+      exact dehomogenize_homogenize_closure.symm
+    _ = dehomogenize A (C_hom) := by rfl
+    _ = dehomogenize A (D ⊔ S) := by exact h_V_sum
+    _ = dehomogenize A (D₀ ⊔ Dₚ) := by exact h_split -- split 0 and positive rays
+    _ = (D₀ : Set V) +ᵥ dehomogenize A Dₚ := by -- extract weight 0 as cone
+      exact pointedCone_vadd_of_dehomogenize_pointedCone_add
+    _ = (H.recessionCone 𝕜 : Set V) +ᵥ dehomogenize A Dₚ := by -- weight 0 is precisely the recession cone
+      exact homogenize_closure_weight_zero_eq_recessionCone
 
 
 omit [AddCommGroup W] [Module 𝕜 W] [IsModuleConvexSpace 𝕜 W] in
@@ -518,7 +581,7 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd {H : Set A}
     exact Set.mem_vadd.mpr ⟨x -ᵥ y, hxy, y, hy, vsub_vadd x y⟩
   refine Set.Subset.antisymm hHsub ?_
   rintro _ ⟨v, hv, y, hy, rfl⟩
-  rw [← Convex.Set.recessionCone_vadd_self (R := 𝕜) (P := H)]
+  rw [← Convex.Set.recessionCone_vadd_self (𝕜 := 𝕜) (P := H)]
   exact Set.mem_vadd.mpr ⟨v, hv, y, hPH hy, rfl⟩
 
 
@@ -862,6 +925,7 @@ there exists a finite set of inequalities that describe it.
 
 lemma isHPolyhedron_of_isPolytope {P : Set A} (hP : IsPolytope 𝕜 P) :
     IsHPolyhedron 𝕜 P := by
+  -- How to abstract the following two lines? (without meta)
   let W := CanonicalHomogenization 𝕜 A
   let := IsModuleConvexSpace.ofAddTorsor (R := 𝕜) (V := W)
   simpa [PointedCone.dehomogenize] using
@@ -882,6 +946,7 @@ lemma isHPolyhedron_of_isVPolyhedron {P : Set A} (hP : IsPolytope 𝕜 P)
   --
   exact IsHPolyhedron.isPolyhedral_vadd_isPolytope (W := W) hC hP
 
+-- TODO: This should be moved to the polyhedral operations file. The proof relies on MW.
 open Convex in
 /--
 The Minkowski sum of two H-polyhedra is an H-polyhedron: decompose both by Minkowski-Weyl,
@@ -912,4 +977,4 @@ end Homogenization
 -- Wishlist:
 -- * A bounded polyhedron is a polytope (i.e. the recession cone is trivial)
 -- * Definition "bounded": Every affine function is bounded:
---   Equivalent statement for polyhedra (for all convex sets?): There are no rays.
+-- * Equivalent statement for polyhedra (for all convex sets?): There are no rays.
