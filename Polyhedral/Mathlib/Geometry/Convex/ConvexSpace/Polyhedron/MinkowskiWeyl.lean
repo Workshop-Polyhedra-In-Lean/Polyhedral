@@ -596,8 +596,8 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
 
   -- 8. Split the generators `G_hom` into the generators `G_hom_pos` with positive weight
   -- and the generators `G_hom_zero` with zero weight.
-  set G_hom_pos :=  { g ∈ G_hom | hom.weight g > 0 } with hG_hom_pos
-  set G_hom_zero := { g ∈ G_hom | hom.weight g = 0 } with hG_hom_zero
+  set G_hom_pos :=  { g ∈ G_hom | g.weight > 0 } with hG_hom_pos
+  set G_hom_zero := { g ∈ G_hom | g.weight = 0 } with hG_hom_zero
   have hG_split : G_hom = G_hom_pos ∪ G_hom_zero := by -- needed?
     -- everything in C'_hom has either positive weight or zero weight
     sorry
@@ -674,44 +674,34 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
           have : (z + s).weight = z.weight + s.weight := by rw [LinearMap.map_add]
           have z.weight_eq_one : z.weight = 1 := by
             linarith
+          have h_mul_eq_smul : ∀ g ∈ G_hom, μ g * g.weight = (μ g • g).weight := by
+            intro g hg
+            simp
+            congr
+          have h_lin: ∑ g ∈ G_hom, (μ g • g).weight = (∑ g ∈ G_hom, μ g • g).weight := by
+            simp only [map_sum, LinearMap.map_smul_of_tower]
+          rw [Finset.sum_congr rfl h_mul_eq_smul]
+          rw [h_lin, hμ₂, z.weight_eq_one]
         have sum_0: ∑ g ∈ G_hom_zero, μ g * g.weight = 0 := by
-          have g_zero : ∀ g ∈ G_hom_zero, g.weight = 0 := by
-            intro g hg
-            rw [hG_hom_zero, Finset.mem_filter ] at hg
-            exact hg.2
-          have : (∑ g ∈ G_hom_zero, μ g * g.weight) = ∑ g ∈ G_hom_zero, μ g * 0 := by
-            sorry
-          have hsum : (∑ g ∈ G_hom_zero, μ g * g.weight) = 0 := by
-            apply Finset.sum_eq_zero
-            intro g hg
-            have hg0 : g.weight = 0 := g_zero g hg
-            simp [hg0]
+          apply Finset.sum_eq_zero
+          intro g hg
+          rw [hG_hom_zero, Finset.mem_filter ] at hg
+          rw [hg.2, mul_zero]
         rw [← Finset.sum_filter_add_sum_filter_not G_hom
             (fun g => g.weight > 0)] at sum_1
 
-        have : ∑ x ∈ G_hom with ¬ x.weight > 0, ↑(μ x) * x.weight = 0 := by
+        have hG_hom_nonpos : ∑ x ∈ G_hom with ¬ x.weight > 0, ↑(μ x) * x.weight = 0 := by
           apply Finset.sum_eq_zero
           intro g hg
-          --have hgne : g.weight <= 0 := hG_hom_nonneg hg
-
-          -- have hg0 : g.weight ≤ 0 := hG_hom_nonneg g
-
-            -- simp [hg0]
-          sorry
-        have : ∑ x ∈ G_hom with x.weight > 0, ↑(μ x) * x.weight = 1 := by
-          have hpo : G_hom.filter (fun g : W => g.weight > 0) = G_hom_pos := by
-            rfl
-          have hze : G_hom.filter (fun g : W => g.weight = 0) = G_hom_zero := by
-            rfl
-          have hne : G_hom.filter (fun g : W => ¬ g.weight > 0) = G_hom_zero := by
-            rw [hG_hom_nonneg]
-
-          rw [hpo, hze]
-          -- sum_1.1
-          sorry
-        --g ∈ G_hom_zero, μ g * g.weight
-
-
+          obtain ⟨hg, hg'⟩ := Finset.mem_filter.mp hg
+          have := hG_hom_nonneg g hg
+          have : g.weight = 0 := by
+            linarith
+          simp [this]
+        rw [hG_hom_nonpos] at sum_1
+        simpa using sum_1
+      let z0 := sorry
+      have : z0 ∈ P := by
 
         sorry
       sorry
