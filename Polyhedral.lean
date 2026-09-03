@@ -48,12 +48,14 @@ public import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.VPolyhedral.Lattic
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.AffineMap
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.AffineSpace
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Defs
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Dimension
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Homogenization
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Module
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Order
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.Basic
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.Lattice
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.EdgeGraph
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Face
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.KreinMilman
@@ -80,6 +82,7 @@ public import Polyhedral.Mathlib.GroupTheory.GroupAction.SubMulActionWithZero.No
 public import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.AffineMap
 public import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.AffineSubspace.Basic
 public import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Defs
+public import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Dimension
 public import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Homogenization.Basic
 public import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Homogenization.Set
 public import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Lattice
