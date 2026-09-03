@@ -56,6 +56,9 @@ def Convex.Set.recessionCone (P : Set A) : PointedCone R V where
 lemma Convex.Set.mem_recessionCone {P : Set A} {v : V} :
     v ∈ P.recessionCone R ↔ ∀ x ∈ P, ∀ a : R, 0 ≤ a → a • v +ᵥ x ∈ P := Iff.rfl
 
+
+-- TODO-status the following lemma currently use complicated AI generated stuff
+-- should be doable easier.
 /-- For a nonempty H-polyhedron, membership in the recession cone can be tested at a single
 point: a direction recedes from every point as soon as it recedes from one. -/
 lemma IsHPolyhedron.mem_recessionCone_iff_exists {P : Set A} (hP : IsHPolyhedron R P)
@@ -64,6 +67,7 @@ lemma IsHPolyhedron.mem_recessionCone_iff_exists {P : Set A} (hP : IsHPolyhedron
   rw [Convex.Set.mem_recessionCone]
   exact hP.forall_smul_vadd_mem_iff_exists hne
 
+-- status: seems good and useful
 /-- The sup of two recession cones is contained in the recession cone of the Minkowski sum -/
 lemma Convex.Set.sup_recessionCone_le_recessionCone_vadd
     {P : Set V} {Q : Set A} :
@@ -79,46 +83,21 @@ lemma Convex.Set.sup_recessionCone_le_recessionCone_vadd
   have : (r • y +ᵥ p) +ᵥ (r • z +ᵥ q) ∈ P +ᵥ Q := Set.vadd_mem_vadd h1 h2
   simpa [← add_vadd, add_comm, add_assoc]
 
+-- status: seems good and useful
 /-- The recession cone cannot shrink when adding a set -/
 lemma Convex.Set.recessionCone_le_recessionCone_vadd_left
     {P : Set V} {Q : Set A} :
     P.recessionCone R ≤ (P +ᵥ Q).recessionCone R :=
   le_trans le_sup_left sup_recessionCone_le_recessionCone_vadd
 
+-- status: seems good and useful
 /-- The recession cone cannot shrink when adding a set -/
 lemma Convex.Set.recessionCone_le_recessionCone_vadd_right
     {P : Set V} {Q : Set A} :
     Q.recessionCone R ≤ (P +ᵥ Q).recessionCone R :=
   le_trans le_sup_right sup_recessionCone_le_recessionCone_vadd
 
--- TODO prove this without using MW
-lemma Convexity.IsPolytope.recessionCone_vadd_eq_left
-    {P : Set V} {Q : Set A}
-    (hQ : IsPolytope R Q) (hne : Q.Nonempty)
-    (hP : IsConvexSet R P) :
-    (P +ᵥ Q).recessionCone R = P.recessionCone R := by
-  ext v
-  constructor
-  · sorry
-  · apply Convex.Set.recessionCone_le_recessionCone_vadd_left
-
--- TODO this probably needs MW to be proven, so it cannot be used to prove MW.
-lemma Convex.Set.recessionCone_vadd {P : Set V} {Q : Set A}
-    (hP : IsHPolyhedron R P) (hQ : IsHPolyhedron R Q) :
-    (P +ᵥ Q).recessionCone R = P.recessionCone R ⊔ Q.recessionCone R := by
-  ext v
-  constructor
-  · sorry
-  · apply sup_recessionCone_le_recessionCone_vadd
-
-/-- Minkowski addition of a set P and its recession cone leaves P unchanged. -/
-lemma Convex.Set.recessionCone_vadd_self {P : Set A} :
-    (P.recessionCone R : Set V) +ᵥ P = P := by
-  ext x
-  refine ⟨fun ⟨v, hv, y, hy, h⟩ ↦ ?_,
-    fun hx ↦ ⟨0, (P.recessionCone R).zero_mem, x, hx, zero_vadd _ _⟩⟩
-  simpa [h] using (Convex.Set.mem_recessionCone.mp hv) y hy 1 zero_le_one
-
+-- status: seems good and useful
 /-- The recession cone of a cone is the cone itself. -/
 lemma PointedCone.recessionCone_eq_self (C : PointedCone R V) :
     (C : Set V).recessionCone R = C := by
@@ -130,7 +109,61 @@ lemma PointedCone.recessionCone_eq_self (C : PointedCone R V) :
     have hax : a • x ∈ C := C.smul_mem ha hx
     exact C.add_mem hax hy
 
+-- status: needs to be proven, using MW for cones or a weak MW version that does
+-- not explicitly talk about the recession cone.
+-- potential strategy for the difficult (not yet proven) direction:
+-- write C as an intersection of a half-space and linear inequalities.
+-- need to prove that v lies in that halfspace and satisfies all the
+-- inequalities. Use that v lies in the recession cone of C + Q.
+-- That means, for all a in R, x in C + Q, we have that x + a • v
+-- is still in C + Q. Assume v violates one of the defining inequalities
+-- of C. Choose an a that's large enough such that a • v violates this
+-- defining inequality by more than any point in the (bounded) polytope Q
+-- can "repair" it. This gives a contradiction to v being in the recession cone.
+--
+-- This requires some notion of boundedness of a polytope w.r.t. a linear form
+-- (namely the considered defining linear inequality of C).
+-- That should probably follow from basic convexity, but I am unsure how much
+-- is implemented in Geometry/Convex and available in mathlib / PRs.
+lemma PointedCone.recessionCone_vadd_eq_left
+    (C : PointedCone R V) {Q : Set A}
+    (hC : C.IsHPolyhedral .id)
+    (hQ : IsPolytope R Q) (hne : Q.Nonempty) :
+    ((C : Set V) +ᵥ Q).recessionCone R = C := by
+  ext v
+  constructor
+  · intro hv
+    sorry
+  · intro h
+    apply Convex.Set.recessionCone_le_recessionCone_vadd_left
+    rw [recessionCone_eq_self]
+    exact h
 
+
+-- TODO status: this should follow from the previous lemma without too much
+-- hassle, needs to be proven.
+lemma Convex.Set.recessionCone_vadd {P : Set V} {Q : Set A}
+    (hP : IsHPolyhedron R P) (hQ : IsHPolyhedron R Q) :
+    (P +ᵥ Q).recessionCone R = P.recessionCone R ⊔ Q.recessionCone R := by
+  ext v
+  constructor
+  · intro hv
+    sorry
+  · apply sup_recessionCone_le_recessionCone_vadd
+
+-- TODO-status: this was generated by Moritz, but it seems fine.
+-- Potentially it can alternatively be deduced from the lemmas above.
+/-- Minkowski addition of a set P and its recession cone leaves P unchanged. -/
+lemma Convex.Set.recessionCone_vadd_self {P : Set A} :
+    (P.recessionCone R : Set V) +ᵥ P = P := by
+  ext x
+  refine ⟨fun ⟨v, hv, y, hy, h⟩ ↦ ?_,
+    fun hx ↦ ⟨0, (P.recessionCone R).zero_mem, x, hx, zero_vadd _ _⟩⟩
+  simpa [h] using (Convex.Set.mem_recessionCone.mp hv) y hy 1 zero_le_one
+
+
+-- TODO-status: this was generated by Moritz, it should now be MUCH easier with
+-- the lemmas above.
 /-- The recession cone of a nonempty polytope is trivial: any nonzero direction admits a
 linear functional positive on it, which is bounded on the convex hull of the finitely many
 generators. -/
@@ -164,7 +197,9 @@ lemma Convexity.IsPolytope.recessionCone_eq_bot {P : Set A} (hP : IsPolytope R P
   have := hray (t.sup' hte h + 1) (by linarith)
   linarith
 
--- this lemma does not seem to be used.
+-- TODO-status: unclear whether we use / want the lemma here.
+-- It's not in good shape, and it should probably fall out of our MW proof machinery
+-- somehow.
 #click_suggestions
 lemma IsHPolyhedron.recessionCone_isHPolyhedral {P : Set A} (hP : IsHPolyhedron R P) :
     IsHPolyhedral .id (P.recessionCone R) := by
