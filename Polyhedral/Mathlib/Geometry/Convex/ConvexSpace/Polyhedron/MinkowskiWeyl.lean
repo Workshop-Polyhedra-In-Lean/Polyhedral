@@ -616,7 +616,6 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
     sorry
 
   -- 9. Normalize the positive-weight generators to weight one to get a finite set of points `G`
-  let G_old''XX := { x : A | ∃ g ∈ G_hom_pos, hom.ofPoint x = (hom.weight g)⁻¹ • g }
   let G := (G_hom_pos.image (fun g => (hom.weight g)⁻¹ • g)).preimage
    (hom.ofPoint) (hom.ofPoint_injective.injOn)
   let Rays := hom.ofVector ⁻¹' G_hom_zero
@@ -695,6 +694,7 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
     --
       have hhull : PointedCone.hull 𝕜 (hom.ofPoint '' ↑G) = PointedCone.hull 𝕜 ↑G_hom_pos := by
         sorry --- This is a lengthy proof
+        -- might make use of the lemma hull_invariant_under_scaling above.
       have : hull 𝕜 (hom.ofPoint '' G) = homogenize V_hom P := by
         rw [← hull_image_ofPoint_eq_homogenize_convexHull, hhull]
       -/
