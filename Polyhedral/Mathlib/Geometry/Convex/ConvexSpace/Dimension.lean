@@ -33,7 +33,8 @@ theorem _root_.AffineSubspace.isConvexSet (t : AffineSubspace k P) : IsConvexSet
   have hle : affineSpan k (w.weights.support : Set P) ≤ t := by
     simpa using affineSpan_mono k hw
   refine hle ?_
-  rw [sConvexComb_eq_convexComb (V := V), AddTorsor.convexCombination,
+  simp only [IsAffineConvexSpace.sConvexComb_eq_convexComb]
+  rw [AddTorsor.convexCombination,
     ← Finset.attach_affineCombination_coe]
   have hsum : ∑ x ∈ w.weights.support.attach,
       (⇑w.weights ∘ ((↑) : w.weights.support → P)) x = 1 := by

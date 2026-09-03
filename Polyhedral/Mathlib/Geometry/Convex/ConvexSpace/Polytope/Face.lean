@@ -8,9 +8,12 @@ module
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
 public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Homogenization
 
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.Face.Grade
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
-import Mathlib.Order.SuccPred.Basic
+public import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.Face.Grade
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
+public import Mathlib.Order.SuccPred.Basic
+
+public import Mathlib.Order.Grade
+public import Mathlib.Order.SuccPred.Basic
 
 /-! This file proves results about faces of polytopes by transporting results from FG
 cones along a homogenization. -/
@@ -70,6 +73,8 @@ lemma _root_.WithBot.orderPred_natCast_eq_pred_of_zero_le {a : ℕ} (ha : 0 < a)
   obtain ⟨b, rfl⟩ := Nat.exists_eq_add_one.mpr ha
   simp
 
+
+
 /-- The face lattice of a polytope as a graded order with grading given by the dimensions of
 homogenization cones. -/
 noncomputable instance Polytope.faceHomogenizationGradeOrder (P : Polytope R A) :
@@ -79,8 +84,24 @@ noncomputable instance Polytope.faceHomogenizationGradeOrder (P : Polytope R A) 
   have : PointedCone.FG (homogenize W (P : ConvexSet R A)) :=
     IsPolytope.homogenize_fg (W := W) P.isPolytope
   let := PointedCone.FG.gradeOrder_finrank this
-  refine GradeOrder.liftRight (β := (homogenize W (P : ConvexSet R A)).Face) _
-    IsHomogenization.Face.homogenizeIso.strictMono ?_
-  exact fun x y ↦ (apply_covBy_apply_iff _).mpr
+
+  have := GradeOrder.liftRight (𝕆 := ℕ) (β := (homogenize W (P : ConvexSet R A)).Face) _
+    IsHomogenization.Face.homogenizeIso.strictMono (fun x y ↦ (apply_covBy_apply_iff _).mpr)
+  refine GradeOrder.liftLeft (fun (x : ℕ) ↦ Order.pred (x : WithBot ℕ)) ?_ ?_
+  · exact fun x y hxy ↦ Order.pred_lt_pred_of_not_isMin (by simpa) (by simp)
+  · simp only [Nat.covBy_iff_add_one_eq, forall_eq']
+    exact fun a ↦ Order.succ_eq_iff_covBy.mp (by simp)
+
+-- This was the previous version: it's a bit shorter but doesn't immediately work for WithBot ℕ
+-- private noncomputable instance aPolytope.faceHomogenizationGradeOrder (P : Polytope R A) :
+--     GradeOrder ℕ (Face (P : ConvexSet R A)) := by
+--   let W := Homogenization R A
+--   letI : ConvexSpace R W := ConvexSpace.ofModule
+--   have : PointedCone.FG (homogenize W (P : ConvexSet R A)) :=
+--     IsPolytope.homogenize_fg (W := W) P.isPolytope
+--   let := PointedCone.FG.gradeOrder_finrank this
+--   refine GradeOrder.liftRight (β := (homogenize W (P : ConvexSet R A)).Face) _
+--     IsHomogenization.Face.homogenizeIso.strictMono ?_
+--   exact fun x y ↦ (apply_covBy_apply_iff _).mpr
 
 end Field
