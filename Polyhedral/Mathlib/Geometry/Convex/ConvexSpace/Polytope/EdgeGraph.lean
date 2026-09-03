@@ -46,31 +46,58 @@ variable [AddCommGroup M] [Module R M] [AddTorsor M X] [IsAffineConvexSpace R M 
 
 -- def IsPolytope (s : Set X) : Prop := ∃ t : Finset X, s = convexHull R t
 
+-- **The affine span of a polytope is finite dimensional**
 instance (p : Polytope R X) :
     FiniteDimensional R (affineSpan R p.carrier).direction := by
   obtain ⟨t, ht⟩ := p.isPolytope
   rw [ht, affineSpan_convexHull_eq]
   exact finiteDimensional_direction_affineSpan_of_finite _ t.finite_toSet
 
+-- **Definition of the edge graph (or 1-skeleton) of a polytope**
+
+-- the vertices of the edge graph are the atoms (i.e. singletons of a vertices) of the face lattice
 def Polytope.vertices (p : Polytope R X) : Set (Face p.toConvexSet) :=
-  { v : Face p.toConvexSet | IsAtom v}
+  { v : Face p.toConvexSet | IsAtom v }
 
+-- the edges of the edge graph are the two element sets produced by
 def Polytope.edges (p : Polytope R X) : Set (Face p.toConvexSet) :=
-  { f : Face p.toConvexSet | ∃ v w : p.vertices , f = v.1 ⊔ w.1 }
+  { f : Face p.toConvexSet | ∃ v w : p.vertices, v.1 ≠ w.1 ∧ v.1 ⋖ f ∧ w.1 ⋖ f }
 
+-- this is indeed a simple undirected graph
 def Polytope.edgeGraph (p : Polytope R X) : SimpleGraph p.vertices where
+  -- …it has a well defined adjacency relation: it is symmetric and irreflexive
   Adj x y := x.1 ≠ y.1 ∧ (x.1 ⊔ y.1) ∈ p.edges
   symm.symm := by grind
   loopless.irrefl := by
+
     simp +contextual [Polytope.edges]
 
-lemma graphEdge_exists_polytopeEdge (p : Polytope R X) (e : p.edges) : ∃ x y : p.vertices,
-  p.edgeGraph.Adj x y ∧ (x.1 ⊔ y.1) ∈ p.edges := by
-  sorry
+-- Useful lemmas for edge graphs:
 
-lemma polytopeEdge_exits_graphEdge (p : Polytope R X) (x : p.vertices) (y : p.vertices)
-  (hxy : p.edgeGraph.Adj x y) :  ∃ e : p.edges, e = x.1 ⊔ y.1  := by
-  sorry
+theorem foo (p : Polytope R X) (v w : p.vertices) (f : Face p.toConvexSet)
+    (hne : v.1 ≠ w.1) (h1 : v.1 ⋖ f) (h2 : w.1 ⋖ f) :
+    f = v.1 ⊔ w.1 := by
+  apply le_antisymm
+  · -- `f ≤ v ⊔ w`: `v ⊔ w` sits between `v` and `f`, so `v ⋖ f` forces it to be one of them,
+    -- and it cannot be `v`, since that would make `w ≤ v` and hence `v = w`.
+    rcases h1.eq_or_eq le_sup_left (sup_le h1.le h2.le) with h | h
+    · exact absurd (h2.eq_or_eq (h ▸ le_sup_right) h1.le) (by simp [hne, h1.ne])
+    · exact h.ge
+  · -- `v ⊔ w ≤ f`: both `v` and `w` are below `f`.
+    exact sup_le h1.le h2.le
+
+
+-- for any edge, there exist two adjacent vertices who have it as their supremum
+example (p : Polytope R X) (e v w : Face p.toConvexSet)
+    (hv : v ⋖ e) (hw : w ⋖ e) (hne : v ≠ w) : v ⊔ w = e := by
+  rcases hv.eq_or_eq (le_sup_left) (sup_le hv.le hw.le) with h | h
+  · exact absurd (hw.eq_or_eq (h ▸ le_sup_right) hv.le) (by simp [hne, hv.ne])
+  · exact h
+
+-- for any two adjacent vertices, there is an edge which is their supremum
+lemma polytopeEdge_exits_graphEdge (p : Polytope R X)
+    (x : p.vertices) (y : p.vertices) (hxy : p.edgeGraph.Adj x y) :
+    ∃ e : p.edges, e = x.1 ⊔ y.1 := ⟨⟨_, hxy.2⟩, rfl⟩
 
 end AffineConvex
 
