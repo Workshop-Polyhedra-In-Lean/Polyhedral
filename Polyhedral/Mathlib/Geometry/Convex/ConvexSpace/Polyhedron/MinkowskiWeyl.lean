@@ -814,13 +814,14 @@ lemma isVPolyhedron_of_isHPolyhedron {H : Set A} (hH : IsHPolyhedron 𝕜 H) :
 For every finite *V-polytope* + *rays* + *submodule*,
 there exists a finite set of inequalities that describe it.
 -/
+
 lemma isHPolyhedron_of_isPolytope {P : Set A} (hP : IsPolytope 𝕜 P) :
     IsHPolyhedron 𝕜 P := by
   let W := CanonicalHomogenization 𝕜 A
   let := IsModuleConvexSpace.ofAddTorsor (R := 𝕜) (V := W)
-  --
   simpa [PointedCone.dehomogenize] using
-    ConvexSet.dehomogenize_isHPolyhedron (A := A) _
+    ConvexSetimagedehomogenize_isHPolyhedron -- older: ConvexSet.dehomogenize_isHPolyhedron
+      (A := A) _
       (IsHPolyhedral.fg _ (
         IsPolytope.homogenize_fg (R := 𝕜) W (C := ⟨P, hP.isConvexSet⟩) hP))
 
@@ -865,4 +866,5 @@ end Homogenization
 
 -- Wishlist:
 -- * A bounded polyhedron is a polytope (i.e. the recession cone is trivial)
--- *
+-- * Definition "bounded": Every affine function is bounded:
+--   Equivalent statement for polyhedra (for all convex sets?): There are no rays.
