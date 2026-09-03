@@ -1,7 +1,7 @@
 /-
 Copyright (c) 2026 Justus Springer. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Anouk Brose, Mei Han, Jesus de Loera, Justus Springer, Santiago Morales, ...
+Authors: Anouk Brose, Mei Han, Noah Gießing, Jesus de Loera, Justus Springer, Santiago Morales
 -/
 
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Basic
