@@ -3,24 +3,43 @@ Copyright (c) 2026 . All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
 -/
+module
 
-import Mathlib.Combinatorics.SimpleGraph.Basic
-import Mathlib.Geometry.Convex.Cone.Face.Lattice
-import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
+public import Mathlib.Combinatorics.SimpleGraph.Basic
+public import Mathlib.Geometry.Convex.Cone.Face.Lattice
+public import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
 
-import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.AffineSubspace.Basic
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Face
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Lattice
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Dimension
+public import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.AffineSubspace.Basic
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Face
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Lattice
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Dimension
 
 /-!
 ## The edge graph of a polytope
 
-TODO
+This file defines the edge graph (or 1-skeleton) of a polytope purely in terms of its face
+lattice: the vertices are the atoms of the lattice, the edges are the faces covering two distinct
+atoms, and two vertices are adjacent when their join is such an edge. Working through the lattice
+rather than through the underlying point set means the definition is automatically invariant under
+combinatorial equivalence of polytopes.
 
+## Main definitions
+
+* `Convexity.Polytope.toConvexSet`: a polytope viewed as a bundled convex set, so that its face
+  lattice `Face p.toConvexSet` is available.
+* `Convexity.Polytope.vertices`: the vertices of `p`, namely the atoms of its face lattice.
+* `Convexity.Polytope.edges`: the edges of `p`, namely the faces covering two distinct vertices.
+* `Convexity.Polytope.edgeGraph`: the resulting simple graph on `p.vertices`.
+
+## TODO
+
+* Show Balinski: the edge graph is is **`d`**-connected for a `d`-dimensional polytope.
+* Relate `Polytope.vertices` to `Convexity.Vertices` from `Polytope/KreinMilman.lean`.
 -/
+
+public section
 
 namespace Convexity
 
@@ -69,7 +88,6 @@ def Polytope.edgeGraph (p : Polytope R X) : SimpleGraph p.vertices where
   Adj x y := x.1 ≠ y.1 ∧ (x.1 ⊔ y.1) ∈ p.edges
   symm.symm := by grind
   loopless.irrefl := by
-
     simp +contextual [Polytope.edges]
 
 -- Useful lemmas for edge graphs:

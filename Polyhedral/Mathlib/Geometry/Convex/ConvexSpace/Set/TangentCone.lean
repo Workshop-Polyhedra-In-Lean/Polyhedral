@@ -3,14 +3,15 @@ Copyright (c) 2026 Louis Theran. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Louis Theran
 -/
+module
 
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Basic
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Convexity
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Face.Lattice
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Lineal
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Lattice
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Lattice
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Pointwise
+public import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Basic
+public import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Convexity
+public import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Face.Lattice
+public import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Lineal
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Lattice
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Lattice
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Pointwise
 
 /-! # The tangent cone of a convex set at a face
 

@@ -3,11 +3,12 @@ Copyright (c) 2026 Louis Theran. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Louis Theran
 -/
+module
 
-import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Dimension
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.TangentCone
+public import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Dimension
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.TangentCone
 
 /-! # Finite generation of tangent cones of polytopes
 

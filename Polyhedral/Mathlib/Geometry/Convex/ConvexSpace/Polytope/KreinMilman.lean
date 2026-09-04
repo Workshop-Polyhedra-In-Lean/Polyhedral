@@ -3,11 +3,12 @@ Copyright (c) 2026 Louis Theran. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Louis Theran
 -/
+module
 
-import Mathlib.Order.Atoms
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Vertex
+public import Mathlib.Order.Atoms
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Vertex
 
 /-! # Krein-Milman for polytopes, proved directly (no homogenization)
 

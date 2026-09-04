@@ -3,12 +3,30 @@ Copyright (c) 2026 . All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
 -/
+module
 
-import Mathlib.Geometry.Convex.ConvexSpace.AffineSpace
-import Mathlib.Geometry.Convex.Hull
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.AffineSpace
+public import Mathlib.Geometry.Convex.ConvexSpace.AffineSpace
+public import Mathlib.Geometry.Convex.Hull
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.AffineSpace
 -- TODO Move these to an appropriate place
 
+/-!
+# Convexity of affine subspaces
+
+This file proves that an affine subspace is convex, and that convexity interacts with affine spans
+in the expected way: an affine subspace is its own convex hull, and passing to the convex hull of a
+set leaves its affine span unchanged.
+
+## Main results
+
+* `AffineSubspace.isConvexSet`: an affine subspace is a convex set, since a convex combination of
+  its points is in particular an affine combination of them.
+* `AffineSubspace.convexHull_eq`: an affine subspace is its own convex hull.
+* `affineSpan_convexHull_eq`: the affine span of a convex hull is the affine span of the set it
+  was taken of.
+-/
+
+public section
 
 namespace Convexity
 
