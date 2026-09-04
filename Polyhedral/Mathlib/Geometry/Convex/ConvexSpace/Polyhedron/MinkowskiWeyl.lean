@@ -182,8 +182,9 @@ lemma IsHPolyhedron.isPolyhedral_vadd_isPolytope {C : PointedCone 𝕜 V}
       ⊔ C.map hom.ofVector).IsPolyhedral :=
     (IsPolyhedral.of_fg (IsPolytope.homogenize_fg W hP)).sup
       (hC.isPolyhedral.map hom.ofVector)
-  simpa [dehomogenize_map_ofVector_sup_homogenize] using
-    ConvexSet.dehomogenize_isHPolyhedron (A := A) _ (isHPolyhedral_of_isVPolyhedral hpoly)
+  -- simpa [dehomogenize_map_ofVector_sup_homogenize] using
+  --   ConvexSet.dehomogenize_isHPolyhedron (A := A) _ (isHPolyhedral_of_isVPolyhedral hpoly)
+  sorry
 
 end Homogenize
 
@@ -240,23 +241,41 @@ agrees with it on points and with its linear part on vectors.
 -/
 -- def Affine.IsHomogenization.linear_extension (h : A →ᵃ[𝕜] 𝕜) : W →ₗ[𝕜] 𝕜 :=
 
+variable [DecidableEq (W →ₗ[𝕜] 𝕜)]
+
+variable (W) in
+noncomputable def AffineMap.linear_extension : (A →ᵃ[𝕜] 𝕜) ↪ W →ₗ[𝕜] 𝕜 where
+  toFun := (hom.exists_linear_extension · |>.choose)
+  inj' := sorry
 
 -- We might need to pass the affine subspace to homogenize_dual
-variable (A) in
-def homogenize_dual (H : Finset (W →ₗ[𝕜] 𝕜)) : PointedCone 𝕜 W :=
-    PointedCone.dual .id (insert hom.weight H)
-lemma homogenize_dual_dualFG (H : Finset (W →ₗ[𝕜] 𝕜)) : (homogenize_dual A H).DualFG .id := by
+variable (W) in
+noncomputable
+def homogenize_dual (H : Finset (A →ᵃ[𝕜] 𝕜)) : PointedCone 𝕜 W :=
+    PointedCone.dual .id (
+      insert hom.weight (H.image (AffineMap.linear_extension W)) : Finset (W →ₗ[𝕜] 𝕜))
+
+omit [IsModuleConvexSpace 𝕜 W] in
+variable (W) in
+lemma homogenize_dual_dualFG (H : Finset (A →ᵃ[𝕜] 𝕜)) : (homogenize_dual W H).DualFG .id := by
+  rw [homogenize_dual]
+  exact DualFG.dual_of_finset .id (insert hom.weight (H.image (AffineMap.linear_extension W)))
+
+lemma homogenize_dual_weight_zero_eq_recessionCone (H : Finset (A →ᵃ[𝕜] 𝕜)) :
+    (homogenize_dual W H) ⊓ hom.weight.ker =
+      (⋂ h ∈ H, (h.linear_extension W) ⁻¹' Set.Ici 0).recessionCone 𝕜 := by
   sorry
-lemma homogenize_dual_weight_zero_eq_recessionCone (H : Finset (W →ₗ[𝕜] 𝕜) :
-    (homogenize_dual A H) ⊓ PointedCone.of_submodule (hom.weight.ker) =
-      (∩ h ∈ H, h ⁻¹' Set.Ici 0).recessionCone := by
-  sorry
+
+variable (W) in
 lemma IsHPolyhedron.exists_homogenize_dual {P : Set A} (hP : IsHPolyhedron 𝕜 P) :
-    ∃ H : Finset (W →ₗ[𝕜] 𝕜),
-      ConvexSet.dehomogenize A (homogenize_dual A H) = P := by
+    ∃ H : Finset (A →ᵃ[𝕜] 𝕜), ∃ S : AffineSubspace 𝕜 A,
+      (P = (⋂ h ∈ H, h ⁻¹' Set.Ici 0) ⊓ S) ∧
+      ConvexSet.dehomogenize A (
+        homogenize_dual W H ⊓ (S.direction.map hom.ofVector : Submodule 𝕜 W)) = P := by
   obtain ⟨ineqs, S, rfl⟩ := hP
-  have h := hom.exists_linear_extension
-  use ineqs
+  use ineqs, S
+  constructor
+  · rfl
   sorry
 
 -- IDEA: We could have general notation for an `∃ statement with witness`, which would
@@ -268,6 +287,48 @@ lemma IsHPolyhedron.exists_homogenize_dual {P : Set A} (hP : IsHPolyhedron 𝕜 
 --       that the actual inequalities are made explicit.
 -- lemma homogenize_dual_splits {P : Set A} {H : Finset (W →ₗ[𝕜] 𝕜)} (hP : IsHPolyhedron 𝕜 P with H) :
 --     (homogenize_dual A H).recessionCone
+
+lemma split_zero_pos (D : PointedCone 𝕜 W) (hD : D.FG) (S : Submodule 𝕜 W) : 
+
+/--
+Minkowski-Weyl theorem for polyhedra, `H → V` direction.
+
+Proved as a chain of equalities.
+-/
+theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd' {H : ConvexSet 𝕜 A}
+    (hH : IsHPolyhedron 𝕜 (H : Set A)) :
+    ∃ P : Set A, IsPolytope 𝕜 P ∧ H = ((H : Set A).recessionCone 𝕜 : Set V) +ᵥ P := by classical
+  -- Build canonical homogenization:
+  let W := CanonicalHomogenization 𝕜 A
+  let hom : Affine.IsHomogenization 𝕜 A W := inferInstance
+  let := IsModuleConvexSpace.ofAddTorsor (R := 𝕜) (V := W)
+
+  -- Build polytope:
+  obtain ⟨ineqs, S, h_dual_eq⟩ := IsHPolyhedron.exists_homogenize_dual W hH
+  let C_hom := homogenize_dual W ineqs ⊓ (S.direction.map hom.ofVector : Submodule 𝕜 W)
+  have hC_H : C_hom.IsHPolyhedral .id := by
+    use homogenize_dual W ineqs, (S.direction.map hom.ofVector : Submodule 𝕜 W)
+    exact ⟨homogenize_dual_dualFG W ineqs, rfl⟩
+  obtain ⟨D, hD, S, h_union⟩ := hC_H.isPolyhedral
+  obtain ⟨D₀, h0, Dₚ, hp, h_split⟩ := sorry D S hom.weight
+  let P := dehomogenize A Dₚ
+  have hP : IsPolytope 𝕜 P := by
+    exact dehomogenize_fg
+    sorry
+
+  -- Proof:
+  use P
+  calc
+    H = dehomogenize A (homogenize_dual W H ⊓ S_hom) := by -- homogenize and dehomogenize
+      exact h_dual_eq.symm
+      -- exact dehomogenize_homogenize_closure.symm
+    _ = dehomogenize A (C_hom) := by rfl
+    _ = dehomogenize A (D ⊔ S) := by rw [h_union]
+    _ = dehomogenize A (D₀ ⊔ Dₚ) := by exact h_split -- split 0 and positive rays
+    _ = (D₀ : Set V) +ᵥ P := by -- extract weight 0 as cone
+      exact pointedCone_vadd_of_dehomogenize_pointedCone_add
+    _ = (H.recessionCone 𝕜 : Set V) +ᵥ P := by -- weight 0 is precisely the recession cone
+      exact homogenize_closure_weight_zero_eq_recessionCone
 
 
 variable (W) in
@@ -392,42 +453,6 @@ theorem PointedCone.homogenize_sup_recessionCone_isHPolyhedral
         rw [hom.ofVector_range_eq_weight_ker]
         exact hw
       exact LinearMap.mem_range.mp hrange
-
-
-/--
-Minkowski-Weyl theorem for polyhedra, `H → V` direction.
-
-Proved as a chain of equalities.
--/
-theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd' {H : ConvexSet 𝕜 A}
-    (hH : IsHPolyhedron 𝕜 H) :
-    ∃ P : Set A, IsPolytope 𝕜 P ∧ H = ((H : Set A).recessionCone 𝕜 : Set V) +ᵥ P := by
-  -- Build canonical homogenization:
-  let W := CanonicalHomogenization 𝕜 A
-  let hom : Affine.IsHomogenization 𝕜 A W := inferInstance
-  let := IsModuleConvexSpace.ofAddTorsor (R := 𝕜) (V := W)
-
-  -- Build polytope:
-  obtain ⟨G, hG⟩ := hH
-  let C_hom := homogenize_closure W H
-  have hC_H : C_hom.IsHPolyhedral 𝕜 := by sorry
-  have hC_V : C_hom.IsPolyhedral 𝕜 := IsVPolyhedral.of_isHPolyhedral hC_H
-  obtain ⟨D, S, hD, hS, h_V_sum⟩ := hC_V
-  obtain ⟨D₀, h0, Dₚ, hp, h_split⟩ := sorry D S hom.weight
-
-  -- Proof:
-  use dehomogenize A Dₚ
-  calc
-    H = dehomogenize A (homogenize_closure W H) := by -- homogenize and dehomogenize
-      exact dehomogenize_homogenize_closure.symm
-    _ = dehomogenize A (C_hom) := by rfl
-    _ = dehomogenize A (D ⊔ S) := by exact h_V_sum
-    _ = dehomogenize A (D₀ ⊔ Dₚ) := by exact h_split -- split 0 and positive rays
-    _ = (D₀ : Set V) +ᵥ dehomogenize A Dₚ := by -- extract weight 0 as cone
-      exact pointedCone_vadd_of_dehomogenize_pointedCone_add
-    _ = (H.recessionCone 𝕜 : Set V) +ᵥ dehomogenize A Dₚ := by -- weight 0 is precisely the recession cone
-      exact homogenize_closure_weight_zero_eq_recessionCone
-
 
 omit [AddCommGroup W] [Module 𝕜 W] [IsModuleConvexSpace 𝕜 W] in
 /--
