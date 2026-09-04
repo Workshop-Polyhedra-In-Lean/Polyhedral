@@ -20,7 +20,7 @@ tangent cone at any single point of `F₀`, summed with the lineality space — 
 space, being `(affineSpan R (F₀ : Set P)).direction` (`tangentCone_lineal`), is finitely generated
 whenever `F₀` itself is. -/
 
-noncomputable section
+public noncomputable section
 
 namespace Convexity
 
