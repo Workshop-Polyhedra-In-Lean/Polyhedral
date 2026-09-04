@@ -56,7 +56,7 @@ private theorem sConvexComb_eq_of_weights_eq_one (h : w.weights v = 1) : w.sConv
       lt_of_le_of_ne (w.nonneg x) (Ne.symm (Finsupp.mem_support_iff.mp hx))
     linarith
   rw [support_weights_eq_singleton.mp hsupp]
-  exact AddTorsor.convexCombination_single v
+  exact sConvexComb_single v
 
 /-- If a point does *not* carry all the weight of a combination, the combination can be
 re-expressed as an affine combination of that point and a combination supported away from it. -/

@@ -29,7 +29,7 @@ variable [PartialOrder k] [IsStrictOrderedRing k] [ConvexSpace k P] [IsAffineCon
 /-- An affine subspace is convex: it is closed under affine combinations of its points, and
 convex combinations are affine combinations. -/
 theorem _root_.AffineSubspace.isConvexSet (t : AffineSubspace k P) : IsConvexSet k (t : Set P) := by
-  intro w hw
+  refine IsConvexSet.of_sConvexComb_mem fun w hw ↦ ?_
   have hle : affineSpan k (w.weights.support : Set P) ≤ t := by
     simpa using affineSpan_mono k hw
   refine hle ?_
