@@ -120,8 +120,8 @@ lemma dehomogenize_map_ofVector_sup_homogenize (C : PointedCone 𝕜 V) (P : Con
 /--
 The dehomogenization of the homogenization closure recovers the original set.
 -/
--- TODO: We need `ext` because `dehomogenize_map_ofVector_sup_homogenize` is stated for `Set` instead
---       of `ConvexSet`
+-- TODO: We need `ext` because `dehomogenize_map_ofVector_sup_homogenize` is
+--       stated for `Set` instead of `ConvexSet`
 lemma dehomogenize_homogenize_closure (S : ConvexSet 𝕜 A) :
     (PointedCone.dehomogenize A (homogenize_closure W S)) = S := by
   ext x
@@ -288,11 +288,10 @@ lemma IsHPolyhedron.exists_homogenize_dual {P : Set A} (hP : IsHPolyhedron 𝕜 
 -- lemma homogenize_dual_splits {P : Set A} {H : Finset (W →ₗ[𝕜] 𝕜)} (hP : IsHPolyhedron 𝕜 P with H) :
 --     (homogenize_dual A H).recessionCone
 
-lemma split_zero_pos (D : PointedCone 𝕜 W) (hD : D.FG) (S : Submodule 𝕜 W) : 
+-- lemma split_zero_pos (D : PointedCone 𝕜 W) (hD : D.FG) (S : Submodule 𝕜 W) :
 
 /--
 Minkowski-Weyl theorem for polyhedra, `H → V` direction.
-
 Proved as a chain of equalities.
 -/
 theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd' {H : ConvexSet 𝕜 A}
@@ -632,15 +631,18 @@ lemma hull_invariant_under_scaling_s (G : Finset V) (multiplier : V → 𝕜) :
   PointedCone.hull 𝕜 G = PointedCone.hull 𝕜 ((G : Set V).image (fun g => multiplier g • g)) := by
     sorry
 
+
+variable (V) in
+variable [IsModuleConvexSpace 𝕜 V] in
 lemma hull_invariant_under_scaling_subset (G1 G2 : Set V) :
-  (∀ g1 ∈ G1, ∃ g2 ∈ G2, ∃ multiplier > 0, g2 = multiplier • g1) →
+  (∀ g1 ∈ G1, ∃ g2 ∈ G2, ∃ multiplier : 𝕜, multiplier > 0 ∧ g2 = multiplier • g1) →
   PointedCone.hull 𝕜 G1 ≤ PointedCone.hull 𝕜 G2 := by
     sorry
 
 
 #click_suggestions
 omit [AddCommGroup W] [Module 𝕜 W] [IsModuleConvexSpace 𝕜 W] in
--- don't understand: W does not appear in the theorem statement!
+-- G.R. don't understand: W does not appear in the theorem statement!
 
 /-- ALTERNATIVE ATTEMPT `H → V` direction
 verbose and in little steps -/
@@ -688,7 +690,7 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
   obtain D_hom := Minkowski_Weil_for_cones_how_it_would_be_handy (hC := hC0_hom.dualFG) (S := S_hom)
   obtain ⟨D_hom, hC_hom_FG, S2, h_representation⟩ := D_hom
   obtain ⟨G_hom, hG_hom⟩  := hC_hom_FG
-  have hG_hom_nonneg : ∀ g ∈ G_hom, g.weight >= 0 := by
+  have hG_hom_nonneg : ∀ g ∈ G_hom, hom.weight g >= 0 := by
     intro g hG
     have g_in_D_hom: g ∈ D_hom := by
       rw [← hG_hom]
@@ -709,13 +711,13 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
     sorry
 
   -- 9. Normalize the positive-weight generators to weight one to get a finite set of points `G`
-  let G := (G_hom_pos.image (fun g => (hom.weight g)⁻¹ • g)).preimage
-   (hom.ofPoint) (hom.ofPoint_injective.injOn)
+  set G_hom_normalized := G_hom_pos.image (fun g => g.weight⁻¹ • g) with hG_hom_normalized
+  set G := G_hom_normalized.preimage (hom.ofPoint) (hom.ofPoint_injective.injOn) with hG
+  -- set G_hom_normalized := (hom.ofPoint '' ↑G) with h_G_hom_normalized
   let Rays := hom.ofVector ⁻¹' G_hom_zero
   let linealityspace : Submodule 𝕜 V := S2.map hom.ofVector.leftInverse
-  -- let P1 : Set A := Convexity.convexHull 𝕜 G
   set P_convSet : ConvexSet 𝕜 A := ConvexSet.convexHull 𝕜 G with hP_conv
-  set P := (P_convSet : Set A) with hP
+  set P := (P_convSet : Set A) with hP -- == Convexity.convexHull 𝕜 G
   have P_is_polytope : IsPolytope 𝕜 P := by
     rw [hP]
     use G
@@ -733,7 +735,7 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
           intro s hs
           rw [h_representation]
           exact Submodule.mem_sup_right hs
-        -- NOTE: This could be proved directly above
+    -- NOTE: The following could be proved directly above
     have hs'' : ∀ s ∈ S2, s ∈ C0_hom := by
           intro s hs
           exact (mem_inf.mp (hs' s hs)).1
@@ -771,48 +773,39 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
 
       --/-
       -- Alternative attempt following Moritz's proof:
-      have z_hom.weight_eq_one : z_hom.weight = 1 :=
-        sorry --- see below for the proof
 
-      /- dehomogenization exists for vectors in G_hom_pos.
-      VERY ROUNDABOUT WAY. probabily not needed.
+      -- Construction path (G_hom_pos ⊆ V_hom) → (G_hom_normalized ⊆ V_hom) → (G ⊆ A)
+      have hhull : PointedCone.hull 𝕜 (G_hom_normalized : Set V_hom)
+                 = PointedCone.hull 𝕜 (G_hom_pos : Set V_hom) := by
+        have left_to_right : ∀ g1 ∈ G_hom_normalized, ∃ g2 ∈ G_hom_pos,
+               ∃ multiplier : 𝕜, multiplier > 0 ∧ g2 = multiplier • g1 := by
+          intro g1 hg1
+          rw [hG_hom_normalized, Finset.mem_image] at hg1
+          obtain ⟨g, g_in_G, g_versus_g1⟩ := hg1
+          use g
+          simp only [g_in_G, gt_iff_lt, true_and]
+          use (hom.weight g)
+          rw [hG_hom_pos, Finset.mem_filter] at g_in_G
+          have weight_pos : hom.weight g > 0 := by exact g_in_G.2
+          simp only [weight_pos, true_and]
+          rw [← inv_smul_eq_iff₀]
+          · exact g_versus_g1
+          · exact weight_pos.ne'
 
-      have dehom_exists : ∀ g ∈ G_hom_pos, ∃ x : A, hom.ofPoint x = (g.weight)⁻¹ • g := by
-        intro g hg
-        rw [hG_hom_pos, Finset.mem_filter] at hg
-        have hgw_pos: g.weight > 0 := hg.2
-        have hgw'_pos: hom.weight g > 0 := by
-          exact hgw_pos
-        have h1 : (g.weight)⁻¹ • g ∈ Set.range hom.ofPoint := by
-          rw [hom.ofPoint_range_eq_preimage_weight_one]
-          simp only [mem_preimage, map_smul, smul_eq_mul, mem_singleton_iff]
-          have w_is_w : g.weight = hom.weight g := by rfl
-          rw [← w_is_w]
-          rw [inv_mul_cancel₀ hgw_pos.ne']
-        exact h1
-      choose pt hpt using dehom_exists -- copied from Moritz; is there a simpler way?
-      --set G : Finset A := G_hom_pos.attach.image (fun g => pt g.1 g.2) with hG
-      --set P := ConvexSet.convexHull 𝕜 (G : Set A) with hP
-      -/
-    --
-      have hhull : PointedCone.hull 𝕜 (hom.ofPoint '' ↑G) = PointedCone.hull 𝕜 ↑G_hom_pos := by
-        set LHS := (hom.ofPoint '' ↑G) with hLHS
-        have left_to_right : ∀ g1 ∈ LHS, ∃ g2 ∈ G_hom_pos, ∃ multiplier > 0,
-                 g2 = multiplier • g1 := by
-          intro g1
+        let X : Set V_hom := G_hom_pos
+        let Y : Set V_hom := G_hom_normalized
 
-          sorry
-        have : PointedCone.hull 𝕜 LHS ≤ PointedCone.hull 𝕜 ↑G_hom_pos :=
-          hull_invariant_under_scaling_subset LHS G_hom_pos left_to_right
-        have : PointedCone.hull 𝕜 LHS ≥ PointedCone.hull 𝕜 ↑G_hom_pos := by sorry
-          -- hull_invariant_under_scaling_subset G_hom_pos LHS right_to_left
+        have : PointedCone.hull 𝕜 Y ≤ PointedCone.hull 𝕜 X :=
+          hull_invariant_under_scaling_subset V_hom Y X left_to_right
+        have : PointedCone.hull 𝕜 X ≤ PointedCone.hull 𝕜 Y := by sorry
+          -- hull_invariant_under_scaling_subset V_hom X Y right_to_left
         apply le_antisymm <;> assumption
-        
+
       have : hull 𝕜 (hom.ofPoint '' G) = homogenize V_hom P_convSet := by
-        rw [← hull_image_ofPoint_eq_homogenize_convexHull, hhull]
+        rw [← hull_image_ofPoint_eq_homogenize_convexHull]
       -- -/
 
-      -- The following will be obsolete.
+      -- The following will be partially obsolete. -----------------------------------
       obtain ⟨μ, ⟨hμ, h_positive_combination_μ⟩ ⟩ := Submodule.mem_span_finset.mp hz_hom
       -- We can normalize the g_i to weight one to get points in G.
       -- Since `x` as well as the points in `G` have weight 1,
@@ -856,10 +849,10 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
           apply Finset.sum_eq_zero
           intro g hg
           obtain ⟨hg, hg'⟩ := Finset.mem_filter.mp hg
-          have := hG_hom_nonneg g hg
-          have : g.weight = 0 := by
-            linarith
-          simp [this]
+          have h_nonneg : g.weight ≥ 0 := hG_hom_nonneg g hg
+          have h_zero : g.weight = 0 := by
+            apply le_antisymm (le_of_not_gt hg') h_nonneg
+          simp [h_zero]
         rw [hG_hom_nonpos] at sum_1
         simpa using sum_1
       have z_exists : ∃ z : A, hom.ofPoint z = z_hom := by
@@ -1020,7 +1013,6 @@ lemma IsHPolyhedron.vadd
   let := IsModuleConvexSpace.ofAddTorsor (R := 𝕜) (V := V)
   exact isHPolyhedron_of_isVPolyhedron (hP₁.vadd hQ₁) (isHPolyhedral_of_isVPolyhedral
     (hP.recessionCone_isPolyhedral.sup hQ.recessionCone_isPolyhedral))
-
 
 end Field
 end Homogenization
