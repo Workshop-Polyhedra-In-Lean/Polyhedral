@@ -608,8 +608,6 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd {H : Set A}
   rw [← Convex.Set.recessionCone_vadd_self (𝕜 := 𝕜) (P := H)]
   exact Set.mem_vadd.mpr ⟨v, hv, y, hPH hy, rfl⟩
 
-
-
 theorem Minkowski_Weil_for_cones_how_it_would_be_handy [Fact (LinearMap.SeparatingRight p)]
     [Fact (LinearMap.SeparatingRight p.flip)]
   {C : PointedCone 𝕜 V} (hC : C.DualFG p)
@@ -628,7 +626,6 @@ theorem Minkowski_Weil_for_cones_how_it_would_be_handy [Fact (LinearMap.Separati
     · sorry
     -- show ↑C_dual_constraints ≤ ↑S_dual
     · sorry
-
   sorry
 -- This theorem would include the identification of the lineality space of `C ⊓ S`,
 -- which would then form the subspace S2 as part of the representation `C ⊓ S = C2 ⊔ S2`.
@@ -636,7 +633,6 @@ theorem Minkowski_Weil_for_cones_how_it_would_be_handy [Fact (LinearMap.Separati
 
 -- REMEMBER: def IsPolyhedral (D : PointedCone R M) :=
 --  ∃ C2 : PointedCone R M, C2.FG ∧ ∃ S2 : Submodule R M, D = C2 ⊔ S2
-
 
 -- (The following is what we currently have, which is somewhat dual to the above statement:)
 theorem XX_FG.exists_dualfg_inf_submodule {C : PointedCone 𝕜 V} (hC : C.FG) {S : Submodule 𝕜 V}
