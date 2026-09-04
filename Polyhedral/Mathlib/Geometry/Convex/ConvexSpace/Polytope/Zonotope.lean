@@ -4,70 +4,64 @@ namespace Convexity
 
 section Semiring
 
-variable {R X V : Type*}
-variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
-variable [ConvexSpace R X]
-
-open scoped Pointwise
+variable {R X Y : Type*}
+variable [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
+variable [ConvexSpace R X] [ConvexSpace R Y]
 
 variable (R) in
-def IsLineSegment (s : Set X) := ∃ a, ∃ b≠a, s = convexHull R {a, b}
+/-- A line segment is the convex hull of two points. The two points are allowed to coincide. -/
+def IsLineSegment (s : Set X) : Prop := ∃ a b, s = convexHull R {a, b}
 
-lemma IsLineSegment.isPolytope {s : Set X}
-    (hs : IsLineSegment (R := R) s) : IsPolytope R s := by
+variable (R) in
+/-- A nondegenerate line segment is the convex hull of two distinct points. -/
+def IsNondegenerateLineSegment (s : Set X) : Prop :=
+  ∃ a b, b ≠ a ∧ s = convexHull R {a, b}
+
+lemma IsNondegenerateLineSegment.isLineSegment {s : Set X}
+    (hs : IsNondegenerateLineSegment R s) : IsLineSegment R s := by
+  obtain ⟨a, b, _, rfl⟩ := hs
+  exact ⟨a, b, rfl⟩
+
+/-- Every line segment is a polytope. -/
+lemma IsLineSegment.isPolytope {s : Set X} (hs : IsLineSegment R s) : IsPolytope R s := by
   classical
-  rcases hs with ⟨a, b, _, rfl⟩
+  obtain ⟨a, b, rfl⟩ := hs
   exact ⟨{a, b}, by simp⟩
 
 variable (R) in
-def UnitCube (n : ℕ) := Set.pi ⊤ (fun (_ : Fin n) => convexHull R {(0 : R), (1 : R)})
+/-- A zonotope is an affine image of a finite product of line segments. -/
+def IsZonotope (s : Set X) : Prop :=
+  ∃ n : ℕ, ∃ f : (Fin n → StdSimplex R (Fin 2)) → X, IsAffineMap R f ∧ Set.range f = s
+
+/-- The range of an affine map from a finite product of line segments is a zonotope. -/
+lemma IsAffineMap.isZonotope_range {n : ℕ}
+    {f : (Fin n → StdSimplex R (Fin 2)) → X} (hf : IsAffineMap R f) :
+    IsZonotope R (Set.range f) :=
+  ⟨n, f, hf, rfl⟩
+
+/-- Every zonotope is nonempty. -/
+lemma IsZonotope.nonempty {s : Set X} (hs : IsZonotope R s) : s.Nonempty := by
+  obtain ⟨_, f, _, rfl⟩ := hs
+  exact Set.range_nonempty f
+
+/-- Affine images of zonotopes are zonotopes. -/
+protected lemma IsZonotope.image {s : Set X} {f : X → Y}
+    (hf : IsAffineMap R f) (hs : IsZonotope R s) : IsZonotope R (f '' s) := by
+  obtain ⟨n, g, hg, rfl⟩ := hs
+  exact ⟨n, f ∘ g, hf.comp hg, Set.range_comp f g⟩
+
+
+/-- The empty set is not a zonotope. -/
+@[simp]
+lemma not_isZonotope_empty : ¬ IsZonotope R (∅ : Set X) := by
+  intro h
+  simpa using h.nonempty
 
 variable (R) in
-def isZonotope (s : Set X) := ∃ n : ℕ, ∃ f : (Fin n → R) → X,
-   IsAffineMap R f ∧ f '' UnitCube (R := R) n = s
+/-- A singleton is a zonotope (the affine image of the zero-dimensional cube). -/
+@[simp] protected lemma IsZonotope.singleton (x : X) : IsZonotope R {x} := by
+  exact ⟨0, fun _ ↦ x, by fun_prop, by simp⟩
 
---TODO : generalize this to families of convex spaces
-lemma convexHull_pi {ι : Type*} [Finite ι] (s : Set ι) (α : ι → Set X) :
-    Set.pi s (fun i => convexHull R (α i)) = convexHull R (Set.pi s α) := by
-  have hs : Fintype s := Fintype.ofFinite ↑s
-  rw [← Set.coe_toFinset s]
-  set t := s.toFinset
-  induction t using Finset.induction
-  · simp
-  · sorry --this might be hard, since we only proved convexHull distributing over cartesian prodúct but this is an intersection.
-  sorry
-
-lemma UnitCube_IsPolytope (n : ℕ) : IsPolytope R (UnitCube R n) := by
-  let t := Set.pi ⊤ (fun (_ : Fin n) => {(0 : R), (1 : R)})
-  have hfinite : t.Finite := by
-    refine Set.Finite.pi fun i => ?_
-    simp only [Set.finite_insert, Set.finite_singleton]
-  have ht : UnitCube R n = convexHull R t := convexHull_pi _ _
-  exact ht ▸ IsPolytope.convexHull_finite R hfinite
-
-section AddCommGroup
-variable [AddCommGroup V] [Module R V] [ConvexSpace R V] [IsModuleConvexSpace R V]
-
-variable (R) in
-lemma sumOfSegments_isZonotope (s : Set V) :
-  (∃ segs : Multiset (Set V),
-    (∀ seg ∈ segs, IsLineSegment R (seg)) ∧ (segs.sum = s)) → isZonotope R s := sorry
-
-variable (R) in
-lemma zonotope_isSumOfSegments (s : Set V) :
-  isZonotope R s → (∃ segs : Multiset (Set V),
-    (∀ seg ∈ segs, IsLineSegment R (seg)) ∧ (segs.sum = s)) := sorry
-
-variable (R) in
-lemma zonotope_iff_sumOfSegments (s : Set V) :
-  isZonotope R s ↔ (∃ segs : Multiset (Set V),
-    (∀ seg ∈ segs, IsLineSegment R (seg)) ∧ (segs.sum = s)) := by
-  constructor
-  · exact zonotope_isSumOfSegments R s
-  · exact sumOfSegments_isZonotope R s
-
-
-end AddCommGroup
 end Semiring
 
 end Convexity
