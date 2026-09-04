@@ -6,6 +6,9 @@ Authors: Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Vale
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
 import Mathlib.Order.WithBotTop
 import Mathlib.Geometry.Convex.ConvexSpace.Defs
+import Mathlib.Geometry.Convex.ConvexSpace.Module
+
+open Convexity
 
 /-! # General properties of support functions
 
@@ -47,32 +50,32 @@ open Convexity
 variable {R V W : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
   [ConvexSpace R V] [ConvexSpace R W]
 
--- TODO: think about the right generality for this lemma!
-lemma IsAffineMap.add {f g : V → R} (hf : IsAffineMap R f) (hg : IsAffineMap R g) :
-    IsAffineMap R (f + g) := by
-  refine ⟨fun s ↦ ?_⟩
-  sorry -- TODO!
-
--- TODO: think about the right generality for this lemma!
-lemma IsAffineMap.smul {f : V → R} {c : R} (hf : IsAffineMap R f) :
-    IsAffineMap R (c • f) := by
-  refine ⟨fun s ↦ ?_⟩
-  sorry -- TODO!
-
-@[fun_prop]
-lemma IsAffineMap.zero [Zero W] : IsAffineMap R (0 : V → W) := IsAffineMap.const _
-
 variable (R V) in
-/-- The dual of a convex space `V` over `R`: the module of all affine maps `V → R` -/
-def ConvexSpace.dual : Submodule R (V → R) where
-  carrier := { f | IsAffineMap R f }
-  add_mem' {f g} hf hg := by simp_all [IsAffineMap.add]
-  zero_mem' := by simp only [Set.mem_ofPred_eq]; fun_prop
-  smul_mem' c x hx := by simp_all [IsAffineMap.smul]
+abbrev ConvexSpace.dual := ConvexSpace.AffineMap R V R
 
-instance : FunLike (ConvexSpace.dual R V) V R where
-  coe φ := φ.1
-  coe_injective φ ψ h := by simp_all
+-- variable (R V) in
+/-- The dual of a convex space `V` over `R`: the module of all affine maps `V → R` -/
+-- def ConvexSpace.dual : Submodule R (V → R) where
+--   carrier := { f | IsAffineMap R f }
+--   add_mem' {f g} hf hg := by simp_all [IsAffineMap.add]
+--   zero_mem' := by simp only [Set.mem_ofPred_eq]; fun_prop
+--   smul_mem' c x hx := by simp_all [IsAffineMap.smul]
+
+-- Next we tried to define it as a structure, but that is not what we want
+-- structure ConvexSpace.dualE (U : (Submodule R (V → R))) [SMul R U] [AddCommMonoid U] where
+--   carrier : Set U --{ f | IsAffineMap R f }
+--   is_affine : ∀ f ∈ carrier, IsAffineMap R (f : V → R)
+--   add_mem : ∀ {f g}, f ∈ carrier → g ∈ carrier → f+g ∈ carrier := by simp_all [IsAffineMap.add]
+--   zero_mem : 0 ∈ U
+--   smul_mem' (r : R) {f : U} : f ∈ carrier → r • f ∈ carrier := by simp_all [IsAffineMap.smul]
+--
+lemma ConvexSpace.dualMap_IsAffine (f : ConvexSpace.dual R V) : IsAffineMap R f := by
+  exact ConvexSpace.AffineMap.isAffineMap f
+
+instance : FunLike (ConvexSpace.dual R V) V R := by
+  exact ConvexSpace.AffineMap.instFunLike
+  -- coe φ := φ.1
+  -- coe_injective φ ψ h := by simp_all
 
 end
 
@@ -201,28 +204,51 @@ Scalar multiplication, Minkowski sum etc. will still be true under restriction.
 
 -/
 
-end
 
-section
-
-variable {R V : Type*} [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
-  [AddCommMonoid V] [Module R V]
-
-/-- An `R`-module is a convex space. -/
-instance : Convexity.ConvexSpace R V := sorry -- is this in mathlib already?
 
 end
+
+-- section
+
+-- variable {R V : Type*} [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
+--   [AddCommMonoid V] [Module R V]
+
+-- /-- An `R`-module is a convex space. -/
+-- instance : Convexity.ConvexSpace R V := by
+--   constructor
+--   · sorry
+--   · sorry
+--   · intro h
+--     sorry
+-- -- is this in mathlib already?
+
+-- end
+
+/- We do not have to prove that R modules are convex spaces. This is in general not true,
+we need to ask that the convex structure is compatible with the module structure.
+We can assume this as a variable using IsModuleConveSpace and for this setting we need
+a  strictly order ring
+-/
 
 -- TODO: old variables were the following. are we losing any generality by specialising?
 -- variable {R V : Type*} [Semiring R] [PartialOrder R] [AddCommMonoid V] [Module R V]
-variable {R V : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
-  [AddCommMonoid V] [Module R V]
+variable {R V : Type*} [CommRing R] [PartialOrder R] [IsStrictOrderedRing R]
+  [AddCommGroup V] [Module R V] [Convexity.ConvexSpace R V] [Convexity.IsModuleConvexSpace R V]
 
-/-- If `φ : V → R` is a convex map on an `R`-module `V`, it is affine. -/
+/-- If `φ : V → R` is a convex map on an `R`-module `V`, it is affine?. -/
 -- xxx: does this lemma hold for more general targets?
 -- (if so, state that version using IsAffineMap)
 -- TODO: how to state the conclusion in Lean?
-lemma howtostate (φ : ConvexSpace.dual R V) : True := sorry
+
+-- def GoodName (φ : ConvexSpace.dual R V)
+
+lemma howtostate (φ : ConvexSpace.dual R V) : IsAffineMap R φ := sorry
+
+-- this is the direction that is not in the repository
+def GoodName (φ : ConvexSpace.dual R V) : V →ᵃ[R] R where
+  toFun := φ
+  linear := sorry
+  map_vadd' := sorry
 
 -- special case: convex dual maps which preserve the origin are actually in the dual
 -- TODO: find a better name!
@@ -253,8 +279,14 @@ def supportFunction (P : Set V) : Module.Dual R V → WithBotTop R :=
   --     exact ⊤
   -- · exact ⊥
 
-variable {R V : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
-  [AddCommMonoid V] [Module R V]
+
+-------
+-- before: [CommSemiring R], [AddCommMonoid V]
+-- now: We want that our R-module is a convex space. For this we need [CommRing R], [AddCommGroup V],
+-- TODO: We have to check again!!!!
+--
+variable {R V : Type*} [CommRing R] [PartialOrder R] [IsStrictOrderedRing R]
+  [AddCommGroup V] [Module R V] [Convexity.ConvexSpace R V]
 
 @[simp]
 lemma supportFunction_empty : supportFunction R (∅ : Set V) = ⊥ := by
@@ -262,6 +294,8 @@ lemma supportFunction_empty : supportFunction R (∅ : Set V) = ⊥ := by
   ext φ
   have : ¬((∅ : Set V).Nonempty) := by simp
   simp
+
+variable [Convexity.IsModuleConvexSpace R V]
 
 lemma supportFunction_of_nonempty_of_isLUB
     {P : Set V} (hP : P.Nonempty) {φ : Module.Dual R V}

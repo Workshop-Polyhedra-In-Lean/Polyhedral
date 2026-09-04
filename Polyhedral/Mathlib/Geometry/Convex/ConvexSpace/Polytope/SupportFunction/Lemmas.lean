@@ -5,7 +5,11 @@ Authors: Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Vale
 -/
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.SupportFunction.Basic
 import Mathlib.Algebra.Order.Ring.WithTop
-
+import Mathlib.Algebra.Order.Module.Pointwise
+import Mathlib.Order.Bounds.Image
+import Mathlib.Algebra.Order.Field.Basic
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Module
+import Mathlib.Data.Set.Image
 /-! # Basic properties of support functions (of sets)
 -/
 
@@ -17,6 +21,7 @@ variable {α : Type*} [DecidableEq α] [MulZeroClass α]
 #check WithTop.instMulZeroClass
 
 -- note: the multiplication we have on WithBotTop R will have -1 * ∞ = ∞
+-- (but we don`t use that because r>0 in our properties)
 -- this may not be what we want (but it coincides with what we want for positive scalars)
 -- pehraps assume (a ≠ 0) (ha' : a ≠ -⊤) instead?
 -- (h : 0 < a)
@@ -38,11 +43,18 @@ lemma WithBotTop.mul_bot {a : WithBotTop α} (ha : a ≠ 0) (ha' : a ≠ ⊤) : 
 end
 
 section convex
-
-variable {R V : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
+-- Would be nice to have it in this more general way:
+-- variable {R V : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
+--   [Convexity.ConvexSpace R V]
+-- Semifield
+variable {R V : Type*} [Semifield R] [PartialOrder R] [IsStrictOrderedRing R] [PosMulReflectLT R]
   [Convexity.ConvexSpace R V]
   {P : Set V}
 
+/- upperBounds(r • φ '' P) ⊆ r • upperBounds(φ '' P) is not true for a ring (we found
+ a counter example for ℤ ) but we need something weaker, we just need is for the least
+ upper bound-/
+-- we know for sure that it is true for a semifild but not for a semiring
 -- is pos. homogeneous (Judith + Valentina)
 open scoped Classical Pointwise in
 -- XXX: right name?
@@ -52,15 +64,22 @@ lemma supportFunctionAffine_homogeneous {r : R} (hr : 0 < r) (φ : ConvexSpace.d
   · by_cases hP' : ∃ x, IsLUB (φ '' P) x
     · obtain ⟨x, hx⟩ := hP'
       have hrP : IsLUB ((r • φ) '' P) (r * x) := by
-        sorry -- hopefully, true; should follow from a mathlib lemma
+        have := IsLUB.mul_left hr.le hx
+        have h : ((fun b ↦ r * b) '' φ '' P) = ((r • φ) '' P) := by
+          apply Set.image_image
+        rw [← h]
+        exact this
       rw [supportFunctionAffine_of_nonempty_of_isLUB hP hx,
         supportFunctionAffine_of_nonempty_of_isLUB (by simp [hP]) hrP]
       simp [WithBotTop.coe]
     · have hrP : ¬∃ x, IsLUB (⇑(r • φ) '' P) x := by
-        simp
-        sorry -- should be (an easy consequence of) a mathlib lemma
+        simp only [Convexity.ConvexSpace.AffineMap.smul_apply, smul_eq_mul, not_exists]
+        intro y hy
+        have H : IsLUB (φ '' P) (r⁻¹ • y) := sorry
+        exact
+      sorry
       rw [supportFunctionAffine_of_nonempty_of_not_exists_isLUB hP hrP,
-        supportFunctionAffine_of_nonempty_of_not_exists_isLUB hP hP']
+         supportFunctionAffine_of_nonempty_of_not_exists_isLUB hP hP']
       simp only [WithBotTop.coe, Function.comp_apply]
       rw [WithBotTop.mul_top (by simp [hr.ne']) (by simp)]
   · rw [hP]
@@ -76,10 +95,15 @@ lemma supportFunctionAffine_homogeneous' (hP : P.Nonempty)
 
 end convex
 
+
+
+
 section linear
 
-variable {R V : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
-  [AddCommMonoid V] [Module R V]
+variable {R V : Type*} [CommRing R] [PartialOrder R] [IsStrictOrderedRing R]
+  [AddCommGroup V] [Module R V] [Convexity.ConvexSpace R V] [Convexity.IsModuleConvexSpace R V]
+-- To be able to use the lemma "positive homogeneity for IsAffineMap
+-- one maybe has to change "[CommRing R]" to "[Semifield R]"
 
 /- ## Basic properties -/
 
@@ -123,10 +147,17 @@ https://leanprover.zulipchat.com/#narrow/channel/217875-Is-there-code-for-X.3F/t
 -- if V has a nice topology... we can define convexClosure, and should have the following
 -- P a set in the convex space, with a topology
 -- (and hope that if V is a module, we have a convex space)
+
+
 section
 
-variable {R V Q W : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
-  [AddCommMonoid V] [Module R V]
+-- before: variable {R V Q W : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
+-- [AddCommMonoid V] [Module R V][CommSemiring Q] [PartialOrder Q] [IsStrictOrderedRing Q] [Convexity.ConvexSpace Q W]
+-- now: We want that our R-module is a convex space. For this we need [CommRing R], [AddCommGroup V]
+-- TODO: We have to check again!!!!
+
+variable {R V Q W : Type*} [CommRing R] [PartialOrder R] [IsStrictOrderedRing R]
+  [AddCommGroup V] [Module R V] [Convexity.ConvexSpace R V]
   [CommSemiring Q] [PartialOrder Q] [IsStrictOrderedRing Q] [Convexity.ConvexSpace Q W]
 
 lemma supportFunctionConvexHull (P : Set V) :
@@ -148,6 +179,25 @@ lemma supportFunctionAffineConvexHull (P : Set W) :
     -- check compatibility with our junk value definition
     -- "good" remaining case should be then the normal proof
   sorry
+
+-----
+-- Our attempt
+lemma supportFunctionAffineConvexHull_2 (P : Set W) (φ : ConvexSpace.dual Q W) :
+    supportFunctionAffine Q P φ = supportFunctionAffine Q (Convexity.convexHull Q P) (φ):= by
+    by_cases! hP : P.Nonempty
+    · by_cases hP' : ∃ x, IsLUB (φ '' P) x
+      · obtain ⟨x, hx⟩ := hP'
+        have hx' : IsLUB (φ '' Convexity.convexHull Q P) x := by sorry
+        have hC : φ '' Convexity.convexHull Q P = Convexity.convexHull Q (φ '' P ) := sorry
+/- for this we could apply Convexity.IsAffineMap.image_convexHull but we need that φ isAffineMap
+and we have that it is in the convex space dual-/
+        sorry
+-- this is the case where there is no LUB
+      · sorry
+--this is the case with P = ∅
+    rw [hP]
+    rw [Convexity.convexHull_empty]
+
 
 end
 
