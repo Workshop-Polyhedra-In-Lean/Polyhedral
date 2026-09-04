@@ -782,6 +782,7 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
         have : PointedCone.hull 𝕜 LHS ≥ PointedCone.hull 𝕜 ↑G_hom_pos := by sorry
           -- hull_invariant_under_scaling_subset G_hom_pos LHS right_to_left
         apply le_antisymm <;> assumption
+        
       have : hull 𝕜 (hom.ofPoint '' G) = homogenize V_hom P_convSet := by
         rw [← hull_image_ofPoint_eq_homogenize_convexHull, hhull]
       -- -/
