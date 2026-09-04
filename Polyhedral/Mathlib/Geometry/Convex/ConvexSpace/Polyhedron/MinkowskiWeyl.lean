@@ -159,7 +159,7 @@ variable {p : V' →ₗ[𝕜] V →ₗ[𝕜] 𝕜}
 
 -- TODO: Redundancy with V -> H (?)
 -- TODO: The `Fact (Surjective p)` should not be necessary (?)
-lemma isHPolyhedral_of_isVPolyhedral [Fact (Function.Surjective p)] {C : PointedCone 𝕜 V}
+theorem isHPolyhedral_of_isVPolyhedral [Fact (Function.Surjective p)] {C : PointedCone 𝕜 V}
     (hC : IsPolyhedral C) : IsHPolyhedral p C := by
   obtain ⟨D, hD, hDC⟩ := hC.exists_dualfg_inf_span p
   exact ⟨D, Submodule.span 𝕜 (C : Set V), hD, hDC.symm⟩
@@ -754,7 +754,7 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
     -- show H ⊆ C +ᵥ P
     · intro x hx
       set x_hom : V_hom := hom.ofPoint x with hx_hom_def
-      have hx' : x_hom ∈ C0_hom := by -- do we need this? (AI-generated)
+      have hx' : x_hom ∈ C0_hom := by
         sorry
           --- exact Submodule.mem_span_of_mem (Set.mem_image_of_mem _ (hH.2 hx))
       have hx22 : x_hom ∈ S_hom := by
@@ -774,9 +774,10 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
       --/-
       -- Alternative attempt following Moritz's proof:
 
-      -- Construction path (G_hom_pos ⊆ V_hom) → (G_hom_normalized ⊆ V_hom) → (G ⊆ A)
-      have hhull : PointedCone.hull 𝕜 (G_hom_normalized : Set V_hom)
-                 = PointedCone.hull 𝕜 (G_hom_pos : Set V_hom) := by
+      -- Construction path of G:
+      --    (G_hom_pos ⊆ V_hom) → (G_hom_normalized ⊆ V_hom) → (G ⊆ A)
+      have hhull : PointedCone.hull 𝕜 (G_hom_pos : Set V_hom)
+                 = PointedCone.hull 𝕜 (G_hom_normalized : Set V_hom) := by
         have left_to_right : ∀ g1 ∈ G_hom_normalized, ∃ g2 ∈ G_hom_pos,
                ∃ multiplier : 𝕜, multiplier > 0 ∧ g2 = multiplier • g1 := by
           intro g1 hg1
