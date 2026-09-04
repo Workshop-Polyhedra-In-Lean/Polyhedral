@@ -18,7 +18,7 @@ public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Pointwise
 This file is about general convex sets; the polytope-specific finite-generation statements are in
 `Polytope/TangentCone.lean`. -/
 
-noncomputable section
+public noncomputable section
 
 namespace Convexity
 

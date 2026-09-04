@@ -17,6 +17,8 @@ is automatically a vertex (extreme point) of `convexHull k T`, and conversely. T
 directly from the definition of `ConvexSet.IsFaceOf`, with no separation theorem needed.
 -/
 
+public section
+
 namespace Convexity
 
 variable {k V A : Type*} [Field k] [LinearOrder k] [IsStrictOrderedRing k]

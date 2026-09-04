@@ -28,6 +28,8 @@ The public API mirrors the rest of `Polytope/`: `IsPolytope k (X : Set A)` is th
 a fixed generating `Finset`. The `Finset`-indexed versions of the key facts (needed for the
 induction) stay as `private` auxiliary lemmas. -/
 
+public section
+
 namespace Convexity
 
 variable {k V A : Type*} [Field k] [LinearOrder k] [IsStrictOrderedRing k]
