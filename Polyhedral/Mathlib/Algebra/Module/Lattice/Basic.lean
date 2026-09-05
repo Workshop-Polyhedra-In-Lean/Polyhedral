@@ -120,15 +120,60 @@ theorem rank_eq_rank_span [IsLattice' K M] :
     LinearIndependent.of_comp (span K (M : Set V)).subtype hK
   exact hW.cardinal_le_rank
 
-/-- The `R`-rank of a lattice equals the `K`-dimension of its `K`-span. -/
+/-- The `R`-rank of a lattice equals the `K`-dimension
+of its `K`-span. This is the finrank version of `rank_eq_rank_span`. -/
 theorem finrank_eq_finrank_span [IsLattice' K M] :
     finrank R M = finrank K (span K (M : Set V)) :=
   congrArg Cardinal.toNat (rank_eq_rank_span K M)
 
+
+/-- An `R`-module `M` is a lattice in an ambient `K`-module `V` if and only if `M`
+is finitely generated, and its `R`-rank equals the `K`-dimension of its `K`-span. -/
 theorem _root_.Submodule.isLattice'_iff_fg_and_finrank_eq :
     IsLattice' K M ↔ M.FG ∧ finrank R M = finrank K (span K (M : Set V)) := by
-  -- Steinitz argument?
-  sorry
+  refine ⟨fun hM ↦ ⟨hM.fg, finrank_eq_finrank_span _ _⟩, ?_⟩
+  rintro ⟨hfg, hrank⟩
+  refine ⟨hfg, fun s hsM hsRli ↦ ?_⟩
+  obtain ⟨b, hbs, hbspan, hbKli ⟩ := exists_linearIndependent K s
+  obtain ⟨c, hcM, hbc, hMspanc, hcKli⟩ :=
+    exists_linearIndepOn_id_extension hbKli (hbs.trans hsM)
+  have hcRli : LinearIndepOn R id c := hcKli.linearIndependent.restrict_scalars' R
+  have hcbKli : LinearIndepOn K id (b ∪ (c \ b)) := by
+    simpa [Set.union_sdiff_cancel hbc] using hcKli
+  have hdisjK : Disjoint ((span K s).restrictScalars R) ((span K (c \ b)).restrictScalars R) := by
+    rw [Submodule.disjoint_restrictScalars_iff, ← hbspan]
+    exact ((linearIndepOn_id_union_iff Set.disjoint_sdiff_right).mp hcbKli).2.2
+  have hdisjR : Disjoint (span R s) (span R (c \ b)) :=
+    hdisjK.mono
+      (Submodule.span_le_restrictScalars R K s)
+      (Submodule.span_le_restrictScalars R K (c \ b))
+  have : Nontrivial R := (algebraMap R K).domain_nontrivial
+  have hdisjSet : Disjoint (s : Set V) ((c \ b) : Set V) :=
+    hdisjR.of_span₀ fun h0 ↦ hsRli.ne_zero h0 rfl
+  have : Module.Finite R M := Module.Finite.of_fg hfg
+  have hsfin : s.Finite :=
+    (hsRli.linearIndependent.codRestrict M (fun x ↦ hsM x.2)).finite
+  have hcfin : c.Finite :=
+    (hcRli.linearIndependent.codRestrict M (fun x ↦ hcM x.2)).finite
+  have hchain : s.ncard + (c \ b).ncard ≤ b.ncard + (c \ b).ncard := calc
+     s.ncard + (c \ b).ncard = (s ∪ (c \ b)).ncard := by
+      rw [Set.ncard_union_eq hdisjSet hsfin hcfin.sdiff]
+    _ = finrank R (span R (s ∪ (c \ b))) := by
+      rw [Module.finrank, rank_span_set (hsRli.id_union (hcRli.mono Set.sdiff_subset) hdisjR)]
+      rfl
+    _ ≤ finrank R M := by
+      exact Submodule.finrank_mono
+       (span_le.mpr (Set.union_subset hsM (Set.sdiff_subset.trans hcM)))
+    _ = finrank K (span K (M : Set V)) := hrank
+    _ = c.ncard := by
+      rw [le_antisymm (span_le.mpr hMspanc) (span_mono hcM), Module.finrank, rank_span_set hcKli]
+      rfl
+    _ = b.ncard + (c \ b).ncard  := by
+      simpa [add_comm] using (Set.ncard_sdiff_add_ncard_of_subset hbc hcfin).symm
+  simpa [((Set.subset_iff_eq_of_ncard_le (Nat.le_of_add_le_add_right hchain)
+    hsfin).mp hbs).symm, hbKli]
+
+
 
 section IsPrincipalIdealRing
 
@@ -158,7 +203,7 @@ is a lattice. -/
 theorem of_fg {M : Submodule R V} (hM : M.FG) : IsLattice' K M where
   fg := hM
   linearIndepOn v hvM hv := by
-    sorry
+    exact (LinearIndependent.iff_fractionRing R K).mp hv
 
 end IsFractionRing
 
