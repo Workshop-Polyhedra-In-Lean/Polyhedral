@@ -663,7 +663,7 @@ omit [AddCommGroup W] [Module 𝕜 W] [IsModuleConvexSpace 𝕜 W] in
 
 /-- ALTERNATIVE ATTEMPT `H → V` direction
 verbose and in little steps -/
-theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd_VERSION2 {H : Set A}
+theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
     (hH : IsHPolyhedron 𝕜 H) :
     ∃ P : Set A, IsPolytope 𝕜 P ∧
     ∃ C : PointedCone 𝕜 V, IsPolyhedral C ∧

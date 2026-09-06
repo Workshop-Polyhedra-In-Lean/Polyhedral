@@ -160,7 +160,7 @@ lemma sup_dualfg_fg {C D : PointedCone 𝕜 N} (hC : C.DualFG p) (hD : D.FG) : (
   exact sup_fg_dualfg hD hC
 
 variable (p) [Fact p.SeparatingRight] in
-/-- An FG cone `C` can be written as the intersection of a DualFG cone `D` and an FG submodule `S`.
+/-- An FG cone `C` can be written as the intersection of a DualFG cone `D` and a FG submodule `S`.
 -/
 theorem FG.exists_dualfg_inf_submodule {C : PointedCone 𝕜 N} (hC : C.FG) {S : Submodule 𝕜 N}
     (hS : S.FG) (hCS : C ≤ S) : ∃ D : PointedCone 𝕜 N, D.DualFG p ∧ D ⊓ S = C := by

@@ -123,6 +123,8 @@ protected lemma map (f : M →ₗ[R] N) (hC : C.IsPolyhedral) : (C.map f).IsPoly
 -- NOTE: over a Field the surjectivity assumption is not necessary because we can intersect
 --   `C` with `f.range`, which is still FG.
 -- TODO: move
+/-- Given a map `f`, every FG cone `C` in the codomain is the image of an FG cone `D`
+from the domain. -/
 lemma _root_.PointedCone.FG.exists_fg_eq_map_of_surjective {f : N →ₗ[R] M} (hf : Surjective f)
     (hC : C.FG) : ∃ D : PointedCone R N, D.FG ∧ C = D.map f :=
   Submodule.FG.exists_fg_eq_map_of_surjective (R := Nonneg R) hf hC
@@ -193,8 +195,8 @@ lemma comap_of_surjective {f : N →ₗ[R] M} (hf : Surjective f) (hC : C.IsPoly
     exact of_submodule _
   · exact hf
 
-/-- The preimage of a cone is polyhedral if and only if the cone itself is polyhdral,
-assuming that the map is surjective. -/
+/-- The preimage of a cone under a surjective map is polyhedral if and only if
+ the cone itself is polyhedral. -/
 lemma comap_iff_of_surjective {f : N →ₗ[R] M} (hf : Surjective f) :
     (C.comap f).IsPolyhedral ↔ C.IsPolyhedral where
   mp h := by
@@ -319,7 +321,7 @@ section IsNoetherian
 
 variable [IsNoetherian R M]
 
-/-- A polyhedral cone is finitely generated. This assumes that the ambient module is noetherian. -/
+/-- In a Noetherian module, every polyhedral cone is finitely generated. -/
 protected lemma fg (hC : C.IsPolyhedral) : C.FG :=
   fg_of_fg_lineal hC <| IsNoetherian.noetherian _
 
@@ -434,7 +436,7 @@ lemma cofg_lineal_of_span_top (hC : C.IsPolyhedral)
 --     sorry -- use hs'
 --   · simpa [span_union, span_coe_eq_restrictScalars] using hs
 
-/-- A polyhedral cone with DualFG linearlity space is itself DualFG. -/
+/-- A polyhedral cone with DualFG linearity space is itself DualFG. -/
 lemma dualfg_of_lineal_dualfg {C : PointedCone R N}
     (hC : C.IsPolyhedral) (hlin : C.lineal.DualFG p) : DualFG p C := by
   obtain ⟨_, hfg, hD⟩ := hC.exists_fg_eq_sup_lineal
