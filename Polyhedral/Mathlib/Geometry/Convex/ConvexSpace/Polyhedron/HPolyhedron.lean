@@ -41,11 +41,12 @@ A cone is *H-polyhedral* if it is the intersection of a submodule and
 a cone with finitely generated dual.
 
 One advantage of allowing non-coFG submodules is that the dual of a polyhedral
-cone is polyhedral even under infinite dimension.
+cone is polyhedral even in infinite dimension.
 TODO: prove
 -/
 def IsHPolyhedral (p : V' →ₗ[R] V →ₗ[R] R) (P : PointedCone R V) : Prop :=
     ∃C : PointedCone R V, ∃S : Submodule R V, C.DualFG p ∧ P = C ⊓ S
+
 
 /--
 The dual of a *V-polyhedral cone* is an *H-polyhedral cone*.
@@ -81,34 +82,38 @@ theorem IsHPolyhedral.dual_isPolyhedral (p : V →ₗ[R] V' →ₗ[R] R) {C : Po
         simp [hx₂ hv]
 
 
-section Field
+-- section Field
 
-variable {R : Type*} [Field R] [LinearOrder R] [IsOrderedRing R]
-variable {V : Type*} [AddCommGroup V] [Module R V]
-variable {V' : Type*} [AddCommGroup V'] [Module R V']
-variable {A : Type*} [AddTorsor V A]
+-- variable {R : Type*} [Field R] [LinearOrder R] [IsOrderedRing R]
+-- variable {V : Type*} [AddCommGroup V] [Module R V]
+-- variable {V' : Type*} [AddCommGroup V'] [Module R V']
+-- variable {A : Type*} [AddTorsor V A]
 
-#click_suggestions
-theorem IsPolyhedral.dual_isHPolyhedral (p : V →ₗ[R] V' →ₗ[R] R)
-    [Fact p.SeparatingRight] {C : PointedCone R V}
-    (h : IsHPolyhedral p.flip C) : IsPolyhedral (PointedCone.dual p C.carrier) := by
-  classical
-  obtain ⟨C', ⟨S, ⟨hDualFG, rfl⟩⟩⟩ := h
-  use PointedCone.dual p C'
-  constructor
-    -- Note: DualFG.dual_fg requires a field with linear order + p.SeparatingRight,
-    --       while the dual `FG.dual_dualfg` requires none of these.
-  · exact DualFG.dual_fg hDualFG
-  · use Submodule.dual p S
-    ext x
-    constructor
-    · intro h
-      simp [PointedCone.dual, Submodule.dual] at ⊢ h
+-- The following is proved below under the name `PointedCone.IsPolyhedral.isHPolyhedral`:
+--    "The dual of an H-polyhedral cone is polyhedral."
+-- TODO: remove this.
 
-      sorry
-    · sorry
+-- #click_suggestions
+-- theorem IsPolyhedral.dual_isHPolyhedral (p : V →ₗ[R] V' →ₗ[R] R)
+--     [Fact p.SeparatingRight] {C : PointedCone R V}
+--     (h : IsHPolyhedral p.flip C) : IsPolyhedral (PointedCone.dual p C.carrier) := by
+--   classical
+--   obtain ⟨C', ⟨S, ⟨hDualFG, rfl⟩⟩⟩ := h
+--   use PointedCone.dual p C'
+--   constructor
+--     -- Note: DualFG.dual_fg requires a field with linear order + p.SeparatingRight,
+--     --       while the dual `FG.dual_dualfg` requires none of these.
+--   · exact DualFG.dual_fg hDualFG
+--   · use Submodule.dual p S
+--     ext x
+--     constructor
+--     · intro h
+--       simp [PointedCone.dual, Submodule.dual] at ⊢ h
 
-end Field
+--       sorry
+--     · sorry
+
+-- end Field
 
 /-- A polyhedral cone is a polyhedron -/
 lemma IsHPolyhedral.isHPolyhedron
@@ -374,10 +379,12 @@ lemma IsHPolyhedron.fg (C : PointedCone R V) (hC : C.FG) :
 variable {V' : Type*} [AddCommGroup V'] [Module R V']
 
 open PointedCone in
+-- TODO: The following seems to be the best statement of the
+-- H → V direction of the Minkowski-Weyl theorem. Should it be highlighted/renamed?
 /-- An H-polyhedral cone with respect to any pairing is polyhedral: its defining functionals
 are in particular plain linear functionals (`DualFG.id`), so the full dual pairing machinery
 applies. -/
-lemma PointedCone.IsHPolyhedral.isPolyhedral {q : V' →ₗ[R] V →ₗ[R] R} {C : PointedCone R V}
+theorem PointedCone.IsHPolyhedral.isPolyhedral {q : V' →ₗ[R] V →ₗ[R] R} {C : PointedCone R V}
     (hC : IsHPolyhedral q C) : IsPolyhedral C := by
   obtain ⟨D, S, hD, rfl⟩ := hC
   exact .of_dualfg_inf_submodule hD.id S
@@ -400,11 +407,14 @@ lemma PointedCone.IsHPolyhedral.isPolyhedral' {q : V' →ₗ[R] V →ₗ[R] R} {
   obtain ⟨D, S, hD, rfl⟩ := hC
   exact .of_dualfg_inf_submodule hD.id S
 
-open PointedCone in
-/-- The dual of an H-polyhedral cone is polyhedral. -/
-theorem PointedCone.IsPolyhedral.of_h_repr (q : V →ₗ[R] V' →ₗ[R] R) {C : PointedCone R V}
-    (h : IsHPolyhedral q.flip C) : IsPolyhedral (PointedCone.dual q C.carrier) :=
-  h.isPolyhedral.dual q
+-- The following is an exact duplication of `PointedCone.IsPolyhedral.isHPolyhedral` above.
+-- TODO: erase one of the two theorems.
+
+-- open PointedCone in
+-- /-- The dual of an H-polyhedral cone is polyhedral. -/
+-- theorem PointedCone.IsPolyhedral.of_h_repr (q : V →ₗ[R] V' →ₗ[R] R) {C : PointedCone R V}
+--     (h : IsHPolyhedral q.flip C) : IsPolyhedral (PointedCone.dual q C.carrier) :=
+--   h.isPolyhedral.dual q
 
 end Field
 

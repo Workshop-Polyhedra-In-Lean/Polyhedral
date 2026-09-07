@@ -608,38 +608,6 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd {H : Set A}
   rw [← Convex.Set.recessionCone_vadd_self (𝕜 := 𝕜) (P := H)]
   exact Set.mem_vadd.mpr ⟨v, hv, y, hPH hy, rfl⟩
 
-theorem Minkowski_Weil_for_cones_how_it_would_be_handy [Fact (LinearMap.SeparatingRight p)]
-    [Fact (LinearMap.SeparatingRight p.flip)]
-  {C : PointedCone 𝕜 V} (hC : C.DualFG p)
-  (S : Submodule 𝕜 V) : PointedCone.IsPolyhedral (C ⊓ S) := by
-  obtain ⟨C_constraints, hC_representation⟩ := hC
-  set S_dual : Submodule 𝕜 V' := Submodule.dual p.flip S
-  set C_dual_constraints : Submodule 𝕜 V' := Submodule.span 𝕜 C_constraints
-  set C_dual_ambient : Submodule 𝕜 V' := (Submodule.span 𝕜 C_constraints) ⊓ S_dual
-  set C_ambient : Submodule 𝕜 V := Submodule.dual p C_dual_ambient
-  rw [IsPolyhedral]
-  have dd : ∃ D2 : PointedCone 𝕜 V', D2.DualFG p.flip ∧ D2 ⊓ S_dual = C_dual_constraints := by
-    apply FG.exists_dualfg_inf_submodule
-    -- show (↑C_dual_constraints).FG
-    · sorry
-    -- show S_dual.FG
-    · sorry
-    -- show ↑C_dual_constraints ≤ ↑S_dual
-    · sorry
-  sorry
--- This theorem would include the identification of the lineality space of `C ⊓ S`,
--- which would then form the subspace S2 as part of the representation `C ⊓ S = C2 ⊔ S2`.
--- (Beside identifying the generators of C2)
-
--- REMEMBER: def IsPolyhedral (D : PointedCone R M) :=
---  ∃ C2 : PointedCone R M, C2.FG ∧ ∃ S2 : Submodule R M, D = C2 ⊔ S2
-
--- (The following is what we currently have, which is somewhat dual to the above statement:)
-theorem XX_FG.exists_dualfg_inf_submodule {C : PointedCone 𝕜 V} (hC : C.FG) {S : Submodule 𝕜 V}
-  (hS : S.FG) (hCS : C ≤ S) : ∃ D : PointedCone 𝕜 V, D.DualFG p ∧ D ⊓ S = C := by
-  sorry
-
-
 -- this would be a useful theorem
 variable (V) in
 variable [IsModuleConvexSpace 𝕜 V] in
@@ -694,7 +662,7 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
     use F'_hom
 
   -- 5. Form the H-cone `C_hom` by intersecting `C0_hom` with the subspace `S_hom`.
-  let C_hom : PointedCone 𝕜 V_hom := C0_hom ⊓ S_hom
+  set C_hom : PointedCone 𝕜 V_hom := C0_hom ⊓ S_hom with hC_hom
 
   -- 6. Fun fact: Dehomogenizing `C_hom` gives back the original H-polyhedron `H`.
   have dehomogenize_gives_back_H :
@@ -704,8 +672,11 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
   -- 7. Apply the Minkowski-Weyl theorem for polyhedral cones to `C_hom`
   -- to get a finite set of generators `G_hom` and a subspace `S2` such that
   -- `C_hom = PointedCone.hull 𝕜 G_hom ⊔ S2`
-  obtain D_hom := Minkowski_Weil_for_cones_how_it_would_be_handy (hC := hC0_hom.dualFG) (S := S_hom)
-  obtain ⟨D_hom, hC_hom_FG, S2, h_representation⟩ := D_hom
+  have : IsHPolyhedral .id C_hom := by
+    rw [IsHPolyhedral]
+    use C0_hom
+    use S_hom
+  obtain ⟨D_hom, hC_hom_FG, S2, h_representation⟩ := PointedCone.IsHPolyhedral.isPolyhedral this
   obtain ⟨G_hom, hG_hom⟩  := hC_hom_FG
   have hG_hom_nonneg : ∀ g ∈ G_hom, hom.weight g >= 0 := by
     intro g hG
@@ -723,9 +694,9 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
   -- and the generators `G_hom_zero` with zero weight.
   set G_hom_pos :=  { g ∈ G_hom | g.weight > 0 } with hG_hom_pos
   set G_hom_zero := { g ∈ G_hom | g.weight = 0 } with hG_hom_zero
-  have hG_split : G_hom = G_hom_pos ∪ G_hom_zero := by -- needed?
-    -- everything in C'_hom has either positive weight or zero weight
-    sorry
+  --have hG_split : G_hom = G_hom_pos ∪ G_hom_zero := by -- needed?
+  --  -- everything in C'_hom has either positive weight or zero weight
+  --  sorry
 
   -- 9. Normalize the positive-weight generators to weight one to get a finite set of points `G`
   set G_hom_normalized := G_hom_pos.image (fun g => g.weight⁻¹ • g) with hG_hom_normalized
@@ -750,7 +721,7 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
     intro s hs
     have hs' : ∀ s ∈ S2, s ∈ C0_hom ⊓ S_hom := by
           intro s hs
-          rw [h_representation]
+          rw [←hC_hom, h_representation]
           exact Submodule.mem_sup_right hs
     -- NOTE: The following could be proved directly above
     have hs'' : ∀ s ∈ S2, s ∈ C0_hom := by
