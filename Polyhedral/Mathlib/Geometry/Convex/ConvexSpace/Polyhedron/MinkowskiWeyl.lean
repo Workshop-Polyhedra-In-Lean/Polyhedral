@@ -466,7 +466,6 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd {H : Set A}
   classical
   let W := CanonicalHomogenization 𝕜 A
   let hom : Affine.IsHomogenization 𝕜 A W := inferInstance
-  -- TODO: We shouldn't need to specify R, V by name
   let := IsModuleConvexSpace.ofAddTorsor (R := 𝕜) (V := W)
   --
   set S : ConvexSet 𝕜 A := hH.toConvexSet with hSdef
