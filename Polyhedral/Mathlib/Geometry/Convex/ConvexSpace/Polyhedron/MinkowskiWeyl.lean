@@ -775,36 +775,44 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
 
       -- Construction path of G:
       --    (G_hom_pos ⊆ V_hom) → (G_hom_normalized ⊆ V_hom) → (G ⊆ A)
-      have hhull : PointedCone.hull 𝕜 (G_hom_pos : Set V_hom)
-                 = PointedCone.hull 𝕜 (G_hom_normalized : Set V_hom) := by
-        set X := (G_hom_pos : Set V_hom) with hX -- abbreviations
-        set Y := (G_hom_normalized : Set V_hom) with hY
 
-        have Y_to_X : ∀ g1 ∈ Y, ∃ g2 ∈ X,
+      set X := (G_hom_pos : Set V_hom)-- abbreviations
+      set Y := (G_hom_normalized : Set V_hom)
+      have hhull : PointedCone.hull 𝕜 X = PointedCone.hull 𝕜 Y := by
+        have Y_to_X : ∀ g1 ∈ G_hom_normalized, ∃ g2 ∈ G_hom_pos,
                ∃ multiplier : 𝕜, multiplier > 0 ∧ g1 = multiplier • g2 := by
           intro g1 hg1
-          rw [hY, hG_hom_normalized, Finset.mem_coe, Finset.mem_image] at hg1
-          rw [hX]
+          rw [hG_hom_normalized, Finset.mem_image] at hg1
           obtain ⟨g, g_in_G, g_versus_g1⟩ := hg1
           use g
-          simp only [Finset.mem_coe, g_in_G, gt_iff_lt, true_and]
+          simp only [g_in_G, gt_iff_lt, true_and]
           use (hom.weight g)⁻¹ -- as multiplier
           rw [hG_hom_pos, Finset.mem_filter] at g_in_G
           have multiplier_pos : (hom.weight g)⁻¹ > 0 := inv_pos_of_pos g_in_G.2
           simp only [multiplier_pos, true_and, ← g_versus_g1]
           rfl
-        have X_to_Y : ∀ g1 ∈ X, ∃ g2 ∈ Y,
+        have X_to_Y : ∀ g1 ∈ G_hom_pos, ∃ g2 ∈ G_hom_normalized,
                ∃ multiplier : 𝕜, multiplier > 0 ∧ g1 = multiplier • g2 := by
           intro g1 hg1
-          rw [hX, hG_hom_pos, Finset.mem_coe, Finset.mem_filter] at hg1
-          rw [hY]
-          obtain ⟨g_in_G, g_versus_g1⟩ := hg1
-          sorry -- ...
+          have hg1_in_hom_pos : g1 ∈ G_hom_pos := hg1
+          rw [hG_hom_pos, Finset.mem_filter] at hg1
+          obtain ⟨g_in_G, g_weight_pos⟩ := hg1
+          have multiplier_pos : hom.weight g1 > 0 := g_weight_pos
+          set g2 := (hom.weight g1)⁻¹ • g1 with hg2
+          use g2
+          rw [hG_hom_normalized, Finset.mem_image]
+          constructor
+          · use g1
+            simp only [hg1_in_hom_pos, hg2, true_and]
+            rfl
+          · use hom.weight g1
+            simp only [gt_iff_lt, multiplier_pos, hg2, true_and]
+            simp only [smul_smul, mul_inv_cancel₀ multiplier_pos.ne', one_smul]
 
-        have : PointedCone.hull 𝕜 Y ≤ PointedCone.hull 𝕜 X :=
-          hull_invariant_under_scaling_subset (Y : Set V_hom) (X : Set V_hom) Y_to_X
         have : PointedCone.hull 𝕜 X ≤ PointedCone.hull 𝕜 Y :=
-          hull_invariant_under_scaling_subset (X : Set V_hom) (Y : Set V_hom) X_to_Y
+          hull_invariant_under_scaling_subset X Y X_to_Y
+        have : PointedCone.hull 𝕜 Y ≤ PointedCone.hull 𝕜 X :=
+          hull_invariant_under_scaling_subset Y X Y_to_X
         apply le_antisymm <;> assumption
 
       have : hull 𝕜 (hom.ofPoint '' G) = homogenize V_hom P_convSet := by
