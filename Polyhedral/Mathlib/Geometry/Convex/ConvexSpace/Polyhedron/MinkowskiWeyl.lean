@@ -608,21 +608,26 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd {H : Set A}
   rw [← Convex.Set.recessionCone_vadd_self (𝕜 := 𝕜) (P := H)]
   exact Set.mem_vadd.mpr ⟨v, hv, y, hPH hy, rfl⟩
 
--- this would be a useful theorem
-variable (V) in
-variable [IsModuleConvexSpace 𝕜 V] in
-lemma hull_invariant_under_scaling_s (G : Finset V) (multiplier : V → 𝕜) :
-  (∀ g ∈ G, multiplier g > 0) ∧  multiplier.support = G →
-  PointedCone.hull 𝕜 G = PointedCone.hull 𝕜 ((G : Set V).image (fun g => multiplier g • g)) := by
-    sorry
+-- alternative formulation (with =) of the following lemma.
+-- variable (V) in
+-- variable [IsModuleConvexSpace 𝕜 V] in
+-- lemma hull_invariant_under_scaling (G : Finset V) (multiplier : V → 𝕜) :
+--   (∀ g ∈ G, multiplier g > 0) ∧  multiplier.support = G →
+--   PointedCone.hull 𝕜 G = PointedCone.hull 𝕜 ((G : Set V).image (fun g => multiplier g • g)) := by
+--     sorry
 
-
-variable (V) in
-variable [IsModuleConvexSpace 𝕜 V] in
-lemma hull_invariant_under_scaling_subset (G1 G2 : Set V) :
-  (∀ g1 ∈ G1, ∃ g2 ∈ G2, ∃ multiplier : 𝕜, multiplier > 0 ∧ g2 = multiplier • g1) →
+/-- Scaling the generators of a cone by positive multipliers does not change the cone.
+    This lemma proves half of this statement. -/
+lemma hull_invariant_under_scaling_subset (G1 G2 : Set V)
+  (h_scaling : ∀ g1 ∈ G1, ∃ g2 ∈ G2, ∃ multiplier : 𝕜, multiplier > 0 ∧ g1 = multiplier • g2) :
   PointedCone.hull 𝕜 G1 ≤ PointedCone.hull 𝕜 G2 := by
-    sorry
+    rw [Submodule.span_le, subset_def]
+    intro g1 hg1
+    apply h_scaling at hg1
+    obtain ⟨g2, ⟨hg2, ⟨multiplier, ⟨hmultiplier_pos, h_g1_versus_g2⟩⟩⟩⟩ := hg1
+    rw [h_g1_versus_g2]
+    have : g2 ∈ hull 𝕜 G2 := mem_span_of_mem hg2
+    exact PointedCone.smul_mem (hull 𝕜 G2) hmultiplier_pos.le this
 
 
 #click_suggestions
@@ -646,20 +651,20 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
   -- 2. homogenize the functions to get linear functions `F_hom`:
   choose extend_function hext hextlin using hom.exists_linear_extension
   let F_hom := Finset.image extend_function F
-  -- 3. add the linear constraint for the "upper" half-space to get `F'_hom`
-  set F'_hom := insert hom.weight F_hom with hF'_hom
+  -- 3. add the linear constraint for the "upper" half-space to get `F0_hom`
+  set F0_hom := insert hom.weight F_hom with hF0_hom
 
   -- 4. homogenize the subspace to get `S_hom`:
   let S_hom : Submodule 𝕜 V_hom := Submodule.span 𝕜 (hom.ofPoint '' S)
-  -- 5. Form the H-cone `C0_hom` in `V_hom` defined by the constraints `F'_hom`
-  let C0_hom : PointedCone 𝕜 V_hom := dual .id F'_hom
+  -- 5. Form the H-cone `C0_hom` in `V_hom` defined by the constraints `F0_hom`
+  let C0_hom : PointedCone 𝕜 V_hom := dual .id F0_hom
   have hC0_nonneg : ∀ z ∈ C0_hom, 0 ≤ hom.weight z := by
     intro z hz
-    exact (PointedCone.mem_dual.mp hz) (x := hom.weight) (by simp [hF'_hom])
+    exact (PointedCone.mem_dual.mp hz) (x := hom.weight) (by simp [hF0_hom])
 
- --- carrier = { x : V_hom | ∀ f ∈ F'_hom, 0 ≤ f x },  -- pedestrian definition
+ --- carrier = { x : V_hom | ∀ f ∈ F0_hom, 0 ≤ f x },  -- pedestrian definition
   have hC0_hom.dualFG : C0_hom.DualFG .id := by
-    use F'_hom
+    use F0_hom
 
   -- 5. Form the H-cone `C_hom` by intersecting `C0_hom` with the subspace `S_hom`.
   set C_hom : PointedCone 𝕜 V_hom := C0_hom ⊓ S_hom with hC_hom
@@ -680,11 +685,11 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
   obtain ⟨G_hom, hG_hom⟩  := hC_hom_FG
   have hG_hom_nonneg : ∀ g ∈ G_hom, hom.weight g >= 0 := by
     intro g hG
-    have g_in_D_hom: g ∈ D_hom := by
-      rw [← hG_hom]
-      simp [hG, Submodule.mem_span_of_mem]
     have : g ∈ C0_hom := by
-      have : g ∈ D_hom ⊔ S2 := mem_sup_left g_in_D_hom
+      have : g ∈ D_hom := by
+        rw [← hG_hom]
+        simp [hG, Submodule.mem_span_of_mem]
+      have : g ∈ D_hom ⊔ S2 := mem_sup_left this
       rw [← h_representation] at this
       exact (Submodule.mem_inf.mp this).1
     apply hC0_nonneg
@@ -702,18 +707,24 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
   set G_hom_normalized := G_hom_pos.image (fun g => g.weight⁻¹ • g) with hG_hom_normalized
   set G := G_hom_normalized.preimage (hom.ofPoint) (hom.ofPoint_injective.injOn) with hG
   -- set G_hom_normalized := (hom.ofPoint '' ↑G) with h_G_hom_normalized
-  let Rays := hom.ofVector ⁻¹' G_hom_zero
-  let linealityspace : Submodule 𝕜 V := S2.map hom.ofVector.leftInverse
+
   set P_convSet : ConvexSet 𝕜 A := ConvexSet.convexHull 𝕜 G with hP_conv
   set P := (P_convSet : Set A) with hP -- == Convexity.convexHull 𝕜 G
+  -- two version of P, of different types. Do we need both?
   have P_is_polytope : IsPolytope 𝕜 P := by
     rw [hP]
     use G
     rw [ConvexSet.convexHull] at hP_conv
     simp [hP_conv]
-  let C := PointedCone.hull 𝕜 Rays ⊔ linealityspace
 
-  -- 10. We have now constructed the cone `C` and the polytope `P`.
+  -- 10. Generate the cone `C` from the zero-weight generators and the subspace S
+  let Rays := hom.ofVector ⁻¹' G_hom_zero
+  let linear_subspace : Submodule 𝕜 V := S2.map hom.ofVector.leftInverse
+  -- The lineality space of the cone is a superspace of this. (The cone generated by Rays
+  -- might have an additional lineality space of its own, which has to be added.)
+  let C := PointedCone.hull 𝕜 Rays ⊔ linear_subspace
+
+  -- 11. We have now constructed the polyhedral cone `C` and the polytope `P`.
   -- It remains to show that `H = C +ᵥ P`
 
   -- Intermediate result: All elements of `S2` have weight zero
@@ -755,7 +766,7 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
         exact hx_hom
       -- show that x ∈ C +ᵥ P
       -- since x_hom ∈ C_hom, `x_hom = (∑ μ_j r_j + s) +ᵥ (∑ λ_i g_i)`
-      -- for some r_j ∈ Rays, s ∈ linealityspace, g_i ∈ G_hom_pos, μ_j ≥ 0, λ_i ≥ 0.
+      -- for some r_j ∈ Rays, s ∈ linear_subspace, g_i ∈ G_hom_pos, μ_j ≥ 0, λ_i ≥ 0.
       obtain ⟨z_hom, hz_hom, s, hs, z_hom_plus_s_is_x_hom⟩ := mem_sup.mp hC_hom_rep
       rw [← hG_hom] at hz_hom
 
@@ -766,28 +777,34 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
       --    (G_hom_pos ⊆ V_hom) → (G_hom_normalized ⊆ V_hom) → (G ⊆ A)
       have hhull : PointedCone.hull 𝕜 (G_hom_pos : Set V_hom)
                  = PointedCone.hull 𝕜 (G_hom_normalized : Set V_hom) := by
-        have left_to_right : ∀ g1 ∈ G_hom_normalized, ∃ g2 ∈ G_hom_pos,
-               ∃ multiplier : 𝕜, multiplier > 0 ∧ g2 = multiplier • g1 := by
+        set X := (G_hom_pos : Set V_hom) with hX -- abbreviations
+        set Y := (G_hom_normalized : Set V_hom) with hY
+
+        have Y_to_X : ∀ g1 ∈ Y, ∃ g2 ∈ X,
+               ∃ multiplier : 𝕜, multiplier > 0 ∧ g1 = multiplier • g2 := by
           intro g1 hg1
-          rw [hG_hom_normalized, Finset.mem_image] at hg1
+          rw [hY, hG_hom_normalized, Finset.mem_coe, Finset.mem_image] at hg1
+          rw [hX]
           obtain ⟨g, g_in_G, g_versus_g1⟩ := hg1
           use g
-          simp only [g_in_G, gt_iff_lt, true_and]
-          use (hom.weight g)
+          simp only [Finset.mem_coe, g_in_G, gt_iff_lt, true_and]
+          use (hom.weight g)⁻¹ -- as multiplier
           rw [hG_hom_pos, Finset.mem_filter] at g_in_G
-          have weight_pos : hom.weight g > 0 := by exact g_in_G.2
-          simp only [weight_pos, true_and]
-          rw [← inv_smul_eq_iff₀]
-          · exact g_versus_g1
-          · exact weight_pos.ne'
-
-        let X : Set V_hom := G_hom_pos
-        let Y : Set V_hom := G_hom_normalized
+          have multiplier_pos : (hom.weight g)⁻¹ > 0 := inv_pos_of_pos g_in_G.2
+          simp only [multiplier_pos, true_and, ← g_versus_g1]
+          rfl
+        have X_to_Y : ∀ g1 ∈ X, ∃ g2 ∈ Y,
+               ∃ multiplier : 𝕜, multiplier > 0 ∧ g1 = multiplier • g2 := by
+          intro g1 hg1
+          rw [hX, hG_hom_pos, Finset.mem_coe, Finset.mem_filter] at hg1
+          rw [hY]
+          obtain ⟨g_in_G, g_versus_g1⟩ := hg1
+          sorry -- ...
 
         have : PointedCone.hull 𝕜 Y ≤ PointedCone.hull 𝕜 X :=
-          hull_invariant_under_scaling_subset V_hom Y X left_to_right
-        have : PointedCone.hull 𝕜 X ≤ PointedCone.hull 𝕜 Y := by sorry
-          -- hull_invariant_under_scaling_subset V_hom X Y right_to_left
+          hull_invariant_under_scaling_subset (Y : Set V_hom) (X : Set V_hom) Y_to_X
+        have : PointedCone.hull 𝕜 X ≤ PointedCone.hull 𝕜 Y :=
+          hull_invariant_under_scaling_subset (X : Set V_hom) (Y : Set V_hom) X_to_Y
         apply le_antisymm <;> assumption
 
       have : hull 𝕜 (hom.ofPoint '' G) = homogenize V_hom P_convSet := by
