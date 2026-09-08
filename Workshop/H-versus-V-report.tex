@@ -4,19 +4,219 @@
 \usepackage{hyperref}
 \usepackage[margin=2cm]{geometry}
 
-\newcommand\lean{\textit}
+\newcommand\lean{\texttt}
+\newcommand\LEAN{\textsc{lean}}
+\newcommand\MW{Minkowski-Weyl}
 
 \begin{document}
 
+\section{H-representation versus V-representations}
+\label{sec:h-versus-v}
+
+
+
 Various types of polyhedral objects (polytopes, polyhedra, polyhedral
 cones)
-can be described in two complementary ways:
-A \emph{V-representation} ....
+can be described in two alternative ways:
+A \emph{V-representation} represents them as the hull
+% (convex hull or positive hull, resp
+of some generating elements (points, rays), while
+an \emph{H-representation} represents them as intersection of half-spaces.
 
 The Minkowski--Weyl family of theorems says that these two types of
 representations define more or less the same classes of objects
 (sometimes under extra conditions).
 
-A the start of the workshop, 
+
+When the workshop started, the \MW\ theorem for polyhedral cones was already in
+place.
+
+For cones, there is duality operation, which
+exchanges
+V-representations with H-representations.
+Therefore, the \MW\ theorem can be
+equivalently expressed as saying that
+the dual of a V-cone is a
+V-cone, 
+and the dual of an H-cone is an H-cone.
+
+
+\paragraph{Generality.}
+The general motto is to keep results as general as possible,
+if the effort is not too big.
+Therefore the results are formulated in such a way that they 
+work in infinite-dimensional spaces:
+In the H-representation, the given half-spaces are intersected with an
+affine
+subspace (of arbitrary dimension), and the V-representation can use
+an 
+additional linear
+subspace (of arbitrary dimension)
+to span the objects.
+
+\subsection{Progress}
+\label{sec:progress}
+
+\paragraph{Homogenization.}
+The standard approach
+for ``lifting'' the \MW\ Theorem from cones to polytopes and polyhedra
+% to transferring these results to polyhedra
+is through \emph{homogenization}, embedding the
+affine space in which the objects lie into a (linear) vector space of
+one dimension higher.
+A framework for homogenization exists already in Mathlib.
+
+
+The straightforward approach of homogenizing a polyhedron to a
+polyhedral cone fails, because the cone spanned by an affine ray is not
+closed (in the topological sense) and therefore cannot be directly used.
+
+One solution is to explicitly add the recession cone to the
+homogenization
+(either as a disjoint set union, by Minkowski summation).
+
+Another solution, starting from an H-polyhedron, simply lifts the
+affine half-spaces to linear half-spaces (extending them through the
+origin) and
+adds the linear constraint that the extra coordinate
+(``\lean{weight}'') is nonnegation.
+
+Both approaches lead to the same polyhedral cone.
+The second approach
+never explicitly mentions the recession cone.
+
+
+\subsection{Terminology}
+\label{sec:terminology}
+
+All objects exist in H and V variations, depending on how they are
+given.
+
+these objects are
+
+For algorithmic questions and effective operations on polytopes and
+polyhedra, it is important, which data are available.
+On the other hand,
+the \MW\ theorems say that there is no mathematical distiction.
+
+After some discussion, it was decided
+that \lean{Polytope}/\lean{IsPolytope} should be defined as V-polytope,
+and \lean{Polyhedron}/\lean{IsPolyhedron} should be defined as
+H-polyhedron,
+
+This is
+in accordance with the standard usage that a polytope, as a bounded object,
+arises naturally as the convex hull of finitely many points, % vertices,
+whereas the intersection of half-spaces may be unbounded and give rise to
+ a polyhedron.
+
+In the realm of cones,
+\lean{IsPolyhedral} is already defined as a V-cone.
+
+H-polyhedron is defined as the
+intersection of finitely many halfspaces with an affine subspace
+(which can be inifinite-dimensional).
+
+$P
+\mathop{+_\mathrm{a}}
+C \mathop{+_\mathrm{v}}
+S
+$, where P is the convex hull of finitely many points,
+$C$ is a finitely generated cone
+and $S$ is a linear subspace (\lean{Submodule} in mathlib
+terminology),
+which can be inifinite-dimensional.
+
+
+
+ H and V variations, depending on how they are
+
+
+\subsubsection{Recession cones}
+\label{sec:recession}
+
+Part of the group worked independently on recession cones of
+polyhedra, which, as it turns out, have some properties that
+do not hold for general convex sets. For example,
+\lean{x.recess
+  $\mathop{+%_v
+  }$ y.recess =
+(x
+$\mathop{+%_v
+}$ y).recess} does not hold
+for general convex sets,
+where $+$ denotes Minkowski addition.
+(The inclusion in the
+$\subseteq$ direction holds in general.)
+
+A difficulty is that polytopes and polyhedra live in affine spaces.
+In affine space, one can add a point and a vector, but one cannot add
+two points.
+
+\subsection{Wishlist}
+\label{sec:wishlist}
+
+\begin{enumerate}
+\item 
+ Every bounded polyhedron is a polyope (that is, without cone and subspace).
+ This should be an easy consequence.
+
+ One challenge is to define boundedness without introducing a norm.
+\item faces of polyhedra (with connection to the group that is working
+  on edge graphs of polytopes)
+\item polarity
+   (with connection to the group that is working
+  on operations on polytopes)
+\item Uniqueness of the V-representation: There is a minimal set of
+  vertices and extreme rays that span a given polyhedron, which is
+  unique up to adding element of the lineality space.
+\end{enumerate}
+
+
+
+
+\subsection{Difficulties}
+\label{sec:difficult}
+
+\subsubsection{Mathematical Difficulties}
+\label{sec:diff-math}
+
+\subsubsection{Difficulties with Mathlib and \LEAN}
+\label{sec:diff-lean}
+
+Mathlib uses the term \lean{PointedCone} to denote a cone that must
+contain $0$ (which is not a necessary condition for a \lean{Cone} in general).
+On the other hand,
+in polyhedral theory a \emph{pointed cone} is a convex cone that has a vertex
+at the origin, or in other words, that has
+only a trivial lineality space. Such a cone is called a 
+\lean{SalientCone} in Mathlib.
+We heard that efforts are under way to change the names in Mathlib.
+
+
+\lean{hom.weight x} and the shorter notation
+\lean{x.weight}, the latter referring to the \emph{canonical
+  homogenization}.
+Since there was no reason to choose any particular 
+homogenization, the proof uses the canonical
+homogenization
+
+The two expressions should be definitionally equal.
+
+
+extra proof steps to provide glue between the two notions.
+
+
+
+transition
+
+\lean{ConvexSet.convexhull}
+\lean{Convexity.convexhull}
+
+(one of them produces a \lean{Set}
+the other a \lean{Pointedcone})
+
+
+painful experience for the newcomers to \LEAN.
 
 \end{document}
