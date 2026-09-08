@@ -3,9 +3,10 @@ Copyright (c) 2026 . All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
 -/
+module
 
-import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
-import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.AffineSubspace.Basic
+public import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
+public import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.AffineSubspace.Basic
 
 /-!
 ## (Finite) Dimension of an affine subspace
@@ -27,6 +28,8 @@ is similary defined using `Module.finrank`.
   integrated with this file. i.e. `Collinear`/`Coplanar` should be redefined. Should other lemmas
   be re-stated?
 -/
+
+public section
 
 attribute [-simp] SetLike.bot_eq_empty -- This simp lemma is a mistake
 

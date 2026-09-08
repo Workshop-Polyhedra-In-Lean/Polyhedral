@@ -3,15 +3,22 @@ Copyright (c) 2026 Louis Theran. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Louis Theran
 -/
+module
 
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Lattice
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Hull
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.StdSimplex
 
-/-! This file proves the elementary fact underlying the (non-homogenization) Krein-Milman theorem
+/-!
+# Vertices of a convex hull
+
+This file proves the elementary fact underlying the (non-homogenization) Krein-Milman theorem
 for polytopes: a point of a finite set `T` that is *not* a convex combination of the rest of `T`
 is automatically a vertex (extreme point) of `convexHull k T`, and conversely. This is proved
-directly from the definition of `ConvexSet.IsFaceOf`, with no separation theorem needed. -/
+directly from the definition of `ConvexSet.IsFaceOf`, with no separation theorem needed.
+-/
+
+public section
 
 namespace Convexity
 

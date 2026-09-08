@@ -3,6 +3,7 @@ Copyright (c) 2026 Louis Theran. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Louis Theran
 -/
+module
 
 import Polyhedral.Mathlib.Combinatorics.SimpleGraph.Connectivity.Ranking
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.NormalCone
@@ -26,6 +27,8 @@ exactly `2`.
 `a.point ≠ x.point`). -/
 
 noncomputable section
+
+public section
 
 namespace Convexity
 

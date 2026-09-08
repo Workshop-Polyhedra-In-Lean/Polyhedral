@@ -3,6 +3,7 @@ Copyright (c) 2026 Louis Theran. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Louis Theran
 -/
+module
 
 import Mathlib.LinearAlgebra.AffineSpace.FiniteDimensional
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.Face.Grade
@@ -22,7 +23,7 @@ space, being `(affineSpan R (F₀ : Set P)).direction` (`tangentCone_lineal`), i
 whenever `F₀` itself is. That's the whole proof; see the note before `IsPolytope.tangentCone_fg`
 for why the combinatorial-looking machinery further down in this file isn't a shortcut to it. -/
 
-noncomputable section
+public noncomputable section
 
 namespace Convexity
 

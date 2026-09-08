@@ -3,6 +3,7 @@ Copyright (c) 2026 Louis Theran. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Louis Theran
 -/
+module
 
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Basic
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Convexity
@@ -18,7 +19,7 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Pointwise
 This file is about general convex sets; the polytope-specific finite-generation statements are in
 `Polytope/TangentCone.lean`. -/
 
-noncomputable section
+public noncomputable section
 
 namespace Convexity
 

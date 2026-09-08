@@ -3,14 +3,18 @@ Copyright (c) 2026 Olivia Röhrig, Martin Winter. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Martin Winter, Olivia Röhrig
 -/
+module
 
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Convexity
-import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Lineal
+public import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Convexity
+public import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Lineal
+public import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Homogenization.Basic
+
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.AffineMap
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Lattice
-import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Homogenization.Basic
 
 /-! This file defines homogenization of convex sets in affine spaces. -/
+
+@[expose] public section
 
 open Convexity Pointwise Set PointedCone Submodule
 
@@ -25,9 +29,7 @@ open Convexity
 variable [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
 variable [AddCommGroup V] [Module R V]
 variable [AddCommGroup W] [Module R W]
-variable [AddTorsor V A]
-
-attribute [local instance] AddTorsor.toConvexSpace
+variable [AddTorsor V A] [ConvexSpace R A]
 
 variable [hom : Affine.IsHomogenization R A W]
 
@@ -104,9 +106,7 @@ theorem homogenize_fg_ofPoint_range {C : ConvexSet R A} (h : (homogenize W C).FG
 
 section Module
 
-attribute [local instance] AddTorsor.toConvexSpace
-
-variable [IsModuleConvexSpace R W] -- WARNING: this is currently inferred! This is dangerous
+variable [ConvexSpace R W] [IsModuleConvexSpace R W] [IsAffineConvexSpace R V A]
 
 variable (A) in
 def dehomogenize (C : PointedCone R W) : ConvexSet R A :=
@@ -162,10 +162,9 @@ section Field
 
 variable [Field R] [LinearOrder R] [IsOrderedRing R]
 variable [AddCommGroup V] [Module R V]
-variable [AddCommGroup W] [Module R W]
-variable [AddTorsor V A]
+variable [AddCommGroup W] [Module R W] [ConvexSpace R W]
+variable [AddTorsor V A] [ConvexSpace R A] [IsAffineConvexSpace R V A]
 
-attribute [local instance] AddTorsor.toConvexSpace
 variable [IsModuleConvexSpace R W]
 
 variable [hom : Affine.IsHomogenization R A W]

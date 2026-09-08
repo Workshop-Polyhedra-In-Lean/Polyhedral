@@ -3,16 +3,18 @@ Copyright (c) 2026 Olivia Röhrig, Martin Winter. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Olivia Röhrig, Martin Winter
 -/
+module
+
+public import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Defs
+public import Polyhedral.Mathlib.Algebra.Group.Pointwise.SetLike.Scalar
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Hull
+public import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Pointwise
 
 import Mathlib.Geometry.Convex.ConvexSpace.AffineSpace
 
-import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Defs
-
-import Polyhedral.Mathlib.Algebra.Group.Pointwise.SetLike.Scalar
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Hull
-import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Pointwise
-
 /-! This file defines bundled convex sets. -/
+
+@[expose] public section
 
 variable {ι R X Y : Type*}
 
@@ -97,7 +99,7 @@ instance : SemilatticeInf (ConvexSet R X) := .ofSetLike ..
 /- # InfSet -/
 
 instance : InfSet (ConvexSet R X) where
-  sInf S := ⟨⋂₀ (_ '' S), .sInter (by simpa using fun K _ => K.2)⟩
+  sInf S := ⟨⋂₀ (SetLike.coe '' S), .sInter (by simpa using fun K _ => K.2)⟩
 
 instance : IsConcreteInfSet (ConvexSet R X) X := ⟨fun _ => rfl⟩
 
@@ -223,6 +225,8 @@ instance : SubtractionCommMonoid (ConvexSet R X) := .ofSetLike ..
 
 /-! ### Scalar multiplication -/
 
+variable [SMulCommClass R R X]
+
 instance : SMul R (ConvexSet R X) where
   smul r K := ⟨_, K.isConvexSet.smul r⟩
 
@@ -235,9 +239,7 @@ instance : DistribMulAction R (ConvexSet R X) := .ofSetLike ..
 
 noncomputable section AddTorsor
 
-variable [AddTorsor X Y]
-
-local instance : ConvexSpace R Y := AddTorsor.toConvexSpace
+variable [AddTorsor X Y] [ConvexSpace R Y] [IsAffineConvexSpace R X Y]
 
 instance : VAdd X (ConvexSet R Y) where
   vadd v K := ⟨_, K.isConvexSet.translate v⟩
@@ -268,9 +270,7 @@ namespace ConvexSet
 variable {R A : Type*}
 variable [PartialOrder R] [Ring R] [IsStrictOrderedRing R]
 variable {V : Type*} [AddCommGroup V] [Module R V]
-variable [AddTorsor V A]
-
-attribute [local instance] AddTorsor.toConvexSpace
+variable [AddTorsor V A] [ConvexSpace R A]
 
 variable {C : ConvexSet R A}
 
