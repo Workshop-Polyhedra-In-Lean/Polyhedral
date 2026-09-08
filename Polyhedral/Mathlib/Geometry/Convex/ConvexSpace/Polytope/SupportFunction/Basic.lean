@@ -8,8 +8,6 @@ import Mathlib.Order.WithBotTop
 import Mathlib.Geometry.Convex.ConvexSpace.Defs
 import Mathlib.Geometry.Convex.ConvexSpace.Module
 
-open Convexity
-
 /-! # General properties of support functions
 
 We define the support function of a set in a general module over a semiring.
@@ -19,24 +17,13 @@ We don't assume `R` to have a total order; a partial order is sufficient.
 Neither do we assume that the supremum is this definition is attained as the maximum.
 (For a continuous pairing over a compact set, this is true.)
 
-- mention generality we want
-- special values for empty and unbounded
-- special junk value for sets without a least upper bound
-- example over ℚ
-
-
 (For comparison, note that Rockefeller uses inner products and convex sets in the definition,
 and assumes non-emptiness. They mention the unbounded case, though.)
-
 
 ## Main definitions and results
 Assume `V` is a module over a semiring `R` endowed with a partial order.
 - `supportFunction P` is the support function of `P : Set V`,
   mapping `Module.Dual R V` to `WithBotTop R`.
-
-Basic properties to prove: in progress!
-
-## TODO
 
 * generalise from the standard dual (or, any inner product) to bilinear pairings
   Assume a bilinear pairing `M →ₗ[R] N →ₗ[R] R` instead, so `P : Set M` would have support function
@@ -47,119 +34,26 @@ Basic properties to prove: in progress!
 section
 
 open Convexity
-variable {R V W : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
+variable {R V W : Type*} [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
   [ConvexSpace R V] [ConvexSpace R W]
 
 variable (R V) in
 abbrev ConvexSpace.dual := ConvexSpace.AffineMap R V R
 
--- variable (R V) in
-/-- The dual of a convex space `V` over `R`: the module of all affine maps `V → R` -/
--- def ConvexSpace.dual : Submodule R (V → R) where
---   carrier := { f | IsAffineMap R f }
---   add_mem' {f g} hf hg := by simp_all [IsAffineMap.add]
---   zero_mem' := by simp only [Set.mem_ofPred_eq]; fun_prop
---   smul_mem' c x hx := by simp_all [IsAffineMap.smul]
-
--- Next we tried to define it as a structure, but that is not what we want
--- structure ConvexSpace.dualE (U : (Submodule R (V → R))) [SMul R U] [AddCommMonoid U] where
---   carrier : Set U --{ f | IsAffineMap R f }
---   is_affine : ∀ f ∈ carrier, IsAffineMap R (f : V → R)
---   add_mem : ∀ {f g}, f ∈ carrier → g ∈ carrier → f+g ∈ carrier := by simp_all [IsAffineMap.add]
---   zero_mem : 0 ∈ U
---   smul_mem' (r : R) {f : U} : f ∈ carrier → r • f ∈ carrier := by simp_all [IsAffineMap.smul]
---
 lemma ConvexSpace.dualMap_IsAffine (f : ConvexSpace.dual R V) : IsAffineMap R f := by
   exact ConvexSpace.AffineMap.isAffineMap f
 
 instance : FunLike (ConvexSpace.dual R V) V R := by
   exact ConvexSpace.AffineMap.instFunLike
-  -- coe φ := φ.1
-  -- coe_injective φ ψ h := by simp_all
 
 end
 
--- S convex set; take supremum instead of scalar product
--- support function for a convex set (in a convex space, with a total order on the ring)
--- why do we need a total order? do we now the sup is the max??
--- maximum need not be attained: maximum need not be attained
--- but do need the supremum to exist (and be unique)
--- partial order could have two maximal elements which are incomparable
--- -> want a total order!
-
--- Support functions are closely related to convex bodies;
--- can extend to unbounded convex sets.
-
-/-
-XXX: This does not cover polytopes in affine spaces; is there a version for them?
-What would the support function even be?
--/
-
-/-
-Note that the codomain still has good arithmetic properties (which we need)!
-We want addition to satisfy `-∞ + ∞ = -∞`, similarly to `EReal`:
-the support function of the Minkowski sum of two sets should be the sum of two polytopes,
-and for the empty resp. an unbounded polytope, the sum of support functions is the LHS,
-whereas their Minkowski sum is empty (so has support function mapping to `-∞`).
--/
-
-/-
-History of this definition
-
-- Attempt 1: assumed `SupSet R` and took the `sSup (φ '' P)`... that's way too strong, excludes e.g.
-  the real numbers.
-- Attempt 2: assume `(hR : ∀ s : Set R, s.Nonempty → BddAbove s → ∃ x : R, IsLUB s x)`,
-  i.e. assume any non-empty bounded above set has a least upper bound (and choose that).
-  Issue: this not satisfied for the rational numbers; perhaps we want rational support functions
-  for rational polytopes (which this definition excludes)
-  Rational polytopes occur naturally during computation.
-- Attempt 2a: reorder the definition cases; just a Lean issue.
-- Attempt 3: add another case distinction into the definition
-  If S is bounded above (but no least upper bound), return a junk value `37`.
-  If if is unbounded, we return `⊤` instead.
-- Attempt 4: generalize to all convex spaces; defined on the dual of a convex space
-  Issue: is the wrong definition for the scaling property to hold!
-  so revert back to definition 3
-
-  Other issue: choices of junk values
-  For multiplication, if `φ '' P` is a "funky" set (i.e., bounded without a least upper bound),
-  the equation `λ * (supportFunction R P φ) = supportFunction R (λ • P) φ`
-  becomes `λ * junk = junk`.
-  This is false for the current junk value, but becomes true for the junk value `37`.
-  This is also useful as the definition will make one fewer case distinction.
-
-  For Minkowski sums, note that the Minkowski sum of a set `S` with a least upper bound and a funky
-  set `T` can be funky, but also could have a least upper bound. Take `S = [0, 1) x {0} ⊆ ℚ²`
-  and `T = {0} × [0, 1]`. Then `S + T` is the unit square without the edge `{1}×[0,1]`.
-  For some suitable functional (e.g., the function `(x, y) ↦ x)`), this will have no least upper
-  bound, but for other other functionals, there will be a least upper bound.
-
-current definition (attempt 5) below
-
-attempt 6: two definitions, supportFunctionAffine and supportFunction (for modules)
-
--/
-
 section
 
-variable {R V : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
+variable {R V : Type*} [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
   [Convexity.ConvexSpace R V]
 
 variable (R) in
-/- Variant of supportFunction, for general convex spaces.
-
-We don't want to define linear programs using support functions,
-but a linear program should have an associated support function.
-"Support fns arise from varying an objective function in a linear program."
-Often, it's convenient to add a constant to a linear program (i.e., you'd want an affine support fn)
-but it's not clear if this is called "support function" in the literature.
-
-WARNING: this does not coincide with the supportFunction over modules,
-as their domains are different.
-
-Q(Martin): Is there a definition of support functions with affine maps in the literature?
-A(Georg): yes, via linear programs (above).
--/
 noncomputable def supportFunctionAffine (P : Set V) : ConvexSpace.dual R V → WithBotTop R :=
   fun φ ↦ by classical exact
   if hP : P.Nonempty then
@@ -188,7 +82,7 @@ lemma supportFunctionAffine_of_nonempty_of_not_exists_isLUB
   simp [supportFunctionAffine, hP, hP']
 
 @[simp]
-lemma supportFunctionAffine_singleton' {v : V} {φ : ConvexSpace.dual R V} :
+lemma supportFunctionAffine_singleton_value {v : V} {φ : ConvexSpace.dual R V} :
     supportFunctionAffine R {v} φ = φ v := by
   rw [supportFunctionAffine_of_nonempty_of_isLUB (by simp)]
   simp
@@ -198,66 +92,22 @@ lemma supportFunctionAffine_singleton {v : V} : supportFunctionAffine R {v} = fu
   ext φ
   simp
 
+end
+
+section
 /-
 Then, redefine the linear support function as the restriction of the affine one to the module dual.
 Scalar multiplication, Minkowski sum etc. will still be true under restriction.
 
 -/
 
-
-
-end
-
--- section
-
--- variable {R V : Type*} [Semiring R] [PartialOrder R] [IsStrictOrderedRing R]
---   [AddCommMonoid V] [Module R V]
-
--- /-- An `R`-module is a convex space. -/
--- instance : Convexity.ConvexSpace R V := by
---   constructor
---   · sorry
---   · sorry
---   · intro h
---     sorry
--- -- is this in mathlib already?
-
--- end
-
-/- We do not have to prove that R modules are convex spaces. This is in general not true,
-we need to ask that the convex structure is compatible with the module structure.
-We can assume this as a variable using IsModuleConveSpace and for this setting we need
-a  strictly order ring
--/
-
--- TODO: old variables were the following. are we losing any generality by specialising?
--- variable {R V : Type*} [Semiring R] [PartialOrder R] [AddCommMonoid V] [Module R V]
-variable {R V : Type*} [CommRing R] [PartialOrder R] [IsStrictOrderedRing R]
+variable {R V : Type*} [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
   [AddCommGroup V] [Module R V] [Convexity.ConvexSpace R V] [Convexity.IsModuleConvexSpace R V]
 
-/-- If `φ : V → R` is a convex map on an `R`-module `V`, it is affine?. -/
--- xxx: does this lemma hold for more general targets?
--- (if so, state that version using IsAffineMap)
--- TODO: how to state the conclusion in Lean?
-
--- def GoodName (φ : ConvexSpace.dual R V)
-
-lemma howtostate (φ : ConvexSpace.dual R V) : IsAffineMap R φ := sorry
-
--- this is the direction that is not in the repository
-def GoodName (φ : ConvexSpace.dual R V) : V →ᵃ[R] R where
+-- linear maps are convex combination preserving
+-- ask olivia about this definition
+def iota (φ : Module.Dual R V) : ConvexSpace.dual R V where
   toFun := φ
-  linear := sorry
-  map_vadd' := sorry
-
--- special case: convex dual maps which preserve the origin are actually in the dual
--- TODO: find a better name!
-def bar (φ : ConvexSpace.dual R V) (hφ : φ 0 = 0) : Module.Dual R V := sorry
-
--- lemma: in particular, the Module dual space consists of convex maps
--- xxx: should this map come with more structure?
--- TODO: find a better name!
-def iota (φ : Module.Dual R V) : ConvexSpace.dual R V := sorry
 
 /-
 The support function of a set `P ⊆ V`, inside an `R`-module `V`.
@@ -271,22 +121,9 @@ variable (R) in
 noncomputable
 def supportFunction (P : Set V) : Module.Dual R V → WithBotTop R :=
   fun φ ↦ supportFunctionAffine R P (iota φ)
-  -- by_cases hP : P.Nonempty
-  -- · letI S := φ '' P
-  --   by_cases hS' : ∃ x, IsLUB S x
-  --   · exact WithBotTop.coe  hS'.choose
-  --   · -- Note that we choose `⊤` as junk value if S is not bounded above.
-  --     exact ⊤
-  -- · exact ⊥
 
-
--------
--- before: [CommSemiring R], [AddCommMonoid V]
--- now: We want that our R-module is a convex space. For this we need [CommRing R], [AddCommGroup V],
--- TODO: We have to check again!!!!
---
-variable {R V : Type*} [CommRing R] [PartialOrder R] [IsStrictOrderedRing R]
-  [AddCommGroup V] [Module R V] [Convexity.ConvexSpace R V]
+variable {R V : Type*} [Ring R] [PartialOrder R] [IsStrictOrderedRing R]
+  [AddCommGroup V] [Module R V] [Convexity.ConvexSpace R V] [Convexity.IsModuleConvexSpace R V]
 
 @[simp]
 lemma supportFunction_empty : supportFunction R (∅ : Set V) = ⊥ := by
@@ -295,59 +132,36 @@ lemma supportFunction_empty : supportFunction R (∅ : Set V) = ⊥ := by
   have : ¬((∅ : Set V).Nonempty) := by simp
   simp
 
-variable [Convexity.IsModuleConvexSpace R V]
-
 lemma supportFunction_of_nonempty_of_isLUB
     {P : Set V} (hP : P.Nonempty) {φ : Module.Dual R V}
     {r : R} (hr : IsLUB (φ '' P) r) :
     supportFunction R P φ = r := by
   replace hr : IsLUB (⇑(iota φ) '' P) r := by
-    sorry -- TODO: deduce this from `hr`
+    have hphi : ⇑(iota φ) = φ := by rfl
+    rw [hphi]
+    exact hr
   have aux : ∃ (x : R), IsLUB ((iota φ) '' P) x := by use r
   simp [supportFunction, supportFunctionAffine, hP, aux, aux.choose_spec.unique hr]
 
 @[simp]
-lemma supportFunction_singleton' {v : V} {φ : Module.Dual R V} : supportFunction R {v} φ = φ v := by
+lemma supportFunction_singleton_value {v : V} {φ : Module.Dual R V} :
+supportFunction R {v} φ = φ v := by
   rw [supportFunction_of_nonempty_of_isLUB (by simp)]
   simp
 
 lemma supportFunction_singleton {v : V} : supportFunction R {v} = fun φ ↦ φ v := by
   ext φ
-  rw [supportFunction_singleton']
+  rw [supportFunction_singleton_value]
 
 -- XXX: do we want this lemma, or is it not worth it?
 open scoped Classical in
 lemma supportFunction_of_nonempty_of_bddAbove {P : Set V} (hP : P.Nonempty) {φ : Module.Dual R V}
-    (_hP' : BddAbove (φ '' P)) :
+    (hP' : BddAbove (φ '' P)) :
     supportFunction R P φ =
       if hS : ∃ x, IsLUB (⇑φ '' P) x then WithBotTop.coe hS.choose else ⊤
     := by
   unfold supportFunction
   sorry
-
-/- TODO: we want more specialized versions of this lemma instead
-open scoped Classical in
-lemma supportFunction_of_nonempty {P : Set V} (hP : P.Nonempty) (φ : Module.Dual R V) :
-    supportFunction R P φ = (
-      if hS : BddAbove (⇑φ '' P) then
-        if _hS' : ∃ x, IsLUB (⇑φ '' P) x then
-        WithBotTop.coe hs.choose else WithBotTop.coe 37 else ⊤)
-    := by
-  unfold supportFunction
-  dsimp
-  rw [ite_eq_left hP]
-  /- by_cases hS : BddAbove (φ '' P); swap
-  · simp [hS]
-  simp only [hS, ↓reduceDIte]
-  by_cases hx : ∃ x, IsLUB (φ '' P) x; swap
-  · simp [hx]; rfl
-  simp [hx]
-  rfl -/
-  sorry -/
-
--- example: unit ball without a point on the boundary; its support fn over R^n
--- is the same as for the full unit ball.
--- this is what we want, fine (because it's the supp)
 
 /-
 ## Open questions/for later
@@ -386,3 +200,4 @@ so need, to transport A and all the other objects into A'
 
 not conclusive, TODO continue this discussion!
 -/
+end
