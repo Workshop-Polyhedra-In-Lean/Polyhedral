@@ -8,6 +8,7 @@ import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Basic
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Convexity
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Face.Lattice
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Lineal
+import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Rank
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Lattice
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Lattice
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Pointwise
@@ -221,6 +222,66 @@ theorem tangentCone_lineal {F₀ : ConvexSet R P} (hF₀K : F₀.IsFaceOf K)
       have hmem : x -ᵥ x' ∈ K.tangentCone F₀ :=
         PointedCone.subset_hull ⟨x, hF₀K.le hx, x', hx', rfl⟩
       simpa [neg_vsub_eq_vsub_rev] using hmem)
+
+/-- **The linear span of `G.tangentCone F₀` is the direction of `G`'s affine span.** Unlike
+`tangentCone_lineal` (which isolates the *lineal* part of the tangent cone, coming from `F₀`
+alone), this computes the *full* span, coming from `G`. No face hypothesis on `F₀` is needed here
+(just `F₀ ≤ G`, `F₀` nonempty): every generator `y -ᵥ x` (`y ∈ G`, `x ∈ F₀ ⊆ G`) already lies in
+`G`'s own vector span, giving `≤`; conversely, picking any `x₀ ∈ F₀`, every difference `g₁ -ᵥ g₂`
+of points of `G` splits as `(g₁ -ᵥ x₀) - (g₂ -ᵥ x₀)`, a difference of two tangent-cone generators,
+giving `≥`. This is the key fact connecting `tangentCone_ici_orderIso` to dimension: the face of
+`K.tangentCone F₀` corresponding to a face `G ≥ F₀` of `K` is `G.tangentCone F₀`, and this shows
+its span has the same dimension as `G`'s own affine span. -/
+theorem span_tangentCone_eq_direction {G F₀ : ConvexSet R P} (hF₀G : F₀ ≤ G)
+    (hF₀ne : (F₀ : Set P).Nonempty) :
+    Submodule.span R (G.tangentCone F₀ : Set M) = (affineSpan R (G : Set P)).direction := by
+  rw [direction_affineSpan, vectorSpan_def]
+  apply le_antisymm
+  · apply Submodule.span_le.mpr
+    intro v hv
+    obtain ⟨r, hr, y, hy, x, hx, rfl⟩ := (mem_tangentCone_iff G F₀ hF₀G hF₀ne v).mp hv
+    exact Submodule.smul_mem _ r (Submodule.subset_span ⟨y, hy, x, hF₀G hx, rfl⟩)
+  · apply Submodule.span_le.mpr
+    rintro _ ⟨g₁, hg₁, g₂, hg₂, rfl⟩
+    obtain ⟨x₀, hx₀⟩ := id hF₀ne
+    have h1 : g₁ -ᵥ x₀ ∈ (G.tangentCone F₀ : Set M) :=
+      (mem_tangentCone_iff G F₀ hF₀G hF₀ne _).mpr ⟨1, zero_le_one, g₁, hg₁, x₀, hx₀, one_smul R _⟩
+    have h2 : g₂ -ᵥ x₀ ∈ (G.tangentCone F₀ : Set M) :=
+      (mem_tangentCone_iff G F₀ hF₀G hF₀ne _).mpr ⟨1, zero_le_one, g₂, hg₂, x₀, hx₀, one_smul R _⟩
+    change g₁ -ᵥ g₂ ∈ (Submodule.span R (G.tangentCone F₀ : Set M) : Set M)
+    rw [show g₁ -ᵥ g₂ = (g₁ -ᵥ x₀) - (g₂ -ᵥ x₀) from (vsub_sub_vsub_cancel_right g₁ g₂ x₀).symm]
+    exact Submodule.sub_mem _ (Submodule.subset_span h1) (Submodule.subset_span h2)
+
+/-- **The tangent cone of `K` over itself is exactly the direction of `K`'s own affine span.**
+`≤` is `span_tangentCone_eq_direction` (`G = F₀ = K`): every element of `K.tangentCone K` lies in
+its own span, which is `(affineSpan K).direction`. `≥` is `tangentCone_lineal` (`F₀ = K`) together
+with `PointedCone.lineal_le`: the whole of `(affineSpan K).direction` is the *lineal* part of
+`K.tangentCone K`, hence already contained in it. This is the degenerate case of
+`tangentCone_ici_orderIso` where `F₀` is already the top of the interval. -/
+theorem tangentCone_self_eq_direction (K : ConvexSet R P) (hKne : (K : Set P).Nonempty) :
+    K.tangentCone K = ((affineSpan R (K : Set P)).direction : PointedCone R M) := by
+  apply le_antisymm
+  · intro v hv
+    have hv' : v ∈ Submodule.span R (K.tangentCone K : Set M) := Submodule.subset_span hv
+    rwa [span_tangentCone_eq_direction (le_refl K) hKne] at hv'
+  · rw [← tangentCone_lineal (IsFaceOf.refl K) hKne]
+    exact PointedCone.lineal_le (K.tangentCone K)
+
+/-- **Rank version of `span_tangentCone_eq_direction`.** The face of `K.tangentCone F₀`
+corresponding (via `tangentCone_ici_orderIso`) to a face `G ≥ F₀` of `K` has the same rank as `G`
+itself. -/
+theorem rank_tangentCone_eq_rank {G F₀ : ConvexSet R P} (hF₀G : F₀ ≤ G)
+    (hF₀ne : (F₀ : Set P).Nonempty) :
+    (G.tangentCone F₀).rank = G.rank :=
+  congrArg (fun S : Submodule R M => Module.rank R S)
+    (span_tangentCone_eq_direction hF₀G hF₀ne)
+
+/-- **`finrank` version of `span_tangentCone_eq_direction`.** -/
+theorem finrank_tangentCone_eq_finrank {G F₀ : ConvexSet R P} (hF₀G : F₀ ≤ G)
+    (hF₀ne : (F₀ : Set P).Nonempty) :
+    (G.tangentCone F₀).finrank = G.finrank :=
+  congrArg (fun S : Submodule R M => Module.finrank R S)
+    (span_tangentCone_eq_direction hF₀G hF₀ne)
 
 /-- **Confirms the geometric picture directly**: the tangent cone over a face is salient
 (pointed) exactly when that face is a single point — matching the classical fact that tangent

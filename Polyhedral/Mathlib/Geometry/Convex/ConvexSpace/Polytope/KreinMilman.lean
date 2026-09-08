@@ -234,10 +234,72 @@ contains — this is `Krein-Milman` restated in lattice-theoretic language via `
 
 open ConvexSet in
 omit [DecidableEq A] in
+/-- **A singleton-vertex face is an atom of the face lattice.** No polytope hypothesis needed:
+`⟨{v}, hv⟩ ≠ ⊥` since `{v}` is nonempty, and any `b ≤ ⟨{v}, hv⟩` has `(b : Set A) ⊆ {v}`, hence is
+either `∅` (i.e. `⊥`) or `{v}` itself (i.e. `⟨{v}, hv⟩`). -/
+theorem IsPolytope.isAtom_singletonFace {K : ConvexSet k A} {v : A}
+    (hv : ({v} : ConvexSet k A).IsFaceOf K) :
+    IsAtom (⟨({v} : ConvexSet k A), hv⟩ : Face K) := by
+  set a : Face K := ⟨({v} : ConvexSet k A), hv⟩ with ha_def
+  have ha : (a : Set A) = {v} := rfl
+  refine ⟨fun hbot => ?_, fun b hba => ?_⟩
+  · have hbotEmpty : (a : Set A) = ∅ := by rw [hbot]; simp [Bot.bot]
+    rw [hbotEmpty] at ha
+    exact Set.singleton_ne_empty v ha.symm
+  · have hbsub : (b : Set A) ⊆ ({v} : Set A) := ha ▸ SetLike.coe_subset_coe.mpr hba.le
+    rcases Set.subset_singleton_iff_eq.mp hbsub with hemp | hsing
+    · exact SetLike.coe_injective (hemp.trans (rfl : (∅ : Set A) = ((⊥ : Face K) : Set A)))
+    · exact absurd (SetLike.coe_injective (hsing.trans ha.symm)) hba.ne
+
+open ConvexSet in
+omit [DecidableEq A] in
+/-- **The atoms of the face lattice of a polytope are exactly the singleton-vertex faces.**
+(⟸) is `IsPolytope.isAtom_singletonFace`, needing no polytope hypothesis on `K` at all. (⟹): an
+atom `a` is itself a nonempty polytope (`IsPolytope.face_isPolytope`), so it has a vertex `v`
+(else its own vertex set, and so its convex hull, would be empty,
+`IsPolytope.eq_convexHull_vertices`); the singleton face `⟨{v}, _⟩` is `≤ a` and (being an atom
+itself) nonzero, so atomicity of `a` forces `⟨{v}, _⟩ = a`. -/
+theorem IsPolytope.isAtom_iff_exists_eq_singleton {K : ConvexSet k A}
+    (hK : IsPolytope k (K : Set A)) {a : Face K} :
+    IsAtom a ↔ ∃ v, ({v} : ConvexSet k A).IsFaceOf K ∧ (a : Set A) = {v} := by
+  constructor
+  · intro ha
+    have haK : IsPolytope k ((a : ConvexSet k A) : Set A) :=
+      IsPolytope.face_isPolytope hK a.isFaceOf
+    have hane : (a : Set A).Nonempty := Face.nonempty_of_ne_bot ha.1
+    have hVne : (Vertices k (a : ConvexSet k A)).Nonempty := by
+      by_contra hempty
+      rw [Set.not_nonempty_iff_eq_empty] at hempty
+      have heq := IsPolytope.eq_convexHull_vertices k haK
+      have haeq : (⟨((a : ConvexSet k A) : Set A), haK.isConvexSet⟩ : ConvexSet k A) =
+          (a : ConvexSet k A) := SetLike.coe_injective rfl
+      rw [haeq, hempty, convexHull_empty] at heq
+      exact hane.ne_empty (by rw [Face.coe_eq_toConvexSet_coe]; exact heq)
+    obtain ⟨v, hv⟩ := hVne
+    have hvK : ({v} : ConvexSet k A).IsFaceOf K := Vertices.mono_of_isFaceOf a.isFaceOf hv
+    refine ⟨v, hvK, ?_⟩
+    set b : Face K := ⟨({v} : ConvexSet k A), hvK⟩ with hb_def
+    have hbatom : IsAtom b := IsPolytope.isAtom_singletonFace hvK
+    have hba : b ≤ a := by
+      rw [← Face.toConvexSet_le_toConvexSet]
+      exact hv.le
+    rcases hba.lt_or_eq with hlt | heq
+    · exact absurd (ha.2 b hlt) hbatom.1
+    · rw [← heq]; rfl
+  · rintro ⟨v, hv, ha⟩
+    have heq : a = (⟨({v} : ConvexSet k A), hv⟩ : Face K) := by
+      apply SetLike.coe_injective
+      rw [ha]; rfl
+    rw [heq]
+    exact IsPolytope.isAtom_singletonFace hv
+
+open ConvexSet in
+omit [DecidableEq A] in
 /-- **The face lattice of a polytope is atomistic**: every face is the join of the vertex-faces
-(atoms) it contains. The atoms of `Face P` are exactly the singleton-vertex faces `⟨{v}, _⟩`, and
-the join of the atoms below `F` is `F` itself because `F` is convex and equals the convex hull of
-its own vertices (`IsPolytope.face_eq_convexHull_vertices`). -/
+(atoms) it contains. The atoms of `Face P` are exactly the singleton-vertex faces `⟨{v}, _⟩`
+(`IsPolytope.isAtom_iff_exists_eq_singleton`), and the join of the atoms below `F` is `F` itself
+because `F` is convex and equals the convex hull of its own vertices
+(`IsPolytope.face_eq_convexHull_vertices`). -/
 theorem IsPolytope.face_isAtomistic {P : ConvexSet k A} (hP : IsPolytope k (P : Set A)) :
     IsAtomistic (Face P) := by
   classical
@@ -262,14 +324,7 @@ theorem IsPolytope.face_isAtomistic {P : ConvexSet k A} (hP : IsPolytope k (P : 
       exact SetLike.coe_subset_coe.mpr (hc hface) (rfl : v ∈ ({v} : ConvexSet k A))
     exact SetLike.coe_subset_coe.mp hsub
   · rintro a ⟨v, hv, ha⟩
-    refine ⟨fun hbot => ?_, fun b hba => ?_⟩
-    · have hbotEmpty : (a : Set A) = ∅ := by rw [hbot]; simp [Bot.bot]
-      rw [hbotEmpty] at ha
-      exact Set.singleton_ne_empty v ha.symm
-    · have hbsub : (b : Set A) ⊆ ({v} : Set A) := ha ▸ SetLike.coe_subset_coe.mpr hba.le
-      rcases Set.subset_singleton_iff_eq.mp hbsub with hemp | hsing
-      · exact SetLike.coe_injective (hemp.trans (rfl : (∅ : Set A) = ((⊥ : Face P) : Set A)))
-      · exact absurd (SetLike.coe_injective (hsing.trans ha.symm)) hba.ne
+    exact (IsPolytope.isAtom_iff_exists_eq_singleton hP).mpr ⟨v, hv.trans F.isFaceOf, ha⟩
 
 open ConvexSet in
 /-- As an instance: the face lattice of a (bundled) polytope is always atomistic, found
@@ -280,5 +335,71 @@ automatically by typeclass search whenever `Face (P : ConvexSet k A)` is written
 `IsPolytope` is a `Prop`, not something typeclass search can discharge on its own. -/
 instance {P : Polytope k A} : IsAtomistic (Face (P : ConvexSet k A)) :=
   IsPolytope.face_isAtomistic P.isPolytope
+
+/-! ## The face lattice of a polytope is finite -/
+
+open ConvexSet in
+omit [DecidableEq A] in
+/-- **The face lattice of a polytope is finite.** Every face `F` is determined by its vertex set
+`Vertices k F` (`IsPolytope.face_eq_convexHull_vertices`), and `Vertices k F ⊆ Vertices k P` is
+finite (`Vertices.mono_of_isFaceOf` into `Vertices k P`, itself finite as a subset of any
+generating `Finset`, `IsPolytope.vertices_subset`). So `F ↦ Vertices k F` is an injection of
+`Face P` into the finite type of subsets of `Vertices k P`. -/
+theorem IsPolytope.finite_face {P : ConvexSet k A} (hP : IsPolytope k (P : Set A)) :
+    Finite (Face P) := by
+  classical
+  obtain ⟨T, hT⟩ := id hP
+  have hPeq : P = (⟨convexHull k (T : Set A), .convexHull⟩ : ConvexSet k A) :=
+    SetLike.coe_injective hT
+  have hVfin : (Vertices k P).Finite := by
+    rw [hPeq]; exact T.finite_toSet.subset IsPolytope.vertices_subset
+  have hmap : ∀ F : Face P, (hVfin.subset (Vertices.mono_of_isFaceOf F.isFaceOf)).toFinset ∈
+      hVfin.toFinset.powerset := by
+    intro F
+    rw [Finset.mem_powerset]
+    intro v hv
+    rw [Set.Finite.mem_toFinset] at hv ⊢
+    exact Vertices.mono_of_isFaceOf F.isFaceOf hv
+  apply Finite.of_injective (fun F : Face P => (⟨_, hmap F⟩ : ↥(hVfin.toFinset.powerset)))
+  intro F₁ F₂ hFeq
+  have hEq : (hVfin.subset (Vertices.mono_of_isFaceOf F₁.isFaceOf)).toFinset =
+      (hVfin.subset (Vertices.mono_of_isFaceOf F₂.isFaceOf)).toFinset := congrArg Subtype.val hFeq
+  have hV : Vertices k (F₁ : ConvexSet k A) = Vertices k (F₂ : ConvexSet k A) := by
+    ext v
+    rw [← Set.Finite.mem_toFinset (hVfin.subset (Vertices.mono_of_isFaceOf F₁.isFaceOf)),
+        ← Set.Finite.mem_toFinset (hVfin.subset (Vertices.mono_of_isFaceOf F₂.isFaceOf)), hEq]
+  have h1 := IsPolytope.face_eq_convexHull_vertices hP F₁.isFaceOf
+  have h2 := IsPolytope.face_eq_convexHull_vertices hP F₂.isFaceOf
+  have hSet : (F₁ : Set A) = (F₂ : Set A) := by
+    rw [Face.coe_eq_toConvexSet_coe (F := F₁), Face.coe_eq_toConvexSet_coe (F := F₂), h1, h2, hV]
+  exact SetLike.coe_injective hSet
+
+open ConvexSet in
+/-- As an instance: the face lattice of a (bundled) polytope is always finite, found
+automatically by typeclass search whenever `Face (P : ConvexSet k A)` is written for an actual
+`P : Polytope k A`, mirroring the analogous `IsAtomistic` instance above. -/
+instance {P : Polytope k A} : Finite (Face (P : ConvexSet k A)) :=
+  IsPolytope.finite_face P.isPolytope
+
+/-! ## Vertices of a face, as a convenience accessor
+
+Every use of the graph-theoretic API in `Polytope/EdgeGraph.lean` needs to move between a face `F`
+of a (bundled) polytope `P` and its geometric vertex points. `F.vertices` packages this as plain
+dot notation, keyed to `P` alone (no `IsPolytope` hypothesis to carry around separately), instead
+of writing out `Vertices k (F : ConvexSet k A)` with the ambient `IsPolytope` proof threaded
+through by hand at every call site. -/
+
+/-- **The vertices of a face `F` of a (bundled) polytope `P`**: the points `v` with `{v}` a face
+of `F` (equivalently, of `P`, `Vertices.mono_of_isFaceOf`). By Krein–Milman
+(`ConvexSet.Face.coe_eq_convexHull_vertices`), `F` is exactly the convex hull of `F.vertices`. -/
+def ConvexSet.Face.vertices {P : Polytope k A} (F : ConvexSet.Face (P : ConvexSet k A)) : Set A :=
+  Vertices k (F : ConvexSet k A)
+
+omit [DecidableEq A] in
+/-- **Krein-Milman, in terms of `Face.vertices`.** -/
+theorem ConvexSet.Face.coe_eq_convexHull_vertices {P : Polytope k A}
+    (F : ConvexSet.Face (P : ConvexSet k A)) :
+    (F : Set A) = convexHull k F.vertices :=
+  IsPolytope.face_eq_convexHull_vertices P.isPolytope F.isFaceOf
 
 end Convexity

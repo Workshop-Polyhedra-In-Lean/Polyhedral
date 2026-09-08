@@ -14,6 +14,7 @@ import Polyhedral.Mathlib.Algebra.Module.Submodule.SubMulActionWithZero
 import Polyhedral.Mathlib.Algebra.Order.Nonneg.Basic
 import Polyhedral.Mathlib.Algebra.Order.Nonneg.DivisionRing
 import Polyhedral.Mathlib.Algebra.Order.Nonneg.Ring
+import Polyhedral.Mathlib.Combinatorics.SimpleGraph.Connectivity.Ranking
 import Polyhedral.Mathlib.Data.Set.Lattice.Image
 import Polyhedral.Mathlib.Data.SetLike.IsConcrete
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Basic
@@ -48,10 +49,12 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Module
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.Basic
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.Lattice
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Basic
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.EdgeGraph
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Face
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.KreinMilman
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Lattice
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.NormalCone
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Pointwise
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.TangentCone
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Basic
@@ -62,8 +65,10 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Vertex
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Hull
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Lattice
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.NormalCone
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Pointwise
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.TangentCone
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.StdSimplex
 import Polyhedral.Mathlib.GroupTheory.GroupAction.SubMulActionWithZero
 import Polyhedral.Mathlib.GroupTheory.GroupAction.SubMulActionWithZero.Closure
 import Polyhedral.Mathlib.GroupTheory.GroupAction.SubMulActionWithZero.Nonneg
@@ -77,5 +82,6 @@ import Polyhedral.Mathlib.LinearAlgebra.AffineSpace.Lattice
 import Polyhedral.Mathlib.LinearAlgebra.BilinearMap
 import Polyhedral.Mathlib.LinearAlgebra.Dual.Basis
 import Polyhedral.Mathlib.Logic.Function.Const
+import Polyhedral.Mathlib.Order.KrullDimension
 import Polyhedral.Mathlib.RingTheory.Finiteness.Cofinite
 import Polyhedral.Mathlib.RingTheory.Finiteness.Corank

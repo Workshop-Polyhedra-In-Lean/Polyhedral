@@ -6,6 +6,7 @@ Authors: Louis Theran
 
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Face.Lattice
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Hull
+import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.StdSimplex
 
 /-! This file proves the elementary fact underlying the (non-homogenization) Krein-Milman theorem
 for polytopes: a point of a finite set `T` that is *not* a convex combination of the rest of `T`
@@ -20,106 +21,6 @@ variable [AddCommGroup V] [Module k V] [AddTorsor V A] [DecidableEq A]
 attribute [local instance] AddTorsor.toConvexSpace
 
 open StdSimplex
-
-section StdSimplexHelpers
-
-variable {w : StdSimplex k A} {v : A}
-
-omit [DecidableEq A] in
-private theorem weights_le_one (w : StdSimplex k A) (v : A) : w.weights v ≤ 1 := by
-  classical
-  rw [← w.total]
-  by_cases hv : v ∈ w.weights.support
-  · exact Finset.single_le_sum (fun i _ => w.nonneg i) hv
-  · rw [Finsupp.notMem_support_iff.mp hv]
-    exact Finsupp.sum_nonneg (fun i _ => w.nonneg i)
-
-omit [DecidableEq A] in
-/-- If a point carries all the weight of a combination, the combination evaluates to that
-point. -/
-private theorem sConvexComb_eq_of_weights_eq_one (h : w.weights v = 1) : w.sConvexComb = v := by
-  classical
-  have hsupp : w.weights.support = {v} := by
-    refine Finset.eq_singleton_iff_unique_mem.mpr ⟨by simp [Finsupp.mem_support_iff, h], ?_⟩
-    intro x hx
-    by_contra hxv
-    have hsub : ({v, x} : Finset A) ⊆ w.weights.support := by
-      intro y hy
-      simp only [Finset.mem_insert, Finset.mem_singleton] at hy
-      rcases hy with rfl | rfl
-      · simp [Finsupp.mem_support_iff, h]
-      · exact hx
-    have h2 : w.weights v + w.weights x ≤ 1 := by
-      rw [← w.total, ← Finset.sum_pair (Ne.symm hxv)]
-      exact Finset.sum_le_sum_of_subset_of_nonneg hsub fun i _ _ => w.nonneg i
-    have hxpos : 0 < w.weights x :=
-      lt_of_le_of_ne (w.nonneg x) (Ne.symm (Finsupp.mem_support_iff.mp hx))
-    linarith
-  rw [support_weights_eq_singleton.mp hsupp]
-  exact AddTorsor.convexCombination_single v
-
-/-- If a point does *not* carry all the weight of a combination, the combination can be
-re-expressed as an affine combination of that point and a combination supported away from it. -/
-private theorem exists_sConvexComb_lineMap (hv1 : w.weights v ≠ 1) :
-    ∃ w' : StdSimplex k A, w'.weights.support = w.weights.support \ {v} ∧
-      AffineMap.lineMap w'.sConvexComb v (w.weights v) = w.sConvexComb := by
-  classical
-  by_cases hv0 : w.weights v = 0
-  · refine ⟨w, ?_, by simp [hv0]⟩
-    have hvns : v ∉ w.weights.support := by simp [Finsupp.mem_support_iff, hv0]
-    ext x
-    simp only [Finset.mem_sdiff, Finset.mem_singleton]
-    exact ⟨fun hx => ⟨hx, fun he => hvns (he ▸ hx)⟩, fun hx => hx.1⟩
-  · have hs : ∃ x ∈ ({v} : Set A), w.weights x ≠ 0 := ⟨v, rfl, hv0⟩
-    have hsupp : w.weights.support ⊆ {v} → w.weights v = 1 := by
-      intro hsupp
-      rcases Finset.subset_singleton_iff.mp hsupp with heq | heq
-      · exfalso
-        have htot := w.total
-        rw [Finsupp.sum, heq] at htot
-        simp at htot
-      · have htot := w.total
-        rw [Finsupp.sum, heq] at htot
-        simpa using htot
-    have hs' : ∃ x ∈ ({v} : Set A)ᶜ, w.weights x ≠ 0 := by
-      by_contra hcon
-      push Not at hcon
-      refine hv1 (hsupp fun x hx => ?_)
-      by_contra hxv
-      exact (Finsupp.mem_support_iff.mp hx) (hcon x (by simpa using hxv))
-    refine ⟨w.restrict {v}ᶜ hs', ?_, ?_⟩
-    · rw [support_weights_restrict]
-      ext x
-      simp only [Finset.mem_filter, Set.mem_compl_iff, Set.mem_singleton_iff,
-        Finset.mem_sdiff, Finset.mem_singleton]
-    have hkey := StdSimplex.convexCombPair_restrict_restrict_compl w {v} hs hs'
-    have hthis := congrArg sConvexComb hkey
-    rw [sConvexComb_convexCombPair, restrict_singleton, sConvexComb_single,
-      AddTorsor.convexCombPair_eq_lineMap] at hthis
-    have hv : (w.weights.filter (· ∈ ({v} : Set A))).sum (fun _ k => k) = w.weights v := by
-      classical
-      rw [Finsupp.sum, Finsupp.support_filter]
-      rw [Finset.sum_congr rfl (fun a ha => by
-        rw [Finsupp.filter_apply, if_pos (Finset.mem_filter.mp ha).2])]
-      by_cases hvs : v ∈ w.weights.support
-      · have heq : {x ∈ w.weights.support | x ∈ ({v} : Set A)} = {v} := by
-          ext x
-          simp only [Finset.mem_filter, Set.mem_singleton_iff, Finset.mem_singleton]
-          constructor
-          · exact fun h => h.2
-          · rintro rfl; exact ⟨hvs, rfl⟩
-        rw [heq]; simp
-      · have heq : {x ∈ w.weights.support | x ∈ ({v} : Set A)} = ∅ := by
-          ext x
-          simp only [Finset.mem_filter, Set.mem_singleton_iff, Finset.notMem_empty, iff_false,
-            not_and]
-          rintro hx rfl
-          exact hvs hx
-        rw [heq]
-        simp [Finsupp.notMem_support_iff.mp hvs]
-    rwa [hv] at hthis
-
-end StdSimplexHelpers
 
 /-- If `x = w.sConvexComb` for a combination `w` of points of `C`, and `x` lies in a face `F` of
 `C`, then every point in the support of `w` lies in `F` too. This generalizes
@@ -169,6 +70,7 @@ theorem essential_iff_singleton_isFaceOf {T : Finset A} {v : A} (hv : v ∈ T) :
       simp only [ConvexSet.mem_mk] at ha hb
       have hz' : v = z := hz.symm
       subst hz'
+      by_contra hav
       obtain ⟨wa, hwa, rfla⟩ := mem_convexHull_iff_exists_sConvexComb.mp ha
       obtain ⟨wb, hwb, rflb⟩ := mem_convexHull_iff_exists_sConvexComb.mp hb
       obtain ⟨p, q, hp, hq, hpq, hcomb⟩ := hzab
@@ -184,32 +86,31 @@ theorem essential_iff_singleton_isFaceOf {T : Finset A} {v : A} (hv : v ∈ T) :
         · exact hwb (Finset.mem_coe.mpr (Finsupp.support_smul hy'))
       have hwcv : (wc.sConvexComb : A) = v := by
         rw [hwcdef, sConvexComb_convexCombPair, AddTorsor.convexCombPair_eq_lineMap, ← hcomb]
-      by_cases hcase : wc.weights v = 1
-      · have hα : wa.weights v = 1 ∧ wb.weights v = 1 := by
-          have hle : wa.weights v ≤ 1 := weights_le_one wa v
-          have hle' : wb.weights v ≤ 1 := weights_le_one wb v
-          have heq : p * wa.weights v + q * wb.weights v = 1 := by
-            have hcase' := hcase
-            rwa [hwcdef, weights_convexCombPair, Finsupp.add_apply, Finsupp.smul_apply,
-              Finsupp.smul_apply, smul_eq_mul, smul_eq_mul] at hcase'
-          constructor <;> nlinarith
-        rw [sConvexComb_eq_of_weights_eq_one hα.1]
-        exact rfl
-      · exfalso
-        apply hess
-        obtain ⟨w', hw', hw'lm⟩ := exists_sConvexComb_lineMap hcase
-        rw [hwcv] at hw'lm
-        have hsolve : w'.sConvexComb = v := by
-          have hlm := (AffineMap.lineMap_eq_right_iff (k := k)).mp hw'lm
-          exact hlm.resolve_right hcase
-        have hmem' : w'.sConvexComb ∈ convexHull k (T.erase v : Set A) := by
-          apply mem_convexHull_iff_exists_sConvexComb.mpr
-          refine ⟨w', ?_, rfl⟩
-          refine (Finset.coe_subset.mpr hw'.le).trans (Finset.coe_subset.mpr ?_)
-          intro y hy
-          simp only [Finset.mem_sdiff, Finset.mem_singleton] at hy
-          exact Finset.mem_erase.mpr ⟨hy.2, Finset.mem_coe.mp (hwcsupp (Finset.mem_coe.mpr hy.1))⟩
-        rwa [hsolve] at hmem'
+      -- `wc.weights v = 1` would force `wa.weights v = 1`, i.e. `a = v`, contradicting `hav`.
+      have hcase : wc.weights v ≠ 1 := by
+        intro hcase1
+        apply hav
+        have hle : wa.weights v ≤ 1 := weights_le_one wa v
+        have hle' : wb.weights v ≤ 1 := weights_le_one wb v
+        have heq : p * wa.weights v + q * wb.weights v = 1 := by
+          rwa [hwcdef, weights_convexCombPair, Finsupp.add_apply, Finsupp.smul_apply,
+            Finsupp.smul_apply, smul_eq_mul, smul_eq_mul] at hcase1
+        rw [sConvexComb_eq_of_weights_eq_one (show wa.weights v = 1 by nlinarith)]
+        rfl
+      apply hess
+      obtain ⟨w', hw', hw'lm⟩ := exists_sConvexComb_lineMap hcase
+      rw [hwcv] at hw'lm
+      have hsolve : w'.sConvexComb = v := by
+        have hlm := (AffineMap.lineMap_eq_right_iff (k := k)).mp hw'lm
+        exact hlm.resolve_right hcase
+      have hmem' : w'.sConvexComb ∈ convexHull k (T.erase v : Set A) := by
+        apply mem_convexHull_iff_exists_sConvexComb.mpr
+        refine ⟨w', ?_, rfl⟩
+        refine (Finset.coe_subset.mpr hw'.le).trans (Finset.coe_subset.mpr ?_)
+        intro y hy
+        simp only [Finset.mem_sdiff, Finset.mem_singleton] at hy
+        exact Finset.mem_erase.mpr ⟨hy.2, Finset.mem_coe.mp (hwcsupp (Finset.mem_coe.mpr hy.1))⟩
+      rwa [hsolve] at hmem'
   · intro hface hmem
     obtain ⟨w, hwsupp, hwv⟩ := mem_convexHull_iff_exists_sConvexComb.mp hmem
     have hvnotsupp : v ∉ w.weights.support := fun hvs =>
