@@ -61,13 +61,13 @@ variable {C D : PointedCone R M} {x : M}
 
 /-- Algebraic relative interior, also known as core. -/
 def relint (C : PointedCone R M) : ConvexCone R M where
-  carrier := {x ∈ C | ∀ t ∈ span R C, ∃ c > 0, x + c • t ∈ C}
+  carrier := {x ∈ C | ∀ t ∈ span R C, ∃ c > (0 : R), x + c • t ∈ C}
   smul_mem' c hc x hx := by
     refine ⟨C.smul_mem hc.le hx.1, fun t ht ↦ ?_⟩
     obtain ⟨d, hd, hxd⟩ := hx.2 (c⁻¹ • t) (Submodule.smul_mem _ _ ht)
     refine ⟨d, hd, ?_⟩
     have := C.smul_mem hc.le hxd
-    rwa [smul_add, smul_comm c d, smul_smul, mul_inv_cancel₀ hc.ne', one_smul] at this
+    rwa [smul_add, smul_comm c d, smul_inv_smul₀ hc.ne'] at this
   add_mem' x hx y hy := by
     refine ⟨C.add_mem hx.1 hy.1, fun t ht ↦ ?_⟩
     obtain ⟨c, hc, hxc⟩ := hx.2 t ht
@@ -78,7 +78,7 @@ def relint (C : PointedCone R M) : ConvexCone R M where
 lemma relint_le : C.relint ≤ C := fun _ hx => hx.1
 
 lemma mem_relint_iff_forall_exists_gt_zero_forall_le_add_smul_mem :
-    x ∈ C.relint ↔ x ∈ C ∧ ∀ t ∈ span R C, ∃ c > 0, x + c • t ∈ C := by
+    x ∈ C.relint ↔ x ∈ C ∧ ∀ t ∈ span R C, ∃ c > (0 : R), x + c • t ∈ C := by
   simp [relint]
 
 lemma mem_relint_iff_mem_hull_neg_eq_top :
@@ -105,10 +105,42 @@ lemma mem_relint_dual {y : N} :
 
 lemma finset_sum_mem_relint_of_subset_of_le_span {s : Finset M} (hs : (s : Set M) ⊆ C)
     (hC : C ≤ Submodule.span R (s : Set M)) : ∑ x ∈ s, x ∈ relint C := by
-  sorry
+  rw [mem_relint_iff_forall_exists_gt_zero_forall_le_add_smul_mem]
+  have hxC : ∑ x ∈ s, x ∈ C := Submodule.sum_mem _ (fun y hy => hs hy)
+  refine ⟨hxC, fun t ht => ?_⟩
+  have hspan_le : Submodule.span R (C : Set M) ≤ Submodule.span R (s : Set M) :=
+    Submodule.span_le.mpr hC
+  obtain ⟨f, -, hf⟩ := Submodule.mem_span_finset.mp (hspan_le ht)
+  set B : R := ∑ y ∈ s, |f y| with hB_def
+  have hB0 : 0 ≤ B := Finset.sum_nonneg (fun y _ => abs_nonneg _)
+  have hBB1 : (0:R) < B + 1 := by linarith
+  refine ⟨1 / (B + 1), by positivity, ?_⟩
+  have hcoef : ∀ y ∈ s, (0:R) ≤ 1 + (1 / (B + 1)) * f y := by
+    intro y hy
+    have hfy : |f y| ≤ B := Finset.single_le_sum (fun z _ => abs_nonneg (f z)) hy
+    have hcpos : (0:R) < 1 / (B + 1) := by positivity
+    have hlow : -|f y| ≤ f y := neg_abs_le (f y)
+    have hstep : (1 / (B + 1)) * (-|f y|) ≤ (1 / (B + 1)) * f y :=
+      mul_le_mul_of_nonneg_left hlow hcpos.le
+    have hBstep : (1 / (B + 1)) * |f y| ≤ (1 / (B + 1)) * B :=
+      mul_le_mul_of_nonneg_left hfy hcpos.le
+    have hlt1 : (1 / (B + 1)) * B < 1 := by
+      rw [div_mul_eq_mul_div, one_mul, div_lt_one hBB1]
+      linarith
+    nlinarith [hstep, hBstep]
+  have hcalc : ∑ x ∈ s, x + (1 / (B + 1)) • t = ∑ y ∈ s, (1 + (1 / (B + 1)) * f y) • y := by
+    rw [← hf, Finset.smul_sum, ← Finset.sum_add_distrib]
+    refine Finset.sum_congr rfl fun y _ => ?_
+    rw [add_smul, one_smul, smul_smul]
+  rw [hcalc]
+  exact Submodule.sum_mem _ (fun y hy => C.smul_mem (hcoef y hy) (hs hy))
 
 lemma finset_sum_mem_relint_hull {s : Finset M} : ∑ x ∈ s, x ∈ relint (hull R (s : Set M)) := by
-  sorry
+  apply finset_sum_mem_relint_of_subset_of_le_span subset_hull
+  intro x hx
+  obtain ⟨c, hc, hc0, hcx⟩ := mem_hull_set.mp hx
+  rw [← hcx]
+  exact Submodule.sum_mem _ (fun y hy => Submodule.smul_mem _ _ (Submodule.subset_span (hc hy)))
 
 lemma relint_nonempty_of_finSalRank (h : C.FinSalRank) : Nonempty C.relint := sorry
 

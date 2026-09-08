@@ -26,6 +26,43 @@ namespace Convexity
 variable {R X Y : Type*} [Semiring R] [PartialOrder R] [IsStrictOrderedRing R] [ConvexSpace R X]
   [ConvexSpace R Y] {C s t : Set X} {x y : X}
 
+section Field
+
+variable {K Z : Type*} [Field K] [LinearOrder K] [IsStrictOrderedRing K] [ConvexSpace K Z]
+  {s : Set Z} {x : Z}
+
+/-- A point of the convex hull of `s` is exactly `sConvexComb` of some combination supported on
+`s`. This gives explicit weighted-sum representatives for elements of a convex hull, which
+`mem_convexHull_iff` alone (the smallest-convex-superset characterization) does not. -/
+theorem mem_convexHull_iff_exists_sConvexComb :
+    x ∈ convexHull K s ↔ ∃ w : StdSimplex K Z, ↑w.weights.support ⊆ s ∧ w.sConvexComb = x := by
+  classical
+  constructor
+  · intro hx
+    refine mem_convexHull_iff.mp hx
+      {y | ∃ w : StdSimplex K Z, ↑w.weights.support ⊆ s ∧ w.sConvexComb = y}
+      (fun a ha => ⟨.single a, by simpa using ha, by simp⟩) ?_
+    apply IsConvexSet.of_convexCombPair_mem
+    rintro p q hp hq hpq a ⟨wa, hwa, rfl⟩ b ⟨wb, hwb, rfl⟩
+    refine ⟨convexCombPair p q hp hq hpq wa wb, ?_, by rw [sConvexComb_convexCombPair]⟩
+    simp only [convexCombPair]
+    intro y hy
+    rw [Finset.mem_coe] at hy
+    obtain ⟨d, hd, hdy⟩ := Finset.mem_biUnion.mp (Finsupp.support_sum hy)
+    have hd' : d = wa ∨ d = wb := by
+      have hsupp_duple : (StdSimplex.duple wa wb hp hq hpq).weights.support ⊆ {wa, wb} := by
+        rw [StdSimplex.weights_duple]
+        exact Finsupp.support_add.trans
+          (Finset.union_subset_union Finsupp.support_single_subset Finsupp.support_single_subset)
+      simpa using hsupp_duple hd
+    rcases hd' with rfl | rfl
+    · exact hwa (Finset.mem_coe.mpr (Finsupp.support_smul hdy))
+    · exact hwb (Finset.mem_coe.mpr (Finsupp.support_smul hdy))
+  · rintro ⟨w, hw, rfl⟩
+    exact IsConvexSet.convexHull.sConvexComb_mem (hw.trans subset_convexHull_self)
+
+end Field
+
 section Pointwise
 
 open Pointwise

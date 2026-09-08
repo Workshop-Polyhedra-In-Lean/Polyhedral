@@ -35,13 +35,28 @@ variable (W) in
 /-- The homogenization cone of a convex set in an affine space. -/
 def homogenize (P : ConvexSet R A) : PointedCone R W := hull R (hom.ofPoint '' P)
 
+lemma homogenize_mono {K₁ K₂ : ConvexSet R A} (h : K₁ ≤ K₂) :
+    K₁.homogenize W ≤ K₂.homogenize W := Submodule.span_mono <| Set.image_mono h
+
+lemma homogenize_monotone : Monotone (homogenize W : ConvexSet R A → PointedCone R W) :=
+  fun _ _ => homogenize_mono
+
 /-- Homogenization from convex set to convex cones as an order homomorphism. -/
 def homogenizeOrderHom : ConvexSet R A →o PointedCone R W where
   toFun := homogenize W
-  monotone' _ _ PlQ := Submodule.span_mono <| Set.image_mono PlQ
+  monotone' := homogenize_monotone
 
+@[simp]
 lemma homogenize_bot : homogenize W (⊥ : ConvexSet R A) = ⊥ := by
-  simp [homogenize, Bot.bot]
+  simp [homogenize]
+
+@[simp]
+lemma homogenize_eq_bot_iff (P : ConvexSet R A) : homogenize W P = ⊥ ↔ P = ⊥ := by
+  refine ⟨fun h ↦ ?_, by simp +contextual [-SetLike.bot_eq_empty]⟩
+  ext x
+  simp only [homogenize, span_eq_bot, mem_image, SetLike.mem_coe, forall_exists_index, and_imp,
+    forall_apply_eq_imp_iff₂] at h
+  simpa using fun hx ↦ Affine.IsHomogenization.ofPoint_ne_zero _ (h x hx)
 
 lemma homogenize_top : homogenize W (⊤ : ConvexSet R A) = hom.weight.positive := by
   rw [homogenize, LinearMap.positive_eq_hull_preimage_singleton hom.weight 1 one_ne_zero,
@@ -49,9 +64,6 @@ lemma homogenize_top : homogenize W (⊤ : ConvexSet R A) = hom.weight.positive 
   congr
   ext x
   simp
-
-lemma homogenize_mono {K₁ K₂ : ConvexSet R A} (h : K₁ ≤ K₂) :
-    K₁.homogenize W ≤ K₂.homogenize W := span_mono <| Set.image_mono h
 
 lemma homogenize_le_weight_positive (K : ConvexSet R A) :
     homogenize W K ≤ hom.weight.positive := by
@@ -102,16 +114,27 @@ def dehomogenize (C : PointedCone R W) : ConvexSet R A :=
 
 alias _root_.PointedCone.dehomogenize := dehomogenize
 
-lemma dehomogenize_bot : dehomogenize A (⊥ : PointedCone R W) = ⊥ := sorry
+@[simp]
+lemma dehomogenize_bot : dehomogenize A (⊥ : PointedCone R W) = ⊥ := by
+  ext
+  simp [dehomogenize, Affine.IsHomogenization.ofPoint_ne_zero]
 
-lemma dehomogenize_top : dehomogenize A (⊤ : PointedCone R W) = ⊤ := sorry
+@[simp]
+lemma dehomogenize_top : dehomogenize A (⊤ : PointedCone R W) = ⊤ := by
+  ext
+  simp [dehomogenize, SetLike.mem_coe.mp]
 
 lemma dehomogenize_weight_positive : dehomogenize A hom.weight.positive = ⊤ := sorry
 
 variable (A) in
+@[mono]
 lemma dehomogenize_mono {C₁ C₂ : PointedCone R W} (h : C₁ ≤ C₂) :
     dehomogenize A C₁ ≤ dehomogenize A C₂ := Set.preimage_mono <| Set.preimage_mono h
     -- Q: why Set.preimage_mono twice?
+
+variable (A) in
+lemma dehomogenize_monotone : Monotone (dehomogenize A : PointedCone R W → ConvexSet R A) :=
+  fun _ _ => dehomogenize_mono A
 
 -- This lemma is just `Set.image_preimage_eq_inter_range` in disguise. It is likely not needed.
 lemma ofPoint_dehomogenize_eq_inter_ofPoint (C : PointedCone R W) :

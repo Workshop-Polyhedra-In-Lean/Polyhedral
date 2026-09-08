@@ -139,6 +139,27 @@ lemma IsFaceOf.FG.isExposedFaceOf (hC : C.FG) (hF : F.IsFaceOf C) :
 lemma IsExposedFaceOf.lineal (hC : C.FG) : IsExposedFaceOf C.lineal C := by
   apply IsFaceOf.FG.isExposedFaceOf hC (IsFaceOf.lineal C)
 
+open Module in
+/-- **A salient, finitely generated cone admits a linear functional strictly positive on its
+nonzero elements.** `FG` is the algebraic substitute for closedness that actually makes the
+argument work. The functional exposing the lineality space (`IsExposedFaceOf.lineal`) does the
+job directly:
+since `C` is salient, its lineality space is trivial, so `C ⊓ φ.ker = ⊥`, i.e. `φ` vanishes on `C`
+only at `0`. -/
+theorem exists_pos_of_salient_fg (hC : C.FG) (hsal : C.Salient) :
+    ∃ φ : Dual R M, C ≤ φ.positive := by
+  obtain ⟨g, hg, hgker⟩ := IsExposedFaceOf.lineal hC
+  have hker : C ⊓ g.ker = ⊥ := by
+    rw [← hgker]
+    ext y
+    simp [salient_iff_lineal_bot.mp hsal]
+  refine ⟨g, fun y hy => ?_⟩
+  rw [LinearMap.mem_positive']
+  refine ⟨hg hy, fun hgy => ?_⟩
+  have : y ∈ C ⊓ g.ker := ⟨hy, hgy⟩
+  rw [hker] at this
+  simpa using this
+
 end Field
 
 section DivisionRing
