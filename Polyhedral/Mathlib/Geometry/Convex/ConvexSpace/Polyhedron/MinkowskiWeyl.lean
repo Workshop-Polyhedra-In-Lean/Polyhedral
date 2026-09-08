@@ -621,7 +621,7 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd {H : Set A}
     exact Set.mem_vadd.mpr ⟨x -ᵥ y, hxy, y, hy, vsub_vadd x y⟩
   refine Set.Subset.antisymm hHsub ?_
   rintro _ ⟨v, hv, y, hy, rfl⟩
-  rw [← Convex.Set.recessionCone_vadd_self (𝕜 := 𝕜) (P := H)]
+  rw [← Convex.Set.recessionCone_vadd_self (R := 𝕜) (P := H)]
   exact Set.mem_vadd.mpr ⟨v, hv, y, hPH hy, rfl⟩
 
 -- alternative formulation (with =) of the following lemma.
