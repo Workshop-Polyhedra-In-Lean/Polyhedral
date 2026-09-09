@@ -652,7 +652,7 @@ lemma hull_invariant_under_scaling_subset (G1 G2 : Set V)
 -- TODO: Find a better name?
 /-- ALTERNATIVE ATTEMPT `H → V` direction
 verbose and in little steps -/
-theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
+theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
     (hH : IsHPolyhedron 𝕜 H) :
     ∃ P : Set A, IsPolytope 𝕜 P ∧
     ∃ C : PointedCone 𝕜 V, IsPolyhedral C ∧
@@ -726,16 +726,26 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
   set Points := G_hom_pos.preimage hom.ofPoint hom.ofPoint_injective.injOn with hPoints
   set G_hom_pos_normalized := (hom.ofPoint '' ↑Points) with h_G_hom_pos_normalized
   have h_normalized : G_hom_pos_normalized = G_hom_pos.image (fun g => g.weight⁻¹ • g) := by
+    ext g_hom
+    simp only [SetLike.mem_coe]
+    rw [h_G_hom_pos_normalized, hPoints]
+    nth_rewrite 1 [Finset.mem_image]
     sorry -- !!!!
 
   set P_convSet : ConvexSet 𝕜 A := ConvexSet.convexHull 𝕜 Points with hP_conv
   set P := (P_convSet : Set A) with hP -- == Convexity.convexHull 𝕜 Points
   -- two version of P, of different types. Do we need both?
+  -- For example, `homogenize` needs `P_convSet`.
   have P_is_polytope : IsPolytope 𝕜 P := by
-    rw [hP]
     use Points
-    rw [ConvexSet.convexHull] at hP_conv
-    simp only [hP_conv, mk_eq]
+    rw [hP, hP_conv, mk_eq, ConvexSet.carrier_eq_coe]
+    rfl
+
+  -- try to prove this directly?:
+  have X1_to_Y : ∀ g1 ∈ G_hom_pos, ∃ g2 ∈ G_hom_pos_normalized,
+       ∃ multiplier : 𝕜, multiplier > 0 ∧ g1 = multiplier • g2 := by sorry
+  have Y1_to_X : ∀ g1 ∈ G_hom_pos_normalized, ∃ g2 ∈ G_hom_pos,
+       ∃ multiplier : 𝕜, multiplier > 0 ∧ g1 = multiplier • g2 := by sorry
 
   -- 10. Generate the cone `C` from the zero-weight generators and the subspace S
   set Rays := hom.ofVector ⁻¹' G_hom_zero with hRays
@@ -767,7 +777,7 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
     linarith
 
   -- The desired representation is `H = C +ᵥ P`:
-  use P
+  use P_convSet -- or use P ?
   constructor
   · exact P_is_polytope
   use C
@@ -777,8 +787,8 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
     · apply fg_span -- show that hull 𝕜 Rays is finitely generated
       rw [hRays]
       apply Finite.preimage
-      exact hom.ofVector_injective.injOn
-      exact Finset.finite_toSet G_hom_zero
+      · exact hom.ofVector_injective.injOn
+      · exact Finset.finite_toSet G_hom_zero
     · use Linear_subspace
   · -- The goal is now to show that `H = C +ᵥ P`:
     rw [Subset.antisymm_iff]
@@ -863,22 +873,7 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
       --   -- simp
       --   sorry
 
-      have : D_hom = homogenize V_hom (P_convSet) := by sorry -- nonsense
       have : D_hom = hull 𝕜 G_hom := by rw [←hG_hom]
-      have : G_hom_pos_normalized = hom.ofPoint '' Points := by
-        rw [hPoints]
-        -- rw [image_eq_range]
-        --rw [image_preimage_eq] --rw [hG_hom_pos_normalized]
-        -- simp
-      -- have : hull 𝕜 G_hom_pos = homogenize V_hom P_convSet :=
-      -- calc
-      --   hull 𝕜 G_hom_pos = hull 𝕜 G_hom_pos_normalized := hhull
-      --   _ = hull 𝕜 (hom.ofPoint '' Points) := by
-      --     rw [hG_hom_pos_normalized]
-      --     sorry
-      --   _ = homogenize V_hom P_convSet := by rw [← hull_image_ofPoint_eq_homogenize_convexHull]
-
-      -- -/
 
       -- The following will be partially obsolete. -----------------------------------
       obtain ⟨μ, ⟨hμ, h_positive_combination_μ⟩ ⟩ := Submodule.mem_span_finset.mp hd_hom
@@ -965,13 +960,6 @@ theorem IsHPolyhedron.exists_isPolytope_plus_Cone_VERSION2 {H : Set A}
         rw [← dehomogenize_gives_back_H]
         sorry -- exact PointedCone.dehomogenize_mem.mpr hcp'
       exact hcp
-  use P
-  -- rw [hP]
-  constructor
-  · exact P_is_polytope
-  · use C
-    sorry
-    -- ...
 
 /--
 The recession cone of an H-polyhedron is a polyhedral cone.
