@@ -664,7 +664,8 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
 
   -- 1. obtain the affine functions `F` and subspace `S` describing the H-polyhedron `H`
   obtain ⟨F, S, hH⟩ := hH
-
+  -- hH : H = { x : A | ∀ f ∈ F, f x ≥ 0 } ⊓ S
+  
   -- 2. homogenize the functions to get linear functions `F_hom`:
   choose extend_function hext hextlin using hom.exists_linear_extension
   let F_hom := Finset.image extend_function F
@@ -672,7 +673,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
   set F0_hom := insert hom.weight F_hom with hF0_hom
   -- 4. Form the H-cone `C0_hom` in `V_hom` defined by the constraints `F0_hom`
   let C0_hom : PointedCone 𝕜 V_hom := dual .id F0_hom
-  --- C0_hom.carrier = { x : V_hom | ∀ f ∈ F0_hom, 0 ≤ f x },  -- pedestrian definition
+  --- C0_hom.carrier = { x : V_hom | ∀ f ∈ F0_hom, f x ≥ 0 },  -- pedestrian definition
   have hC0_nonneg : ∀ z ∈ C0_hom, 0 ≤ hom.weight z := by
     intro z hz
     exact (PointedCone.mem_dual.mp hz) (x := hom.weight)
