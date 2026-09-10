@@ -645,6 +645,12 @@ lemma hull_invariant_under_scaling_subset (G1 G2 : Set V)
     have : g2 ∈ hull 𝕜 G2 := mem_span_of_mem hg2
     exact PointedCone.smul_mem (hull 𝕜 G2) hmultiplier_pos.le this
 
+-- Something like this ought to be a theorem
+-- in Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.Basic
+theorem ConvexCone_map {G : Set V} (f : V →ₗ[𝕜] W) :
+    PointedCone.hull 𝕜 (f '' G) = PointedCone.map f (PointedCone.hull 𝕜 G) := by
+  symm
+  simpa using (PointedCone.map_hull (R := 𝕜) (f := f) (s := G))
 
 #click_suggestions
 -- omit [AddCommGroup W] [Module 𝕜 W] [IsModuleConvexSpace 𝕜 W] in
@@ -722,22 +728,19 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
       rw [Finset.mem_union]
       by_cases sign : 0 < g.weight
       · apply Or.inl
-        -- show g ∈ G_hom_pos
-        rw [hG_hom_pos]
-        simp only [gt_iff_lt, Finset.mem_filter]
+        -- show that g ∈ G_hom_pos:
+        rw [hG_hom_pos, Finset.mem_filter]
         constructor
         · exact hg
         · exact sign
-      · have ge : g.weight ≥ 0 := hG_hom_nonneg g hg
-        have le : g.weight ≤ 0 := not_lt.mp sign
-        have zero : g.weight = 0 := le_antisymm le ge
+      · have zero : g.weight = 0 := le_antisymm (not_lt.mp sign) (hG_hom_nonneg g hg)
         apply Or.inr
-        -- show g ∈ G_hom_zero
+        -- show that g ∈ G_hom_zero:
         rw [hG_hom_zero, Finset.mem_filter]
         constructor
         · exact hg
         · exact zero
-    · apply Finset.union_subset -- converse direction easy
+    · apply Finset.union_subset -- converse direction `⊇` is easy
       · apply Finset.filter_subset
       · apply Finset.filter_subset
 
@@ -772,22 +775,22 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
   -- It remains to show that `H = C +ᵥ P`
 
   -- Intermediate result: All elements of `T` have weight zero
-  have T_weight_eq_zero : ∀ s ∈ T, hom.weight s = 0 := by
-    intro s hs
-    have hs' : ∀ s ∈ T, s ∈ C0_hom ⊓ S_hom := by
-          intro s hs
+  have T_weight_eq_zero : ∀ t ∈ T, hom.weight t = 0 := by
+    intro t ht
+    have ht' : ∀ t ∈ T, t ∈ C0_hom ⊓ S_hom := by
+          intro t ht
           rw [←hC_hom, h_representation]
-          exact Submodule.mem_sup_right hs
+          exact Submodule.mem_sup_right ht
     -- NOTE: The following could be proved directly above
-    have hs'' : ∀ s ∈ T, s ∈ C0_hom := by
-          intro s hs
-          exact (mem_inf.mp (hs' s hs)).1
-    have hs_nonneg : 0 ≤ hom.weight s := hC0_nonneg s (hs'' s hs)
-    have hs_neg_nonneg : 0 ≤ hom.weight (-s) :=
-          hC0_nonneg (-s) (hs'' (-s) (by simp only [Submodule.neg_mem _ hs]))
-    have hs_neg : hom.weight (-s) = - hom.weight s := by
+    have ht'' : ∀ t ∈ T, t ∈ C0_hom := by
+          intro t ht
+          exact (mem_inf.mp (ht' t ht)).1
+    have ht_nonneg : 0 ≤ hom.weight t := hC0_nonneg t (ht'' t ht)
+    have ht_neg_nonneg : 0 ≤ hom.weight (-t) :=
+          hC0_nonneg (-t) (ht'' (-t) (by simp only [Submodule.neg_mem _ ht]))
+    have ht_neg : hom.weight (-t) = - hom.weight t := by
           simp only [LinearMap.map_neg]
-    rw [hs_neg] at hs_neg_nonneg
+    rw [ht_neg] at ht_neg_nonneg
     linarith
 
   -- The desired representation is `H = C +ᵥ P`:
@@ -810,6 +813,13 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
     -- show H ⊆ C +ᵥ P
     · intro x hx
       set x_hom : V_hom := hom.ofPoint x with hx_hom_def
+      have x_hom_weight_eq_one: x_hom.weight = 1 := by
+        have : x_hom ∈ hom.weight ⁻¹' {1} := by
+          rw [← hom.ofPoint_range_eq_preimage_weight_one]
+          use x
+        rw [mem_preimage, mem_singleton_iff] at this
+        exact this
+
       have hx' : x_hom ∈ C0_hom := by
         sorry
           --- exact Submodule.mem_span_of_mem (Set.mem_image_of_mem _ (hH.2 hx))
@@ -822,15 +832,20 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
         rw [← h_representation]
         exact hx_hom
       -- show that x ∈ C +ᵥ P
-      -- since x_hom ∈ H_hom, `x_hom = (∑ μ_j r_j + s) +ᵥ (∑ λ_i g_i)`
-      -- for some r_j ∈ Rays, s ∈ Linear_subspace, g_i ∈ G_hom_pos, μ_j ≥ 0, λ_i ≥ 0.
+      -- since x_hom ∈ H_hom, `x_hom = (∑ μ_j r_j + t) +ᵥ (∑ λ_i g_i)`
+      -- for some r_j ∈ Rays, t ∈ Linear_subspace, g_i ∈ G_hom_pos, μ_j ≥ 0, λ_i ≥ 0.
       obtain ⟨d_hom, hd_hom, t_hom, ht_hom, d_hom_plus_t_hom_eq_x_hom⟩ := mem_sup.mp hC_hom_rep
       -- rw [← hG_hom] at hd_hom
       have split_d : D_hom = hull 𝕜 G_hom_pos ⊔ hull 𝕜 G_hom_zero := by
         sorry
       rw [split_d] at hd_hom
       obtain ⟨p_hom, hp_hom, z_hom, hz_hom, p_hom_plus_z_hom_eq_d_hom⟩ := mem_sup.mp hd_hom
-      -- Now we have the decomposition   `x_hom = p_hom + z_hom + t_hom
+      -- Now we have the decomposition `x_hom = p_hom + z_hom + t_hom`
+      -- This needs to be translated to `x = p + z + t = (z +ᵥ t) +ₐ p` with `p ∈ P` and `z + t ∈ C`
+
+      -- set p := hom.ofPoint⁻¹ p_hom with hp
+      -- set z := hom.ofVector ⁻¹ z_hom with hz
+      -- set t := hom.ofVector ⁻¹ t_hom with ht
 
       --/-
       -- Alternative attempt following Moritz's proof:
@@ -838,6 +853,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
       -- Construction path of Points:
       --    (G_hom_pos ⊆ V_hom) → (G_hom_pos_normalized ⊆ V_hom) → (Points ⊆ A)
 
+      -- intermediate result: G_hom_pos and G_hom_pos_normalized generate the some hull:
       set X := (G_hom_pos : Set V_hom) with hX-- abbreviations
       set Y := (G_hom_pos_normalized : Set V_hom) with hY
       have hhull : PointedCone.hull 𝕜 X = PointedCone.hull 𝕜 Y := by
@@ -877,21 +893,68 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
           hull_invariant_under_scaling_subset Y X Y_to_X
         apply le_antisymm <;> assumption
 
+      have weight_G_normalized_eq_one : ∀ g ∈ G_hom_pos_normalized, hom.weight g = 1 := by
+        sorry
+
+      have : hom.ofPoint '' Points = G_hom_pos_normalized := by
+        rw [hPoints]
+        simp only [Finset.coe_preimage]
+        apply image_preimage_eq_of_subset
+        rw [hom.ofPoint_range_eq_preimage_weight_one, ←image_subset_iff, subset_singleton_iff]
+        intro w hw
+        rw [mem_image] at hw
+        obtain ⟨x, ⟨hxG, weight_of_x_eq_w⟩ ⟩ := hw
+        rw [←weight_G_normalized_eq_one x hxG]
+        exact weight_of_x_eq_w.symm
+
       have : hull 𝕜 (hom.ofPoint '' Points) = homogenize V_hom P_convSet := by
         rw [← hull_image_ofPoint_eq_homogenize_convexHull]
 
-      -- have : G_hom_pos_normalized =
-      --       ⇑hom.ofPoint ''
-      --        ((G_hom_pos_normalized.preimage ⇑hom.ofPoint hom.ofPoint_injective.injOn) ) := by
-      --   simp only [Finset.coe_preimage]
-      --   rw [image_preimage_eq] -- too strong
-      --   -- simp
-      --   sorry
 
       have : D_hom = hull 𝕜 G_hom := by rw [←hG_hom]
 
+
+      -- We have the decomposition `x_hom = p_hom + z_hom + t_hom`
+      -- This needs to be translated to `x = p + z + t = (z +ᵥ t) +ₐ p` with `p ∈ P` and `z + t ∈ C`
+
+      -- set p := hom.ofPoint⁻¹ p_hom with hp
+      -- set z := hom.ofVector ⁻¹ z_hom with hz
+      -- set t := hom.ofVector ⁻¹ t_hom with ht
+
+      have t_weight_eq_zero : t_hom.weight = 0 := T_weight_eq_zero t_hom ht_hom
+
+
+      have z_weight_eq_zero : z_hom.weight = 0 := by
+        have hmap_zero : (hull 𝕜 ↑(G_hom_zero : Set V_hom)).map hom.weight = ⊥ := by
+          rw [PointedCone.map_hull, span_eq_bot, forall_mem_image]
+          intro x hx
+          rw [Finset.mem_coe, Finset.mem_filter] at hx
+          exact hx.2
+        have h_z_mem_bot : hom.weight z_hom ∈ (⊥ : PointedCone 𝕜 𝕜) := by
+          rw [←hmap_zero, PointedCone.mem_map]
+          exact ⟨z_hom, hz_hom, rfl⟩
+        rw [mem_bot] at h_z_mem_bot
+        exact h_z_mem_bot
+
+      have p_weight_eq_one : p_hom.weight = 1 := by
+        have : (p_hom+z_hom+t_hom).weight = p_hom.weight + z_hom.weight + t_hom.weight := by
+          rw [map_add, map_add, add_right_inj]
+        rw [p_hom_plus_z_hom_eq_d_hom, d_hom_plus_t_hom_eq_x_hom,
+           t_weight_eq_zero, z_weight_eq_zero, x_hom_weight_eq_one, add_zero, add_zero
+         ] at this --⟩ := mem_sup.mp hd_hom
+        exact this.symm
+
+      have p_exists : ∃ p : A, hom.ofPoint p = p_hom := by
+        -- simp
+        sorry
+
+      -- set x := hom.ofPoint⁻¹ x_hom
+      set p := Classical.choose p_exists
+      set hp := Classical.choose_spec p_exists
+      -- choose
+
       -- The following will be partially obsolete. -----------------------------------
-      obtain ⟨μ, ⟨hμ, h_positive_combination_μ⟩ ⟩ := Submodule.mem_span_finset.mp hd_hom
+      obtain ⟨μ, ⟨hμ, h_positive_combination_μ⟩ ⟩ := Submodule.mem_span_finset.mp hp_hom
       -- We can normalize the g_i to weight 1 to get points in Points.
       -- Since `x` as well as the points in `Points` have weight 1,
       -- and all other points have weight 0,  `∑ λ_i = 1`, and thus
@@ -900,17 +963,17 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
       let P_pos := μ.support
       have sum_pos1: ∑ g ∈ G_hom_pos, μ g * g.weight = 1 := by
         have sum_1: ∑ g ∈ G_hom, μ g * g.weight = 1 := by
-          have t_weight_zero : t.weight = 0 := T_weight_eq_zero t hs
-          --have : (d_hom + s).weight = 1 := by
+          have t_weight_zero : t_hom.weight = 0 := T_weight_eq_zero t_hom ht_hom
+          --have : (d_hom + t_hom).weight = 1 := by
           --  rw [d_hom_plus_s_is_x_hom, hx_hom_def]
           --  exact hom.weight_one x
-          --have : (d_hom + s).weight = d_hom.weight + s.weight := by rw [LinearMap.map_add]
+          --have : (d_hom + t_hom).weight = d_hom.weight + s.weight := by rw [LinearMap.map_add]
           have d_hom.weight_eq_one : d_hom.weight = 1 :=
           calc
             d_hom.weight = d_hom.weight + 0 := by rw [add_zero]
-            _ = d_hom.weight + t.weight     := by rw [t_weight_zero]
-            _ = (d_hom + t).weight          := by rw [LinearMap.map_add]
-            _ = x_hom.weight                := by rw [d_hom_plus_t_eq_x_hom]
+            _ = d_hom.weight + t_hom.weight     := by rw [t_weight_zero]
+            _ = (d_hom + t_hom).weight          := by rw [LinearMap.map_add]
+            _ = x_hom.weight                := by rw [d_hom_plus_t_hom_eq_x_hom]
             _ = hom.weight x_hom            := by rfl
             _ = hom.weight (hom.ofPoint x)  := by rw [hx_hom_def]
             _ = 1                           := hom.weight_one x
@@ -921,7 +984,8 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
           have h_lin: ∑ g ∈ G_hom, (μ g • g).weight = (∑ g ∈ G_hom, μ g • g).weight := by
             simp only [map_sum, LinearMap.map_smul_of_tower]
           rw [Finset.sum_congr rfl h_mul_eq_smul]
-          rw [h_lin, h_positive_combination_μ, d_hom.weight_eq_one]
+          sorry -- a translation step from V_hom to V is missing.
+          -- rw [h_lin, h_positive_combination_μ, d_hom.weight_eq_one]
         have sum_0: ∑ g ∈ G_hom_zero, μ g * g.weight = 0 := by
           apply Finset.sum_eq_zero
           intro g hg
