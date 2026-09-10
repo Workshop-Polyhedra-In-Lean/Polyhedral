@@ -665,7 +665,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
   -- 1. obtain the affine functions `F` and subspace `S` describing the H-polyhedron `H`
   obtain ⟨F, S, hH⟩ := hH
   -- hH : H = { x : A | ∀ f ∈ F, f x ≥ 0 } ⊓ S
-  
+
   -- 2. homogenize the functions to get linear functions `F_hom`:
   choose extend_function hext hextlin using hom.exists_linear_extension
   let F_hom := Finset.image extend_function F
@@ -724,14 +724,9 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
   --  sorry
 
   -- 9. Normalize the positive-weight generators to weight 1 to get a finite set of points `Points`
-  set Points := G_hom_pos.preimage hom.ofPoint hom.ofPoint_injective.injOn with hPoints
-  set G_hom_pos_normalized := (hom.ofPoint '' ↑Points) with h_G_hom_pos_normalized
-  have h_normalized : G_hom_pos_normalized = G_hom_pos.image (fun g => g.weight⁻¹ • g) := by
-    ext g_hom
-    simp only [SetLike.mem_coe]
-    rw [h_G_hom_pos_normalized, hPoints]
-    nth_rewrite 1 [Finset.mem_image]
-    sorry -- !!!!
+  set G_hom_pos_normalized := G_hom_pos.image (fun g => g.weight⁻¹ • g) with h_G_hom_pos_normalized
+  set Points := G_hom_pos_normalized.preimage (hom.ofPoint) (hom.ofPoint_injective.injOn) with hPoints
+  -- have G_hom_pos_normalized = (hom.ofPoint '' ↑Points) with
 
   set P_convSet : ConvexSet 𝕜 A := ConvexSet.convexHull 𝕜 Points with hP_conv
   set P := (P_convSet : Set A) with hP -- == Convexity.convexHull 𝕜 Points
@@ -826,9 +821,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
         have Y_to_X : ∀ g1 ∈ G_hom_pos_normalized, ∃ g2 ∈ G_hom_pos,
                ∃ multiplier : 𝕜, multiplier > 0 ∧ g1 = multiplier • g2 := by
           intro g1 hg1
-          rw [←hY, h_normalized] at hg1
-          simp only [SetLike.mem_coe] at hg1
-          rw [Finset.mem_image] at hg1
+          rw [h_G_hom_pos_normalized, Finset.mem_image] at hg1
           obtain ⟨g, g_in_G, g_versus_g1⟩ := hg1
           use g
           simp only [g_in_G, gt_iff_lt, true_and]
@@ -846,9 +839,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
           have multiplier_pos : hom.weight g1 > 0 := g_weight_pos
           set g2 := (hom.weight g1)⁻¹ • g1 with hg2
           use g2
-          rw [←hY, h_normalized]
-          simp only [SetLike.mem_coe]
-          rw [Finset.mem_image]
+          rw [h_G_hom_pos_normalized, Finset.mem_image]
           constructor
           · use g1
             simp only [hg1_in_hom_pos, hg2, true_and]
