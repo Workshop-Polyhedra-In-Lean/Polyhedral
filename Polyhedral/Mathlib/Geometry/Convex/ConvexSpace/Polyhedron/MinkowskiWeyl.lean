@@ -746,7 +746,8 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
 
   -- 9. Normalize the positive-weight generators to weight 1 to get a finite set of points `Points`
   set G_hom_pos_normalized := G_hom_pos.image (fun g => g.weight⁻¹ • g) with h_G_hom_pos_normalized
-  set Points := G_hom_pos_normalized.preimage (hom.ofPoint) (hom.ofPoint_injective.injOn) with hPoints
+  set Points := G_hom_pos_normalized.preimage (hom.ofPoint) (hom.ofPoint_injective.injOn)
+         with hPoints
   -- have G_hom_pos_normalized = (hom.ofPoint '' ↑Points) with
 
   set P_convSet : ConvexSet 𝕜 A := ConvexSet.convexHull 𝕜 Points with hP_conv
@@ -923,7 +924,6 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
 
       have t_weight_eq_zero : t_hom.weight = 0 := T_weight_eq_zero t_hom ht_hom
 
-
       have z_weight_eq_zero : z_hom.weight = 0 := by
         have hmap_zero : (hull 𝕜 ↑(G_hom_zero : Set V_hom)).map hom.weight = ⊥ := by
           rw [PointedCone.map_hull, span_eq_bot, forall_mem_image]
@@ -944,14 +944,19 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
          ] at this --⟩ := mem_sup.mp hd_hom
         exact this.symm
 
-      have p_exists : ∃ p : A, hom.ofPoint p = p_hom := by
-        -- simp
-        sorry
+      have p_exists : ∃ p : A, p_hom = hom.ofPoint p := by -- because p_hom.weight = 1
+        apply (hom.weight_one_iff p_hom).mp
+        exact p_weight_eq_one
+      have v_exists : ∀ v_hom : V_hom, (v_hom.weight = 0) → ∃ v : V, hom.ofVector v = v_hom := by
+        intro v_hom hv_hom
+        have hrange : v_hom ∈ LinearMap.range hom.ofVector := by
+          rw [hom.ofVector_range_eq_weight_ker]
+          exact hv_hom
+        exact (LinearMap.mem_range.mp hrange)
 
-      -- set x := hom.ofPoint⁻¹ x_hom
-      set p := Classical.choose p_exists
-      set hp := Classical.choose_spec p_exists
-      -- choose
+      choose (p : A) hp using p_exists
+      choose (z : V) hz using v_exists z_hom z_weight_eq_zero
+      choose (t : V) ht using v_exists t_hom t_weight_eq_zero
 
       -- The following will be partially obsolete. -----------------------------------
       obtain ⟨μ, ⟨hμ, h_positive_combination_μ⟩ ⟩ := Submodule.mem_span_finset.mp hp_hom
