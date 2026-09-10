@@ -914,7 +914,8 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
 
       have : D_hom = hull 𝕜 G_hom := by rw [←hG_hom]
 
-
+      have x_hom_decomp : x_hom = p_hom + z_hom + t_hom := by
+        rw [p_hom_plus_z_hom_eq_d_hom, d_hom_plus_t_hom_eq_x_hom]
       -- We have the decomposition `x_hom = p_hom + z_hom + t_hom`
       -- This needs to be translated to `x = p + z + t = (z +ᵥ t) +ₐ p` with `p ∈ P` and `z + t ∈ C`
 
@@ -937,11 +938,9 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
         exact h_z_mem_bot
 
       have p_weight_eq_one : p_hom.weight = 1 := by
-        have : (p_hom+z_hom+t_hom).weight = p_hom.weight + z_hom.weight + t_hom.weight := by
-          rw [map_add, map_add, add_right_inj]
-        rw [p_hom_plus_z_hom_eq_d_hom, d_hom_plus_t_hom_eq_x_hom,
-           t_weight_eq_zero, z_weight_eq_zero, x_hom_weight_eq_one, add_zero, add_zero
-         ] at this --⟩ := mem_sup.mp hd_hom
+        have : x_hom.weight = p_hom.weight + z_hom.weight + t_hom.weight := by
+          rw [x_hom_decomp, map_add, map_add, add_right_inj]
+        rw [t_weight_eq_zero, z_weight_eq_zero, x_hom_weight_eq_one, add_zero, add_zero] at this
         exact this.symm
 
       have p_exists : ∃ p : A, p_hom = hom.ofPoint p := by -- because p_hom.weight = 1
@@ -957,6 +956,19 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
       choose (p : A) hp using p_exists
       choose (z : V) hz using v_exists z_hom z_weight_eq_zero
       choose (t : V) ht using v_exists t_hom t_weight_eq_zero
+
+      have : x = (z +ᵥ t) +ᵥ p := by
+        have : hom.ofPoint x = hom.ofPoint ((z +ᵥ t) +ᵥ p) := calc
+          hom.ofPoint x = x_hom := hx_hom_def.symm
+          _ = p_hom + z_hom + t_hom := x_hom_decomp
+          _ = hom.ofPoint p + (hom.ofVector z + hom.ofVector t) := by rw [←hp, ←hz, ←ht, add_assoc]
+          _ = hom.ofPoint p + hom.ofVector (z + t) := by rw [← LinearMap.map_add]
+          _ = hom.ofVector (z + t) + hom.ofPoint p := by rw [add_comm]
+          _ = hom.ofPoint ((z +ᵥ t) +ᵥ p) := by
+            simp only [map_add, vadd_eq_add, AffineMap.map_vadd]
+          --_ = hom.ofPoint (z +ᵥ t +ᵥ p) := by sorry
+        apply hom.ofPoint_injective
+        exact this
 
       -- The following will be partially obsolete. -----------------------------------
       obtain ⟨μ, ⟨hμ, h_positive_combination_μ⟩ ⟩ := Submodule.mem_span_finset.mp hp_hom
