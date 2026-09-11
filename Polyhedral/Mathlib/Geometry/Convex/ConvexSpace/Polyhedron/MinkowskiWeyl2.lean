@@ -2,10 +2,9 @@
 Copyright (c) 2025 Martin Winter. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Martin Winter
-
-
- Günter Rote : separated the alternative proof in a separate file.
 -/
+
+-- Günter Rote : separated the alternative proof in a separate file.--
 
 import Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Convexity
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Pointwise
@@ -18,6 +17,7 @@ import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Set.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.Homogenization
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.HPolyhedron
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.Basic
+-- import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polyhedron.MinkowskiWeyl
 
 /-! # Minkowski-Weyl for polyhedra
 
@@ -41,39 +41,19 @@ variable {A : Type*} [AddTorsor V A]
 attribute [local instance] AddTorsor.toConvexSpace
 
 
+
 -- `H = (C + S) +ᵥ P` should become the definition of `IsVPolyhedron`
 
 
-/- Minkowski-Weyl for polyhedral cones -/
-variable {p : V' →ₗ[𝕜] V →ₗ[𝕜] 𝕜}
-
 /- Minkowski-Weyl for polyhedra -/
 open Convex
-
--- def IsHPolyhedron.vertices {P : Set A}
--- (hP : IsHPolyhedron R P) : Finset { v ∈ Set A | IsFace 0 hP v}
-
--- TODO: This should be a more general theorem in Mathlib
-/--
-If an affine functional is nonnegative along the ray `a • v +ᵥ x`, `a ≥ 0`, then its
-linear part is nonnegative on the direction `v`.
--/
-lemma AffineMap.linear_nonneg_of_forall_nonneg (h : A →ᵃ[𝕜] 𝕜) {x : A} {v : V}
-    (hray : ∀ a : 𝕜, 0 ≤ a → 0 ≤ h (a • v +ᵥ x)) : 0 ≤ h.linear v := by
-  by_contra hneg
-  push Not at hneg
-  have h0 : (0 : 𝕜) ≤ h x := by simpa only [zero_smul, zero_vadd] using hray 0 le_rfl
-  have hdiv : (0 : 𝕜) ≤ (h x + 1) / (-h.linear v) := div_nonneg (by linarith) (by linarith)
-  have hkey := hray _ hdiv
-  simp only [AffineMap.map_vadd, map_smul, smul_eq_mul, vadd_eq_add] at hkey
-  have hcancel : (h x + 1) / (-h.linear v) * (-h.linear v) = h x + 1 :=
-    div_mul_cancel₀ _ (by linarith)
-  linarith
 
 section Homogenize
 
 variable [IsModuleConvexSpace 𝕜 W]
 variable [hom : Affine.IsHomogenization 𝕜 A W]
+
+-- The following Lemma is copied from MinkowskiWeyl.lean:
 
 omit [LinearOrder 𝕜] [IsOrderedRing 𝕜] [IsModuleConvexSpace 𝕜 W] in
 -- TODO: This should be added to the new Mathlib homogenization API
@@ -96,59 +76,7 @@ lemma Affine.IsHomogenization.exists_linear_extension (h : A →ᵃ[𝕜] 𝕜) 
   rw [hv, map_sub, hFx, hFx]
   simp only [AffineMap.map_vadd, vadd_eq_add, add_sub_cancel_right]
 
-/- Every affine functional extends to a unique linear functional on the homogenization space which
-agrees with it on points and with its linear part on vectors.
--/
--- def Affine.IsHomogenization.linear_extension (h : A →ᵃ[𝕜] 𝕜) : W →ₗ[𝕜] 𝕜 :=
-
 variable [DecidableEq (W →ₗ[𝕜] 𝕜)]
-
-variable (W) in
-noncomputable def AffineMap.linear_extension : (A →ᵃ[𝕜] 𝕜) ↪ W →ₗ[𝕜] 𝕜 where
-  toFun := (hom.exists_linear_extension · |>.choose)
-  inj' := sorry
-
--- We might need to pass the affine subspace to homogenize_dual
-variable (W) in
-noncomputable
-def homogenize_dual (H : Finset (A →ᵃ[𝕜] 𝕜)) : PointedCone 𝕜 W :=
-    PointedCone.dual .id (
-      insert hom.weight (H.image (AffineMap.linear_extension W)) : Finset (W →ₗ[𝕜] 𝕜))
-
-omit [IsModuleConvexSpace 𝕜 W] in
-variable (W) in
-lemma homogenize_dual_dualFG (H : Finset (A →ᵃ[𝕜] 𝕜)) : (homogenize_dual W H).DualFG .id := by
-  rw [homogenize_dual]
-  exact DualFG.dual_of_finset .id (insert hom.weight (H.image (AffineMap.linear_extension W)))
-
-lemma homogenize_dual_weight_zero_eq_recessionCone (H : Finset (A →ᵃ[𝕜] 𝕜)) :
-    (homogenize_dual W H) ⊓ hom.weight.ker =
-      (⋂ h ∈ H, (h.linear_extension W) ⁻¹' Set.Ici 0).recessionCone 𝕜 := by
-  sorry
-
-variable (W) in
-lemma IsHPolyhedron.exists_homogenize_dual {P : Set A} (hP : IsHPolyhedron 𝕜 P) :
-    ∃ H : Finset (A →ᵃ[𝕜] 𝕜), ∃ S : AffineSubspace 𝕜 A,
-      (P = (⋂ h ∈ H, h ⁻¹' Set.Ici 0) ⊓ S) ∧
-      ConvexSet.dehomogenize A (
-        homogenize_dual W H ⊓ (S.direction.map hom.ofVector : Submodule 𝕜 W)) = P := by
-  obtain ⟨ineqs, S, rfl⟩ := hP
-  use ineqs, S
-  constructor
-  · rfl
-  sorry
-
--- IDEA: We could have general notation for an `∃ statement with witness`, which would
---       have computable access to the witness in definitions.
---       The Exists could have a head/tail coercion into ExistsWithWitness
---       relying on choice for use in proofs, and (witness → predicate) could have a
---       coercion into ExistsWithWitness to avoid `constructor` in proofs of ExistsWithWitness.
---       Then we could use `IsHPolyhedron 𝕜 P with H` as an argument when we demand the
---       that the actual inequalities are made explicit.
--- lemma homogenize_dual_splits {P : Set A} {H : Finset (W →ₗ[𝕜] 𝕜)} (hP : IsHPolyhedron 𝕜 P with H) :
---     (homogenize_dual A H).recessionCone
-
--- lemma split_zero_pos (D : PointedCone 𝕜 W) (hD : D.FG) (S : Submodule 𝕜 W) :
 
 -----------------------------------------------------------------
 
