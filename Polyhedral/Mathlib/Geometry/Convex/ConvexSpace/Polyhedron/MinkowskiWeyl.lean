@@ -645,13 +645,6 @@ lemma hull_invariant_under_scaling_subset (G1 G2 : Set V)
     have : g2 ∈ hull 𝕜 G2 := mem_span_of_mem hg2
     exact PointedCone.smul_mem (hull 𝕜 G2) hmultiplier_pos.le this
 
--- Something like this ought to be a theorem
--- in Polyhedral.Mathlib.Geometry.Convex.Cone.Pointed.Finite.Basic
-theorem ConvexCone_map {G : Set V} (f : V →ₗ[𝕜] W) :
-    PointedCone.hull 𝕜 (f '' G) = PointedCone.map f (PointedCone.hull 𝕜 G) := by
-  symm
-  simpa using (PointedCone.map_hull (R := 𝕜) (f := f) (s := G))
-
 #click_suggestions
 -- omit [AddCommGroup W] [Module 𝕜 W] [IsModuleConvexSpace 𝕜 W] in
 -- G.R. don't understand: W does not appear in the theorem statement!
