@@ -315,8 +315,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
       rw [split_d] at hd_hom
       obtain ⟨p_hom, hp_hom, z_hom, hz_hom, p_hom_plus_z_hom_eq_d_hom⟩ := mem_sup.mp hd_hom
       -- Now we have the decomposition `x_hom = p_hom + z_hom + t_hom`
-      -- This needs to be translated to `x = p + z + t = (z +ᵥ t) +ₐ p` with `p ∈ P` and `z + t ∈ C`
-
+      -- This needs to be translated to `x = (z +ᵥ t) +ₐ p` with `p ∈ P` and `z + t ∈ C`
       -- set p := hom.ofPoint⁻¹ p_hom with hp
       -- set z := hom.ofVector ⁻¹ z_hom with hz
       -- set t := hom.ofVector ⁻¹ t_hom with ht
@@ -325,9 +324,10 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
       -- Alternative attempt following Moritz's proof:
 
       -- Construction path of Points:
+      -- Construction path of `Points`:
       --    (G_hom_pos ⊆ V_hom) → (G_hom_pos_normalized ⊆ V_hom) → (Points ⊆ A)
 
-      -- intermediate result: G_hom_pos and G_hom_pos_normalized generate the some hull:
+      -- intermediate result: G_hom_pos and G_hom_pos_normalized generate the same hull:
       set X := (G_hom_pos : Set V_hom) with hX-- abbreviations
       set Y := (G_hom_pos_normalized : Set V_hom) with hY
       have hhull : PointedCone.hull 𝕜 X = PointedCone.hull 𝕜 Y := by
@@ -461,7 +461,10 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
             LinearMap.ker_eq_bot_of_injective hom.ofVector_injective
           exact LinearMap.leftInverse_apply_of_inj (f := hom.ofVector) ofVector_inj t
       have z_in_Rays : z ∈ hull 𝕜 Rays := by
-        sorry --?simp? SCHON ZU HAUSE??
+        have := PointedCone.mem_comap (f := hom.ofVector) (C := hull 𝕜 ↑G_hom_zero) (x := z)
+        -- theorem mem_comap {f : E →ₗ[R] F} {C : PointedCone R F} {x : E} : x ∈ C.comap f ↔ f x ∈ C :=
+
+        sorry --?simp?
 
       have a1 : hull 𝕜 (hom.ofPoint '' Points) = homogenize V_hom P_convSet := by
         rw [← hull_image_ofPoint_eq_homogenize_convexHull]
