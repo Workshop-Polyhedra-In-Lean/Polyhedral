@@ -139,7 +139,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
     use F0_hom
 
   -- 5. homogenize the subspace `S` to get `S_hom`:
-  let S_hom : Submodule 𝕜 V_hom := Submodule.span 𝕜 (hom.ofPoint '' S)
+  set S_hom : Submodule 𝕜 V_hom := Submodule.span 𝕜 (hom.ofPoint '' S) with hS_hom
 
   -- 6. Form the H-cone `H_hom` by intersecting `C0_hom` with the subspace `S_hom`.
   set H_hom : PointedCone 𝕜 V_hom := C0_hom ⊓ S_hom with hC_hom
@@ -268,10 +268,11 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
 
       -- the following statements essentially prove the same as `dehomogenize_gives_back_H` :
       have hx' : x_hom ∈ C0_hom := by
-        have x_satisfies_F : ∀ f ∈ F, x ∈ ⇑f ⁻¹' Ici 0 := by
+        have x_satisfies_F : ∀ f ∈ F, 0 ≤ f x := by
           rw [hH] at hx
-          simp only [mem_inter_iff, mem_iInter₂] at hx
-          exact hx.1
+          apply mem_of_mem_inter_left at hx
+          simp only [mem_iInter] at hx
+          exact hx
         rw [hC0_hom, PointedCone.mem_dual, LinearMap.id_coe]
         simp only [SetLike.mem_coe, id_eq]
         intro f0_hom hf0_hom
@@ -287,15 +288,17 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
             have := hext_affine f x
             rw [hf.2, ←hx_hom] at this
             rw [this]
-            -- show `f x ≥ 0`
-            rw [←mem_Ici, ←mem_preimage]
-            exact x_satisfies_F f hf.1
+            exact x_satisfies_F f hf.1 -- show `f x ≥ 0`
       have hx22 : x_hom ∈ S_hom := by
         have : x ∈ S := by
           rw [hH] at hx
           simp only [mem_inter_iff] at hx
           exact hx.2
-        sorry
+        have : x_hom ∈ hom.ofPoint '' ↑S := by
+          simp only [mem_image, SetLike.mem_coe]
+          use x
+        rw [hS_hom]
+        exact mem_span_of_mem this
       have hx_hom_in_H_hom : x_hom ∈ H_hom := by
         rw [Submodule.mem_inf]
         exact ⟨hx', hx22⟩
@@ -365,7 +368,16 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
         apply le_antisymm <;> assumption
 
       have weight_G_normalized_eq_one : ∀ g ∈ G_hom_pos_normalized, hom.weight g = 1 := by
-        sorry
+        intro g hg
+        rw [h_G_hom_pos_normalized, Finset.mem_image] at hg
+        obtain ⟨g_hom, hg_hom ⟩ := hg
+        rw [←hg_hom.2,  LinearMap.map_smul, inv_smul_eq_iff₀]
+        · rw [smul_eq_mul, mul_one]
+          rfl
+        · -- prove `g_hom.weight ≠ 0` :
+          apply ne_of_gt
+          rw [hG_hom_pos, Finset.mem_filter] at hg_hom
+          exact hg_hom.1.2
 
       have Points_vs_G_hom_pos_normalized : hom.ofPoint '' Points = G_hom_pos_normalized := by
         rw [hPoints]
@@ -380,7 +392,6 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
 
       have : hull 𝕜 (hom.ofPoint '' Points) = homogenize V_hom P_convSet := by
         rw [← hull_image_ofPoint_eq_homogenize_convexHull]
-
 
       have : D_hom = hull 𝕜 G_hom := by rw [←hG_hom]
 
@@ -440,7 +451,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
         exact this
 
       have t_in_Linear_subspace : t ∈ Linear_subspace := by
-        rw [ hLinear]
+        rw [hLinear]
         simp only [Submodule.mem_map]
         use t_hom  -- "refine" instead
         constructor
