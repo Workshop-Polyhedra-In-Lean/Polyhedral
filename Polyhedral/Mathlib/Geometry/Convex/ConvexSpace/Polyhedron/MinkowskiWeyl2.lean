@@ -462,6 +462,11 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
           exact LinearMap.leftInverse_apply_of_inj (f := hom.ofVector) ofVector_inj t
       have z_in_Rays : z ∈ hull 𝕜 Rays := by
         have := PointedCone.mem_comap (f := hom.ofVector) (C := hull 𝕜 ↑G_hom_zero) (x := z)
+
+        have := z ∈ PointedCone.comap hom.ofVector (hull 𝕜 ↑G_hom_zero) ↔
+                  hom.ofVector z ∈ hull 𝕜 ↑G_hom_zero :=
+          Iff.rfl
+
         -- theorem mem_comap {f : E →ₗ[R] F} {C : PointedCone R F} {x : E} : x ∈ C.comap f ↔ f x ∈ C :=
 
         sorry --?simp?
