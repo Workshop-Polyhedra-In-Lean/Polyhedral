@@ -473,22 +473,17 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
 --lemma ofPoint_mem_homogenize_iff_mem (x : A) (P : ConvexSet R A) :
 --    hom.ofPoint x ∈ homogenize W P ↔ x ∈ P := by
 
-      have p_in_P : p ∈ P := by -- lots of small steps
-        have : p_hom ∈ hull 𝕜 ↑G_hom_pos := hp_hom
-        have : p_hom ∈ hull 𝕜 ↑G_hom_pos_normalized := by
-          rw [←hhull]
-          exact this
-        have : p_hom ∈ hull 𝕜 (hom.ofPoint '' Points) := by
-          rw [Points_vs_G_hom_pos_normalized]
-          exact this
-        have a2 : p_hom ∈ homogenize V_hom P_convSet := by
-          rw [← a1]
-          exact this
-        rw [hp] at a2
-        apply (ofPoint_mem_homogenize_iff_mem V_hom p P_convSet).mp at a2
+      have p_in_P : p ∈ P := by
         rw [hP]
-        simp only [SetLike.mem_coe]
-        exact a2
+        have a3 : hom.ofPoint p ∈ homogenize V_hom P_convSet := by
+          rw [←hp] -- p_hom ∈ ...
+          rw [←a1] -- p_hom ∈ hull 𝕜 (hom.ofPoint '' Points)
+          rw [Points_vs_G_hom_pos_normalized] --  p_hom ∈ hull 𝕜 ↑G_hom_pos_normalized
+          rw [←hhull]
+          exact hp_hom
+        apply (ofPoint_mem_homogenize_iff_mem V_hom p P_convSet).mp at a3
+        exact a3 -- a3 : p ∈ P_convSet
+
 /- for showing that d ∈ Convexhull Points = P, could also get
    inspiration from above definition of hDsplit:
    have hDsplit : D = homogenize W (ConvexSet.convexHull 𝕜 (↑T : Set A)) ⊔ ... := by
