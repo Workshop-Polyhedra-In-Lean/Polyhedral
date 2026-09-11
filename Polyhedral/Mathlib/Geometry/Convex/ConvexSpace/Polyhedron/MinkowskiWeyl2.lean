@@ -124,12 +124,12 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
   -- hH : H = { x : A | ∀ f ∈ F, f x ≥ 0 } ⊓ S
 
   -- 2. homogenize the functions to get linear functions `F_hom`:
-  choose extend_function hext hextlin using hom.exists_linear_extension
-  let F_hom := Finset.image extend_function F
+  choose extend_function hext_affine hext_linear using hom.exists_linear_extension
+  set F_hom := Finset.image extend_function F with hF_hom
   -- 3. add the linear constraint for the "upper" half-space to get `F0_hom`
   set F0_hom := insert hom.weight F_hom with hF0_hom
   -- 4. Form the H-cone `C0_hom` in `V_hom` defined by the constraints `F0_hom`
-  let C0_hom : PointedCone 𝕜 V_hom := dual .id F0_hom
+  set C0_hom : PointedCone 𝕜 V_hom := dual .id F0_hom with hC0_hom
   --- C0_hom.carrier = { x : V_hom | ∀ f_hom ∈ F0_hom, f_hom x ≥ 0 },  -- pedestrian definition
   have hC0_nonneg : ∀ z ∈ C0_hom, 0 ≤ hom.weight z := by
     intro z hz
@@ -258,7 +258,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
     constructor
     -- show H ⊆ C +ᵥ P
     · intro x hx
-      set x_hom : V_hom := hom.ofPoint x with hx_hom_def
+      set x_hom : V_hom := hom.ofPoint x with hx_hom
       have x_hom_weight_eq_one: x_hom.weight = 1 := by
         have : x_hom ∈ hom.weight ⁻¹' {1} := by
           rw [← hom.ofPoint_range_eq_preimage_weight_one]
@@ -266,17 +266,42 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
         rw [mem_preimage, mem_singleton_iff] at this
         exact this
 
+      -- the following statements essentially prove the same as `dehomogenize_gives_back_H` :
       have hx' : x_hom ∈ C0_hom := by
-        sorry
-          --- exact Submodule.mem_span_of_mem (Set.mem_image_of_mem _ (hH.2 hx))
+        have x_satisfies_F : ∀ f ∈ F, x ∈ ⇑f ⁻¹' Ici 0 := by
+          rw [hH] at hx
+          simp only [mem_inter_iff, mem_iInter₂] at hx
+          exact hx.1
+        rw [hC0_hom, PointedCone.mem_dual, LinearMap.id_coe]
+        simp only [SetLike.mem_coe, id_eq]
+        intro f0_hom hf0_hom
+        simp only [hF0_hom, Finset.mem_insert] at hf0_hom
+        cases hf0_hom with
+        | inl f_weight =>
+            have : hom.weight x_hom = 1 := x_hom_weight_eq_one
+            rw [f_weight, this]
+            linarith
+        | inr f_hom =>
+            rw [hF_hom, Finset.mem_image] at f_hom
+            obtain ⟨f, hf⟩  := f_hom
+            have := hext_affine f x
+            rw [hf.2, ←hx_hom] at this
+            rw [this]
+            -- show `f x ≥ 0`
+            rw [←mem_Ici, ←mem_preimage]
+            exact x_satisfies_F f hf.1
       have hx22 : x_hom ∈ S_hom := by
+        have : x ∈ S := by
+          rw [hH] at hx
+          simp only [mem_inter_iff] at hx
+          exact hx.2
         sorry
-      have hx_hom : x_hom ∈ H_hom := by
+      have hx_hom_in_H_hom : x_hom ∈ H_hom := by
         rw [Submodule.mem_inf]
         exact ⟨hx', hx22⟩
       have hC_hom_rep : x_hom ∈ D_hom ⊔ T := by
         rw [← h_representation]
-        exact hx_hom
+        exact hx_hom_in_H_hom
       -- show that x ∈ C +ᵥ P
       -- since x_hom ∈ H_hom, `x_hom = (∑ μ_j r_j + t) +ᵥ (∑ λ_i g_i)`
       -- for some r_j ∈ Rays, t ∈ Linear_subspace, g_i ∈ G_hom_pos, μ_j ≥ 0, λ_i ≥ 0.
@@ -404,7 +429,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
 
       have x_decomp : x = (z +ᵥ t) +ᵥ p := by
         have : hom.ofPoint x = hom.ofPoint ((z +ᵥ t) +ᵥ p) := calc
-          hom.ofPoint x = x_hom := hx_hom_def.symm
+          hom.ofPoint x = x_hom := hx_hom.symm
           _ = p_hom + z_hom + t_hom := x_hom_decomp
           _ = hom.ofPoint p + (hom.ofVector z + hom.ofVector t) := by rw [←hp, ←hz, ←ht, add_assoc]
           _ = hom.ofPoint p + hom.ofVector (z + t) := by rw [←LinearMap.map_add]
