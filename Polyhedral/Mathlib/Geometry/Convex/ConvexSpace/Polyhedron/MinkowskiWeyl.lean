@@ -1010,7 +1010,8 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
         rw [hP]
         simp only [SetLike.mem_coe]
         exact a2
-/- for showing that d ∈ Convexhull Points = P, could also get inspiration from above definition of hDsplit:
+/- for showing that d ∈ Convexhull Points = P,
+could also get inspiration from above definition of hDsplit:
    have hDsplit : D = homogenize W (ConvexSet.convexHull 𝕜 (↑T : Set A)) ⊔ ... := by
     rw [← hull_image_ofPoint_eq_homogenize_convexHull, hhull, ← hPoints]
        -/
@@ -1020,8 +1021,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
         simp only [vadd_eq_add]
         rw [mem_sup]
         refine ⟨z, ⟨z_in_Rays, ?_⟩⟩ -- use z
-        refine ⟨t, ⟨t_in_Linear_subspace, ?_⟩⟩ -- use t
-        rfl
+        refine ⟨t, ⟨t_in_Linear_subspace, rfl⟩⟩ -- use t
       rw [mem_vadd]
       refine ⟨z +ᵥ t, ⟨this, ?_⟩⟩ -- use z + t
       refine ⟨p, ⟨p_in_P, ?_⟩⟩ -- use p
