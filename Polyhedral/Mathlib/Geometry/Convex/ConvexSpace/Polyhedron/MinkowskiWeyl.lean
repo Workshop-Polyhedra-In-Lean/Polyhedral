@@ -630,7 +630,6 @@ theorem IsHPolyhedron.exists_isPolytope_recessionCone_vadd {H : Set A}
 -- lemma hull_invariant_under_scaling (G : Finset V) (multiplier : V → 𝕜) :
 --   (∀ g ∈ G, multiplier g > 0) ∧  multiplier.support = G →
 --   PointedCone.hull 𝕜 G = PointedCone.hull 𝕜 ((G : Set V).image (fun g => multiplier g • g)) := by
---     sorry
 
 /-- Scaling the generators of a cone by positive multipliers does not change the cone.
     This lemma proves half of this statement. -/
@@ -656,6 +655,9 @@ theorem ConvexCone_map {G : Set V} (f : V →ₗ[𝕜] W) :
 -- omit [AddCommGroup W] [Module 𝕜 W] [IsModuleConvexSpace 𝕜 W] in
 -- G.R. don't understand: W does not appear in the theorem statement!
 -- TODO: Find a better name?
+
+-- An alternative formulation of the conclusion would be `H = C ⊔  P`
+
 /-- ALTERNATIVE ATTEMPT `H → V` direction
 verbose and in little steps -/
 theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
@@ -693,7 +695,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
   -- 6. Form the H-cone `H_hom` by intersecting `C0_hom` with the subspace `S_hom`.
   set H_hom : PointedCone 𝕜 V_hom := C0_hom ⊓ S_hom with hC_hom
 
-  -- 7. Fun fact: Dehomogenizing `H_hom` gives back the original H-polyhedron `H`.
+  -- 7. Fun fact: Dehomogenizing `H_hom` gives back the original H-polyhedron `H`. (not needed?)
   have dehomogenize_gives_back_H :
     PointedCone.dehomogenize A (H_hom) = H := by
     sorry
@@ -758,12 +760,6 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
     use Points
     rw [hP, hP_conv, mk_eq, ConvexSet.carrier_eq_coe]
     rfl
-
-  -- try to prove this directly?:
-  have X1_to_Y : ∀ g1 ∈ G_hom_pos, ∃ g2 ∈ G_hom_pos_normalized,
-       ∃ multiplier : 𝕜, multiplier > 0 ∧ g1 = multiplier • g2 := by sorry
-  have Y1_to_X : ∀ g1 ∈ G_hom_pos_normalized, ∃ g2 ∈ G_hom_pos,
-       ∃ multiplier : 𝕜, multiplier > 0 ∧ g1 = multiplier • g2 := by sorry
 
   -- 10. Generate the cone `C` from the zero-weight generators and the subspace S
   set Rays := hom.ofVector ⁻¹' G_hom_zero with hRays
@@ -838,7 +834,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
       obtain ⟨d_hom, hd_hom, t_hom, ht_hom, d_hom_plus_t_hom_eq_x_hom⟩ := mem_sup.mp hC_hom_rep
       -- rw [← hG_hom] at hd_hom
       have split_d : D_hom = hull 𝕜 G_hom_pos ⊔ hull 𝕜 G_hom_zero := by
-        sorry
+        rw [←hull_union, ← Finset.coe_union, ←hG_hom_split, ←hG_hom]
       rw [split_d] at hd_hom
       obtain ⟨p_hom, hp_hom, z_hom, hz_hom, p_hom_plus_z_hom_eq_d_hom⟩ := mem_sup.mp hd_hom
       -- Now we have the decomposition `x_hom = p_hom + z_hom + t_hom`
@@ -962,21 +958,17 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
           hom.ofPoint x = x_hom := hx_hom_def.symm
           _ = p_hom + z_hom + t_hom := x_hom_decomp
           _ = hom.ofPoint p + (hom.ofVector z + hom.ofVector t) := by rw [←hp, ←hz, ←ht, add_assoc]
-          _ = hom.ofPoint p + hom.ofVector (z + t) := by rw [← LinearMap.map_add]
+          _ = hom.ofPoint p + hom.ofVector (z + t) := by rw [←LinearMap.map_add]
           _ = hom.ofVector (z + t) + hom.ofPoint p := by rw [add_comm]
           _ = hom.ofPoint ((z +ᵥ t) +ᵥ p) := by
             simp only [map_add, vadd_eq_add, AffineMap.map_vadd]
-          --_ = hom.ofPoint (z +ᵥ t +ᵥ p) := by sorry
         apply hom.ofPoint_injective
         exact this
 
-      have : p ∈ P := by
-        sorry
-
-      have : t ∈ Linear_subspace := by
+      have t_in_Linear_subspace : t ∈ Linear_subspace := by
         rw [ hLinear]
         simp only [Submodule.mem_map]
-        use t_hom
+        use t_hom  -- "refine" instead
         constructor
         · rw [← SetLike.mem_coe]
           exact ht_hom
@@ -988,7 +980,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
 
           -- How do I prove "Affine.IsHomogenization.ofVector.leftInverse (Affine.IsHomogenization.ofVector t) = t" when I know that the function "ofVector" is injective?
           sorry
-      have : z ∈ hull 𝕜 Rays := by
+      have z_in_Rays : z ∈ hull 𝕜 Rays := by
         sorry --?simp?
 
 
@@ -1002,7 +994,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
 --lemma ofPoint_mem_homogenize_iff_mem (x : A) (P : ConvexSet R A) :
 --    hom.ofPoint x ∈ homogenize W P ↔ x ∈ P := by
 
-      have : p ∈ P := by -- lots of small steps
+      have p_in_P : p ∈ P := by -- lots of small steps
         have : p_hom ∈ hull 𝕜 ↑G_hom_pos := hp_hom
         have : p_hom ∈ hull 𝕜 ↑G_hom_pos_normalized := by
           rw [←hhull]
@@ -1018,70 +1010,23 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
         rw [hP]
         simp only [SetLike.mem_coe]
         exact a2
-
-      -- The following will be partially obsolete. -----------------------------------
-      obtain ⟨μ, ⟨hμ, h_positive_combination_μ⟩ ⟩ := Submodule.mem_span_finset.mp hp_hom
-      -- We can normalize the g_i to weight 1 to get points in Points.
-      -- Since `x` as well as the points in `Points` have weight 1,
-      -- and all other points have weight 0,  `∑ λ_i = 1`, and thus
-      -- `x` is a convex combination of (normalized) points in Points plus a point in C:
-      -- x_hom = c +ᵥ p for some c ∈ C and p ∈ P
-      let P_pos := μ.support
-      have sum_pos1: ∑ g ∈ G_hom_pos, μ g * g.weight = 1 := by
-        have sum_1: ∑ g ∈ G_hom, μ g * g.weight = 1 := by
-          have t_weight_zero : t_hom.weight = 0 := T_weight_eq_zero t_hom ht_hom
-          --have : (d_hom + t_hom).weight = 1 := by
-          --  rw [d_hom_plus_s_is_x_hom, hx_hom_def]
-          --  exact hom.weight_one x
-          --have : (d_hom + t_hom).weight = d_hom.weight + s.weight := by rw [LinearMap.map_add]
-          have d_hom.weight_eq_one : d_hom.weight = 1 :=
-          calc
-            d_hom.weight = d_hom.weight + 0 := by rw [add_zero]
-            _ = d_hom.weight + t_hom.weight     := by rw [t_weight_zero]
-            _ = (d_hom + t_hom).weight          := by rw [LinearMap.map_add]
-            _ = x_hom.weight                := by rw [d_hom_plus_t_hom_eq_x_hom]
-            _ = hom.weight x_hom            := by rfl
-            _ = hom.weight (hom.ofPoint x)  := by rw [hx_hom_def]
-            _ = 1                           := hom.weight_one x
-          have h_mul_eq_smul : ∀ g ∈ G_hom, μ g * g.weight = (μ g • g).weight := by
-            intro g hg
-            simp only [LinearMap.map_smul_of_tower]
-            congr
-          have h_lin: ∑ g ∈ G_hom, (μ g • g).weight = (∑ g ∈ G_hom, μ g • g).weight := by
-            simp only [map_sum, LinearMap.map_smul_of_tower]
-          rw [Finset.sum_congr rfl h_mul_eq_smul]
-          sorry -- a translation step from V_hom to V is missing.
-          -- rw [h_lin, h_positive_combination_μ, d_hom.weight_eq_one]
-        have sum_0: ∑ g ∈ G_hom_zero, μ g * g.weight = 0 := by
-          apply Finset.sum_eq_zero
-          intro g hg
-          rw [hG_hom_zero, Finset.mem_filter ] at hg
-          rw [hg.2, mul_zero]
-        rw [← Finset.sum_filter_add_sum_filter_not G_hom
-            (fun g => g.weight > 0)] at sum_1
-
-        have hG_hom_nonpos : ∑ x ∈ G_hom with ¬ x.weight > 0, ↑(μ x) * x.weight = 0 := by
-          apply Finset.sum_eq_zero
-          intro g hg
-          obtain ⟨hg, hg'⟩ := Finset.mem_filter.mp hg
-          have h_nonneg : g.weight ≥ 0 := hG_hom_nonneg g hg
-          have h_zero : g.weight = 0 := by
-            apply le_antisymm (le_of_not_gt hg') h_nonneg
-          simp only [h_zero, mul_zero]
-        rw [hG_hom_nonpos] at sum_1
-        simpa only [gt_iff_lt, add_zero] using sum_1
-      have d_exists : ∃ d : A, hom.ofPoint d = d_hom := by
-        sorry
-      -- choose (d : A) (hd : hom.ofPoint d = d_hom) using d_exists
-      choose (d : A) hd using d_exists
-
-      have : d ∈ P := by
-/- for showing that d ∈ Convexhull Points = P, get inspiration from above definition of hDsplit:
+/- for showing that d ∈ Convexhull Points = P, could also get inspiration from above definition of hDsplit:
    have hDsplit : D = homogenize W (ConvexSet.convexHull 𝕜 (↑T : Set A)) ⊔ ... := by
     rw [← hull_image_ofPoint_eq_homogenize_convexHull, hhull, ← hPoints]
        -/
-        sorry
-      sorry
+
+      have : z +ᵥ t ∈ C := by
+        rw [hC]
+        simp only [vadd_eq_add]
+        rw [mem_sup]
+        refine ⟨z, ⟨z_in_Rays, ?_⟩⟩ -- use z
+        refine ⟨t, ⟨t_in_Linear_subspace, ?_⟩⟩ -- use t
+        rfl
+      rw [mem_vadd]
+      refine ⟨z +ᵥ t, ⟨this, ?_⟩⟩ -- use z + t
+      refine ⟨p, ⟨p_in_P, ?_⟩⟩ -- use p
+      exact x_decomp.symm
+
     -- Converse direction: show C +ᵥ P ⊆ H
     · intro x hx
       obtain ⟨c, hc, p, hp, rfl⟩ := Set.mem_vadd.mp hx
