@@ -453,21 +453,15 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
       have t_in_Linear_subspace : t ∈ Linear_subspace := by
         rw [hLinear]
         simp only [Submodule.mem_map]
-        use t_hom  -- "refine" instead
-        constructor
+        refine ⟨t_hom, ⟨?t_hom_in_T , ?left_inverse ⟩⟩
         · rw [← SetLike.mem_coe]
           exact ht_hom
         · rw [←ht]
-          unfold LinearMap.leftInverse
-          have ofVector_inj : hom.ofVector.ker = ⊥ := LinearMap.ker_eq_bot_of_injective hom.ofVector_injective
-          rw [dite_eq_left ofVector_inj]
-          -- simp?
-
-          -- How do I prove "Affine.IsHomogenization.ofVector.leftInverse (Affine.IsHomogenization.ofVector t) = t" when I know that the function "ofVector" is injective?
-          sorry
+          have ofVector_inj : hom.ofVector.ker = ⊥ :=
+            LinearMap.ker_eq_bot_of_injective hom.ofVector_injective
+          exact LinearMap.leftInverse_apply_of_inj (f := hom.ofVector) ofVector_inj t
       have z_in_Rays : z ∈ hull 𝕜 Rays := by
-        sorry --?simp?
-
+        sorry --?simp? SCHON ZU HAUSE??
 
       have a1 : hull 𝕜 (hom.ofPoint '' Points) = homogenize V_hom P_convSet := by
         rw [← hull_image_ofPoint_eq_homogenize_convexHull]
@@ -495,7 +489,8 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
         rw [hP]
         simp only [SetLike.mem_coe]
         exact a2
-/- for showing that d ∈ Convexhull Points = P, could also get inspiration from above definition of hDsplit:
+/- for showing that d ∈ Convexhull Points = P, could also get
+   inspiration from above definition of hDsplit:
    have hDsplit : D = homogenize W (ConvexSet.convexHull 𝕜 (↑T : Set A)) ⊔ ... := by
     rw [← hull_image_ofPoint_eq_homogenize_convexHull, hhull, ← hPoints]
        -/
@@ -537,19 +532,5 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
       exact hcp
 
 end Homogenize
-
-
-/-
-`V → H` direction of the *Minkowski-Weyl* theorem.
-For every finite *V-polytope* + *rays* + *submodule*,
-there exists a finite set of inequalities that describe it.
--/
-
-
 end Field
 end Homogenization
-
--- Wishlist:
--- * A bounded polyhedron is a polytope (i.e. the recession cone is trivial)
--- * Definition "bounded": Every affine function is bounded:
--- * Equivalent statement for polyhedra (for all convex sets?): There are no rays.
