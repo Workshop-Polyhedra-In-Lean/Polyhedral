@@ -452,7 +452,8 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
           have ofVector_inj : hom.ofVector.ker = ⊥ :=
             LinearMap.ker_eq_bot_of_injective hom.ofVector_injective
           exact LinearMap.leftInverse_apply_of_inj (f := hom.ofVector) ofVector_inj t
-      have z_in_Rays : z ∈ hull 𝕜 Rays := by
+
+      have z_in_Rays : z ∈ hull 𝕜 Rays := by --  THIS IS STILL A MESS!
         have : (z ∈ PointedCone.comap hom.ofVector (hull 𝕜 ↑G_hom_zero) ↔
                   hom.ofVector z ∈ hull 𝕜 ↑G_hom_zero) :=
           Iff.rfl
