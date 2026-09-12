@@ -94,8 +94,7 @@ lemma hull_invariant_under_scaling_subset (G1 G2 : Set V)
   PointedCone.hull 𝕜 G1 ≤ PointedCone.hull 𝕜 G2 := by
     rw [Submodule.span_le, subset_def]
     intro g1 hg1
-    apply h_scaling at hg1
-    obtain ⟨g2, ⟨hg2, ⟨multiplier, ⟨hmultiplier_pos, h_g1_versus_g2⟩⟩⟩⟩ := hg1
+    obtain ⟨g2, ⟨hg2, ⟨multiplier, ⟨hmultiplier_pos, h_g1_versus_g2⟩⟩⟩⟩ := h_scaling g1 hg1
     rw [h_g1_versus_g2]
     have : g2 ∈ hull 𝕜 G2 := mem_span_of_mem hg2
     exact PointedCone.smul_mem (hull 𝕜 G2) hmultiplier_pos.le this
@@ -135,8 +134,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
     intro z hz
     exact (PointedCone.mem_dual.mp hz) (x := hom.weight)
       (by simp only [hF0_hom, Finset.coe_insert, mem_insert_iff, SetLike.mem_coe, true_or])
-  have hC0_hom.dualFG : C0_hom.DualFG .id := by
-    use F0_hom
+  have hC0_hom.dualFG : C0_hom.DualFG .id := by use F0_hom
 
   -- 5. homogenize the subspace `S` to get `S_hom`:
   set S_hom : Submodule 𝕜 V_hom := Submodule.span 𝕜 (hom.ofPoint '' S) with hS_hom
@@ -222,20 +220,17 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
 
   -- Intermediate result: All elements of `T` have weight zero
   have T_weight_eq_zero : ∀ t ∈ T, hom.weight t = 0 := by
+    have hT_nonneg : ∀ t ∈ T,  0 ≤ hom.weight t := by
+      intro t ht
+      apply hC0_nonneg -- now need to show t ∈ C0_hom
+      have : t ∈ C0_hom ⊓ S_hom := by
+        rw [←hC_hom, h_representation]
+        exact Submodule.mem_sup_right ht
+      exact (mem_inf.mp this).1
     intro t ht
-    have ht' : ∀ t ∈ T, t ∈ C0_hom ⊓ S_hom := by
-          intro t ht
-          rw [←hC_hom, h_representation]
-          exact Submodule.mem_sup_right ht
-    -- NOTE: The following could be proved directly above
-    have ht'' : ∀ t ∈ T, t ∈ C0_hom := by
-          intro t ht
-          exact (mem_inf.mp (ht' t ht)).1
-    have ht_nonneg : 0 ≤ hom.weight t := hC0_nonneg t (ht'' t ht)
-    have ht_neg_nonneg : 0 ≤ hom.weight (-t) :=
-          hC0_nonneg (-t) (ht'' (-t) (by simp only [Submodule.neg_mem _ ht]))
-    have ht_neg : hom.weight (-t) = - hom.weight t := by
-          simp only [LinearMap.map_neg]
+    have ht_nonneg : 0 ≤ hom.weight t := hT_nonneg t ht
+    have ht_neg_nonneg : 0 ≤ hom.weight (-t) := hT_nonneg (-t) (Submodule.neg_mem T ht)
+    have ht_neg : hom.weight (-t) = - hom.weight t := LinearMap.map_neg hom.weight t
     rw [ht_neg] at ht_neg_nonneg
     linarith
 
@@ -295,21 +290,21 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
           simp only [mem_inter_iff] at hx
           exact hx.2
         have : x_hom ∈ hom.ofPoint '' ↑S := by
-          simp only [mem_image, SetLike.mem_coe]
+          rw [mem_image]
+          change ∃ x ∈ S, Affine.IsHomogenization.ofPoint x = x_hom
           use x
         rw [hS_hom]
         exact mem_span_of_mem this
       have hx_hom_in_H_hom : x_hom ∈ H_hom := by
         rw [Submodule.mem_inf]
         exact ⟨hx', hx22⟩
-      have hC_hom_rep : x_hom ∈ D_hom ⊔ T := by
+      have hC_hom_rep : x_hom ∈ D_hom ⊔ ↑T := by
         rw [← h_representation]
         exact hx_hom_in_H_hom
       -- show that x ∈ C +ᵥ P
       -- since x_hom ∈ H_hom, `x_hom = (∑ μ_j r_j + t) +ᵥ (∑ λ_i g_i)`
       -- for some r_j ∈ Rays, t ∈ Linear_subspace, g_i ∈ G_hom_pos, μ_j ≥ 0, λ_i ≥ 0.
       obtain ⟨d_hom, hd_hom, t_hom, ht_hom, d_hom_plus_t_hom_eq_x_hom⟩ := mem_sup.mp hC_hom_rep
-      -- rw [← hG_hom] at hd_hom
       have split_d : D_hom = hull 𝕜 G_hom_pos ⊔ hull 𝕜 G_hom_zero := by
         rw [←hull_union, ← Finset.coe_union, ←hG_hom_split, ←hG_hom]
       rw [split_d] at hd_hom
@@ -320,12 +315,6 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
       -- set z := hom.ofVector ⁻¹ z_hom with hz
       -- set t := hom.ofVector ⁻¹ t_hom with ht
 
-      --/-
-      -- Alternative attempt following Moritz's proof:
-
-      -- Construction path of Points:
-      -- Construction path of `Points`:
-      --    (G_hom_pos ⊆ V_hom) → (G_hom_pos_normalized ⊆ V_hom) → (Points ⊆ A)
 
       -- intermediate result: G_hom_pos and G_hom_pos_normalized generate the same hull:
       set X := (G_hom_pos : Set V_hom) with hX-- abbreviations
@@ -404,6 +393,9 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
       -- set z := hom.ofVector ⁻¹ z_hom with hz
       -- set t := hom.ofVector ⁻¹ t_hom with ht
 
+      -- Recall the construction path of `p ∈ Points`:
+      --    (G_hom_pos ⊆ V_hom) → (G_hom_pos_normalized ⊆ V_hom) → (Points ⊆ A)
+
       have t_weight_eq_zero : t_hom.weight = 0 := T_weight_eq_zero t_hom ht_hom
 
       have z_weight_eq_zero : z_hom.weight = 0 := by
@@ -454,20 +446,80 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
         rw [hLinear]
         simp only [Submodule.mem_map]
         refine ⟨t_hom, ⟨?t_hom_in_T , ?left_inverse ⟩⟩
-        · rw [← SetLike.mem_coe]
+        · change t_hom ∈ ↑T
           exact ht_hom
         · rw [←ht]
           have ofVector_inj : hom.ofVector.ker = ⊥ :=
             LinearMap.ker_eq_bot_of_injective hom.ofVector_injective
           exact LinearMap.leftInverse_apply_of_inj (f := hom.ofVector) ofVector_inj t
       have z_in_Rays : z ∈ hull 𝕜 Rays := by
-        have := PointedCone.mem_comap (f := hom.ofVector) (C := hull 𝕜 ↑G_hom_zero) (x := z)
-
-        have := z ∈ PointedCone.comap hom.ofVector (hull 𝕜 ↑G_hom_zero) ↔
-                  hom.ofVector z ∈ hull 𝕜 ↑G_hom_zero :=
+        have : (z ∈ PointedCone.comap hom.ofVector (hull 𝕜 ↑G_hom_zero) ↔
+                  hom.ofVector z ∈ hull 𝕜 ↑G_hom_zero) :=
           Iff.rfl
+        -- This can also be obtained as
+        -- PointedCone.mem_comap (f := hom.ofVector) (C := hull 𝕜 ↑G_hom_zero) (x := z)
 
-        -- theorem mem_comap {f : E →ₗ[R] F} {C : PointedCone R F} {x : E} : x ∈ C.comap f ↔ f x ∈ C :=
+        have : PointedCone.comap hom.ofVector (hull 𝕜 ↑G_hom_zero) =
+               hom.ofVector ⁻¹' (hull 𝕜 ↑(G_hom_zero : Set V_hom)) := by
+          simp only [coe_comap]
+
+        have := map_comap_eq_of_surjective (f := hom.ofVector)
+         -- requires ofVector to be surjective!
+
+        have a200 : hom.ofVector '' Rays = G_hom_zero := by
+          rw [hRays]
+          ext g
+          constructor
+          · rintro ⟨r, hr, rfl⟩
+            exact hr
+          · intro hg
+            rcases Finset.mem_filter.mp hg with ⟨hgG, hgzero⟩
+            have hrange : g ∈ LinearMap.range hom.ofVector := by
+              rw [hom.ofVector_range_eq_weight_ker]
+              exact hgzero
+            obtain ⟨r, hr⟩ := LinearMap.mem_range.mp hrange
+            refine ⟨r, ?_, hr⟩
+            change hom.ofVector r ∈ G_hom_zero
+            simpa [hr] using hg
+
+        have a100 : (hull 𝕜 (hom.ofVector '' Rays)) = (hom.ofVector '' (hull 𝕜 Rays)) := by
+          rw [← map_hull]
+          simp only [coe_map]
+        have : hom.ofVector '' (hom.ofVector ⁻¹' (G_hom_zero : Set V_hom))
+             = (G_hom_zero : Set V_hom) := by
+          --=simp?
+          -- rw [map_comap_eq_of_surjective]
+          sorry
+
+        have : hom.ofVector '' (hull 𝕜 (hom.ofVector ⁻¹' (G_hom_zero : Set V_hom))) =
+               hull 𝕜 (hom.ofVector '' (hom.ofVector ⁻¹' (G_hom_zero : Set V_hom))) := by
+          rw [← coe_map, PointedCone.map_hull]
+        have : hom.ofVector '' (hull 𝕜 (hom.ofVector ⁻¹' (G_hom_zero : Set V_hom))) =
+               hull 𝕜 (G_hom_zero : Set V_hom) := by
+          rw [← coe_map, PointedCone.map_hull]
+          --simp?
+          sorry
+        have : hom.ofVector '' (hull 𝕜 (hom.ofVector ⁻¹' (G_hom_zero : Set V_hom))) =
+               map hom.ofVector (hull 𝕜 (hom.ofVector ⁻¹' (G_hom_zero : Set V_hom))) := by
+          rw [coe_map]
+        have : map hom.ofVector (hull 𝕜 (hom.ofVector ⁻¹' (G_hom_zero : Set V_hom))) =
+               hull 𝕜 (hom.ofVector '' (hom.ofVector ⁻¹' (G_hom_zero : Set V_hom))) := by
+          rw [PointedCone.map_hull]
+        have : hull 𝕜 (hom.ofVector ⁻¹' (G_hom_zero : Set V_hom)) =
+               hom.ofVector ⁻¹' (hull 𝕜 (G_hom_zero : Set V_hom)) := by
+          -- The cone generated by the inverse-image generators is the inverse image
+          -- of the cone generated by the original generators, since `hom.ofVector`
+          -- is linear and injective.  `simp?` does not know how to unfold this;
+          -- prepare the proof by extensionality on carrier membership.
+          ext x
+          simp only [SetLike.mem_coe, mem_preimage]
+          sorry
+        -- Rays = hom.ofVector ⁻¹' ↑G_hom_zero
+
+        -- The following generates a type error:
+        -- have : (PointedCone.comap hom.ofVector (hull 𝕜 ↑G_hom_zero)) =
+        --        hom.ofVector ⁻¹' (hull 𝕜 ↑(G_hom_zero)) := by sorry
+        -- theorem mem_comap {f : E →ₗ[R] F} {C : PointedCone R F} {x : E} : x ∈ C.comap f ↔ f x ∈ C
 
         sorry --?simp?
 
@@ -486,7 +538,7 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
         have a3 : hom.ofPoint p ∈ homogenize V_hom P_convSet := by
           rw [←hp] -- p_hom ∈ ...
           rw [←a1] -- p_hom ∈ hull 𝕜 (hom.ofPoint '' Points)
-          rw [Points_vs_G_hom_pos_normalized] --  p_hom ∈ hull 𝕜 ↑G_hom_pos_normalized
+          rw [Points_vs_G_hom_pos_normalized] -- p_hom ∈ hull 𝕜 ↑G_hom_pos_normalized
           rw [←hhull]
           exact hp_hom
         apply (ofPoint_mem_homogenize_iff_mem V_hom p P_convSet).mp at a3
