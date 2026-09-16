@@ -133,15 +133,14 @@ lemma supportFunction_empty : supportFunction R (∅ : Set V) = ⊥ := by
   simp
 
 lemma supportFunction_of_nonempty_of_isLUB
-    {P : Set V} (hP : P.Nonempty) {φ : Module.Dual R V}
-    {r : R} (hr : IsLUB (φ '' P) r) :
+    {P : Set V} (hP : P.Nonempty) {φ : Module.Dual R V} {r : R} (hr : IsLUB (φ '' P) r) :
     supportFunction R P φ = r := by
-  replace hr : IsLUB (⇑(iota φ) '' P) r := by
-    have hphi : ⇑(iota φ) = φ := by rfl
-    rw [hphi]
-    exact hr
-  have aux : ∃ (x : R), IsLUB ((iota φ) '' P) x := by use r
-  simp [supportFunction, supportFunctionAffine, hP, aux, aux.choose_spec.unique hr]
+      exact supportFunctionAffine_of_nonempty_of_isLUB hP hr
+
+lemma supportFunction_of_nonempty_of_not_exists_isLUB
+    {P : Set V} (hP : P.Nonempty) {φ : Module.Dual R V} (hP' : ¬(∃ x, IsLUB (φ '' P) x)) :
+    supportFunction R P φ = ⊤ := by
+      exact supportFunctionAffine_of_nonempty_of_not_exists_isLUB hP hP'
 
 @[simp]
 lemma supportFunction_singleton_value {v : V} {φ : Module.Dual R V} :
@@ -154,7 +153,7 @@ lemma supportFunction_singleton {v : V} : supportFunction R {v} = fun φ ↦ φ 
   rw [supportFunction_singleton_value]
 
 -- XXX: do we want this lemma, or is it not worth it?
-open scoped Classical in
+/- open scoped Classical in
 lemma supportFunction_of_nonempty_of_bddAbove {P : Set V} (hP : P.Nonempty) {φ : Module.Dual R V}
     (hP' : BddAbove (φ '' P)) :
     supportFunction R P φ =
@@ -163,7 +162,6 @@ lemma supportFunction_of_nonempty_of_bddAbove {P : Set V} (hP : P.Nonempty) {φ 
   unfold supportFunction
   sorry
 
-/-
 ## Open questions/for later
 
 ### What about unbounded polyhedra
