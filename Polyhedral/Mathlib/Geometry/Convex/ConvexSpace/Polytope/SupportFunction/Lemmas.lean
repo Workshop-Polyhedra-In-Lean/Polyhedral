@@ -58,7 +58,7 @@ variable {R V : Type*} [Semifield R] [PartialOrder R] [IsStrictOrderedRing R] [P
 -- is pos. homogeneous (Judith + Valentina)
 open scoped Classical Pointwise in
 -- XXX: right name?
-lemma supportFunctionAffine_homogeneous {r : R} (hr : 0 < r) (φ : ConvexSpace.dual R V) :
+lemma supportFunctionAffine_smul_of_pos {r : R} (hr : 0 < r) (φ : ConvexSpace.dual R V) :
     supportFunctionAffine R P (r • φ) = r * supportFunctionAffine R P φ := by
   by_cases! hP : P.Nonempty
   · by_cases hP' : ∃ x, IsLUB (φ '' P) x
@@ -75,9 +75,24 @@ lemma supportFunctionAffine_homogeneous {r : R} (hr : 0 < r) (φ : ConvexSpace.d
     · have hrP : ¬∃ x, IsLUB (⇑(r • φ) '' P) x := by
         simp only [Convexity.ConvexSpace.AffineMap.smul_apply, smul_eq_mul, not_exists]
         intro y hy
-        have H : IsLUB (φ '' P) (r⁻¹ • y) := sorry
-        exact
-      sorry
+        have H : IsLUB (φ '' P) (r⁻¹ • y) := by
+          have hr': 0 ≤ r⁻¹:= by
+            refine inv_nonneg_of_nonneg ?_
+            exact Std.le_of_lt hr
+          have hyy: IsLUB (⇑(r⁻¹ • r • φ) '' P) (r⁻¹ • y) := by
+            have := IsLUB.mul_left hr' hy
+            convert this
+            · simp only [Convexity.ConvexSpace.AffineMap.smul_apply, smul_eq_mul]
+              rw [Set.image_image]
+            · rw[smul_eq_mul]
+          have hphi: ⇑(r⁻¹ • r • φ) = ⇑ φ := by
+            simp only [Convexity.ConvexSpace.AffineMap.coe_smul]
+            refine inv_smul_smul₀ ?_ ⇑φ
+            exact Ne.symm (Std.ne_of_lt hr)
+          rw [hphi] at hyy
+          exact hyy
+        apply hP'
+        exact Exists.intro (r⁻¹ • y) H
       rw [supportFunctionAffine_of_nonempty_of_not_exists_isLUB hP hrP,
          supportFunctionAffine_of_nonempty_of_not_exists_isLUB hP hP']
       simp only [WithBotTop.coe, Function.comp_apply]
@@ -85,9 +100,11 @@ lemma supportFunctionAffine_homogeneous {r : R} (hr : 0 < r) (φ : ConvexSpace.d
   · rw [hP]
     simp only [supportFunctionAffine_empty, Pi.bot_apply]
     rw [WithBotTop.mul_bot _ (by simp)]
-    · sorry -- missing lemma? should be easy in any case
+    have:= WithBotTop.coe_lt_coe.mpr hr
+    exact this.ne.symm
 
 open scoped Classical Pointwise in
+/-here empty set should be excluded, maybe we dont want this lemma -/
 lemma supportFunctionAffine_homogeneous' (hP : P.Nonempty)
     {r : R} (hr : 0 ≤ r) (φ : ConvexSpace.dual R V) :
     supportFunctionAffine R P (r • φ) = r * supportFunctionAffine R P φ := by
@@ -100,7 +117,7 @@ end convex
 
 section linear
 
-variable {R V : Type*} [CommRing R] [PartialOrder R] [IsStrictOrderedRing R]
+variable {R V : Type*} [Field R] [PartialOrder R] [IsStrictOrderedRing R] [PosMulReflectLT R]
   [AddCommGroup V] [Module R V] [Convexity.ConvexSpace R V] [Convexity.IsModuleConvexSpace R V]
 -- To be able to use the lemma "positive homogeneity for IsAffineMap
 -- one maybe has to change "[CommRing R]" to "[Semifield R]"
@@ -111,23 +128,94 @@ variable {R V : Type*} [CommRing R] [PartialOrder R] [IsStrictOrderedRing R]
 
 -- invariance under dilation
 open scoped Pointwise Classical in
-lemma supportFunction_smul
+lemma supportFunction_smul_set_of_nonneg
     {P : Set V} {r : R} (hr : 0 ≤ r) (hP : P.Nonempty) (φ : Module.Dual R V) :
     supportFunction R (r • P) φ = r * (supportFunction R P φ) := by
   by_cases hP' : ∃ x, IsLUB (φ '' P) x
   · obtain ⟨x, hx⟩ := hP'
-    have hrP : IsLUB (⇑φ '' (r • P)) (r * x) := sorry
+    have hrP : IsLUB (⇑φ '' (r • P)) (r * x) := by
+      have hphi : φ '' ( r • P )= r • φ '' P := by
+        refine Set.image_smul_comm (⇑φ) r P ?_
+        intro b
+        simp only [map_smul, smul_eq_mul]
+      rw [hphi]
+      have := IsLUB.mul_left hr hx
+      convert this
+      conv =>
+        lhs
+        rw [← Set.image_smul]
+      rfl
     rw [supportFunction_of_nonempty_of_isLUB hP hx,
       supportFunction_of_nonempty_of_isLUB (by simp [hP]) hrP]
     simp [WithBotTop.coe]
-  · sorry
+  · rw [supportFunction_of_nonempty_of_not_exists_isLUB hP hP']
+    by_cases hzero: r=0
+    · rw [hzero]
+      rw [mul_eq_zero_comm.mp]
+      · rw [Set.zero_smul_set]
+        · have : supportFunction R 0 φ = φ 0 := supportFunction_singleton_value
+          rw [this]
+          simp only [map_zero]
+          exact (AddOpposite.op_eq_zero_iff (WithBotTop.coe 0)).mp rfl
+        · exact hP
+      · exact mul_eq_zero_of_right ⊤ rfl
+    · have h0 : 0 < r := by exact Std.lt_of_le_of_ne hr fun a ↦ hzero (id (Eq.symm a))
+      have inf: WithBotTop.coe r * ⊤ = ⊤ := by
+        refine WithBotTop.mul_top ?_ ?_
+        · have:= WithBotTop.coe_lt_coe.mpr h0
+          exact this.ne.symm
+        · simp
+      rw [inf]
+      have hnon : ¬∃ x, IsLUB (⇑φ '' (r • P)) x := by
+        simp only [not_exists]
+        intro y hy
+        have hyr : IsLUB (⇑φ '' P) (r⁻¹ • y) := by
+          have : ⇑φ '' (r • P) = r • ⇑φ '' P := by
+            refine Set.image_smul_comm (⇑φ) r P ?_
+            intro b
+            simp only [map_smul, smul_eq_mul]
+          rw [this] at hy
+          have hr': 0 ≤ r⁻¹:= by
+            refine inv_nonneg_of_nonneg ?_
+            exact Std.le_of_lt h0
+          have hphi: ⇑(r⁻¹ • r • φ) = ⇑ φ := by
+            simp only [LinearMap.coe_smul]
+            refine inv_smul_smul₀ ?_ ⇑φ
+            exact Ne.symm (Std.ne_of_lt h0)
+          have hyy: IsLUB (⇑(r⁻¹ • r • φ) '' P) (r⁻¹ • y) := by
+            have := IsLUB.mul_left hr' hy
+            convert this
+            · have (r : R ) (M : Set R ) : (fun b ↦ r * b) '' (M) = r • M := by
+                exact Eq.symm (Set.Subset.antisymm (fun ⦃a⦄ a_1 ↦ a_1) fun ⦃a⦄ a_1 ↦ a_1)
+              specialize this r⁻¹ (r • (φ '' P))
+              rw [this]
+              rw [hphi]
+              exact Eq.symm (inv_smul_smul₀ hzero (⇑φ '' P))
+            · rw[smul_eq_mul]
+          rw [hphi] at hyy
+          exact hyy
+        apply hP'
+        exact Exists.intro (r⁻¹ • y) hyr
+      have hPr : (r • P).Nonempty := by
+        exact Set.Nonempty.smul_set hP
+      rw [supportFunction_of_nonempty_of_not_exists_isLUB hPr hnon]
+
 
 open scoped Pointwise Classical in
 /-- Version of `supportFunction_smul` allowing for `P` to be empty, but asking for positive `R`. -/
-lemma supportFunction_smul'
-    (P : Set V) {r : R} (hr : 0 < r) (φ : Module.Dual R V) :
-    supportFunction R (r • P) φ = r * (supportFunction R P φ) := by
-  sorry
+lemma supportFunction_smul_set_of_pos {P : Set V} {r : R} (hr : 0 < r) (φ : Module.Dual R V) :
+supportFunction R (r • P) φ = r * (supportFunction R P φ) := by
+  by_cases! hP : P.Nonempty
+  · apply supportFunction_smul_set_of_nonneg hr.le hP
+  · have hPr : r • P = ∅ := by
+      exact Set.smul_set_eq_empty.mpr hP
+    rw [hPr, hP]
+    rw [supportFunction_empty]
+    simp only [Pi.bot_apply]
+    refine Eq.symm (WithBotTop.mul_bot ?_ ?_)
+    · have hrr := WithBotTop.coe_lt_coe.mpr hr
+      exact Ne.symm (Std.ne_of_lt hrr)
+    · exact WithBotTop.coe_ne_top r
 
 -- additivity: TODO write down!
 
@@ -160,7 +248,7 @@ variable {R V Q W : Type*} [CommRing R] [PartialOrder R] [IsStrictOrderedRing R]
   [AddCommGroup V] [Module R V] [Convexity.ConvexSpace R V]
   [CommSemiring Q] [PartialOrder Q] [IsStrictOrderedRing Q] [Convexity.ConvexSpace Q W]
 
-lemma supportFunctionConvexHull (P : Set V) :
+/- lemma supportFunctionConvexHull (P : Set V) :
     supportFunction R P = supportFunction R (Convexity.convexHull R P) := by
     -- we have to cast the module R V into a ConvexSpace R V
     -- this should be doable with Mathlib.Geometry.Convex.ConvexSpace.Module
@@ -170,7 +258,7 @@ lemma supportFunctionConvexHull (P : Set V) :
     -- first follows by inclusion, the other with convex_convexHull_eq and linearity
     -- convex_convexHull_eq only exists for the Analysis definition
     -- there should be convex_convexHull_eq for convex spaces
-  -- sorry
+  -- sorry -/
 
 lemma supportFunctionAffineConvexHull (P : Set W) :
     supportFunctionAffine Q P = supportFunctionAffine Q (Convexity.convexHull Q P) := by
