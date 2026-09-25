@@ -358,26 +358,20 @@ theorem IsHPolyhedron.exists_Polytope_plus_Cone_VERSION2 {H : Set A}
         apply le_antisymm <;> assumption
 
       have weight_G_normalized_eq_one : ∀ g ∈ G_hom_pos_normalized, hom.weight g = 1 := by
-        intro g hg
+        intro _ hg
         rw [hG_hom_pos_normalized, Finset.mem_image] at hg
-        obtain ⟨g_hom, hg_hom ⟩ := hg
-        rw [←hg_hom.2, LinearMap.map_smul, inv_smul_eq_iff₀]
-        · rw [smul_eq_mul, mul_one]
-          rfl
-        · apply ne_of_gt -- prove `g_hom.weight ≠ 0`
-          rw [hG_hom_pos, Finset.mem_filter] at hg_hom
-          exact hg_hom.1.2
+        obtain ⟨g_hom, hg_hom, rfl⟩ := hg
+        rw [hG_hom_pos, Finset.mem_filter] at hg_hom
+        rw [map_smul, smul_eq_mul]
+        exact inv_mul_cancel₀ hg_hom.2.ne'
 
       have Points_vs_G_hom_pos_normalized : hom.ofPoint '' Points = G_hom_pos_normalized := by
         rw [hPoints]
         simp only [Finset.coe_preimage]
         apply image_preimage_eq_of_subset
-        rw [hom.ofPoint_range_eq_preimage_weight_one, ←image_subset_iff, subset_singleton_iff]
-        intro w hw
-        rw [mem_image] at hw
-        obtain ⟨x, ⟨hxG, weight_of_x_eq_w⟩ ⟩ := hw
-        rw [←weight_G_normalized_eq_one x hxG]
-        exact weight_of_x_eq_w.symm
+        intro g hg
+        rw [hom.ofPoint_range_eq_preimage_weight_one]
+        exact weight_G_normalized_eq_one g hg
 
       have : hull 𝕜 (hom.ofPoint '' Points) = homogenize V_hom P_convSet := by
         rw [← hull_image_ofPoint_eq_homogenize_convexHull]
