@@ -1,7 +1,7 @@
 /-
-Copyright (c) 2026 Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Valentina Taylor. All rights reserved.
+Copyright (c) 2026 Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Valentina Taylor, Mara Gruss. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Valentina Taylor
+Authors: Moritz Grillo, Judith Müller, Michael Rothgang, Moritz Stargalla, Valentina Taylor, Mara Gruss
 -/
 import Polyhedral.Mathlib.Geometry.Convex.ConvexSpace.Polytope.SupportFunction.Basic
 import Mathlib.Algebra.Order.Ring.WithTop
@@ -17,28 +17,40 @@ section
 
 variable {α : Type*} [DecidableEq α] [MulZeroClass α]
 
-#synth Mul (WithTopBot α)
-#check WithTop.instMulZeroClass
-
 -- note: the multiplication we have on WithBotTop R will have -1 * ∞ = ∞
 -- (but we don`t use that because r>0 in our properties)
 -- this may not be what we want (but it coincides with what we want for positive scalars)
 -- pehraps assume (a ≠ 0) (ha' : a ≠ -⊤) instead?
 -- (h : 0 < a)
 lemma WithBotTop.mul_top {a : WithBotTop α} (ha : a ≠ 0) (ha' : a ≠ ⊥) : a * ⊤ = ⊤ := by
-  rw [WithBot.mul_def]
-  have : ⊤ ≠ (0 : WithBot (WithTop α)) := by
-    sorry -- what's the lemma to use?
-  simp [ha, this]
-  --rw [WithBot.map₂_bot_right (a := a)]
-  sorry --rw [WithBot.map₂_coe_coe  (a := a) (b := (⊤ : WithTop α))]
-  --simp [WithBot.map₂, Option.map₂, Option.bind, Option.map]
+  by_cases! hha : a = ⊤
+  · rw [hha]
+    change ((↑(⊤ : WithTop α) : WithBot (WithTop α)) *
+      ↑(⊤ : WithTop α)) =
+    (↑(⊤ : WithTop α) : WithBot (WithTop α))
+    rw [← WithBot.coe_mul]
+    simp
+  · lift a to WithTop α using ha'
+    have hha' : a ≠ (⊤ : WithTop α) := by
+      intro h
+      apply hha
+      exact congrArg (fun x : WithTop α => (x : WithBot (WithTop α))) h
+    lift a to α using hha'
+    change (↑((↑a : WithTop α) * ⊤) : WithBot (WithTop α)) = ↑(⊤ : WithTop α)
+    congr
+    apply WithTop.mul_top
+    intro h
+    apply ha
+    exact congrArg (fun x : WithTop α => (x : WithBot (WithTop α))) h
 
-lemma WithBotTop.mul_bot {a : WithBotTop α} (ha : a ≠ 0) (ha' : a ≠ ⊤) : a * ⊥ = ⊥ := by
-  rw [WithBot.mul_def]
-  have : ⊤ ≠ (0 : WithBot (WithTop α)) := by
-    sorry -- what's the lemma to use?
-  simp [ha]
+/- infinity * -inifinity equals -infinity, so we can ommit the hypothesis that
+a is different than infinity-/
+lemma WithBotTop.mul_bot {a : WithBotTop α} (ha : a ≠ 0) : a * ⊥ = ⊥ := by
+  by_cases! hha : a = ⊥
+  · rw [hha]
+    simp only [ne_eq, WithBot.bot_ne_zero, not_false_eq_true, WithBot.mul_bot]
+  · apply WithBot.mul_bot
+    exact ha
 
 end
 
@@ -99,7 +111,7 @@ lemma supportFunctionAffine_smul_of_pos {r : R} (hr : 0 < r) (φ : ConvexSpace.d
       rw [WithBotTop.mul_top (by simp [hr.ne']) (by simp)]
   · rw [hP]
     simp only [supportFunctionAffine_empty, Pi.bot_apply]
-    rw [WithBotTop.mul_bot _ (by simp)]
+    rw [WithBotTop.mul_bot _]
     have:= WithBotTop.coe_lt_coe.mpr hr
     exact this.ne.symm
 
@@ -111,9 +123,6 @@ lemma supportFunctionAffine_homogeneous' (hP : P.Nonempty)
   sorry
 
 end convex
-
-
-
 
 section linear
 
@@ -212,10 +221,9 @@ supportFunction R (r • P) φ = r * (supportFunction R P φ) := by
     rw [hPr, hP]
     rw [supportFunction_empty]
     simp only [Pi.bot_apply]
-    refine Eq.symm (WithBotTop.mul_bot ?_ ?_)
+    refine Eq.symm (WithBotTop.mul_bot ?_)
     · have hrr := WithBotTop.coe_lt_coe.mpr hr
       exact Ne.symm (Std.ne_of_lt hrr)
-    · exact WithBotTop.coe_ne_top r
 
 -- additivity: TODO write down!
 
@@ -240,7 +248,8 @@ https://leanprover.zulipchat.com/#narrow/channel/217875-Is-there-code-for-X.3F/t
 section
 
 -- before: variable {R V Q W : Type*} [CommSemiring R] [PartialOrder R] [IsStrictOrderedRing R]
--- [AddCommMonoid V] [Module R V][CommSemiring Q] [PartialOrder Q] [IsStrictOrderedRing Q] [Convexity.ConvexSpace Q W]
+-- [AddCommMonoid V] [Module R V][CommSemiring Q] [PartialOrder Q] [IsStrictOrderedRing Q]
+-- [Convexity.ConvexSpace Q W]
 -- now: We want that our R-module is a convex space. For this we need [CommRing R], [AddCommGroup V]
 -- TODO: We have to check again!!!!
 
@@ -262,29 +271,106 @@ variable {R V Q W : Type*} [CommRing R] [PartialOrder R] [IsStrictOrderedRing R]
 
 lemma supportFunctionAffineConvexHull (P : Set W) :
     supportFunctionAffine Q P = supportFunctionAffine Q (Convexity.convexHull Q P) := by
+    by_cases! hP: P = ∅
+    · rw[hP]
+      simp
+    ·
+      sorry
     -- what is the convex hull of ∅
     --> this is ∅ and therefore compatible with our definition (see convexHull_empty)
     -- check compatibility with our junk value definition
     -- "good" remaining case should be then the normal proof
-  sorry
 
 -----
--- Our attempt
+-- to shorten the following proof, we need theorems about upper bounds on convex hulls
 lemma supportFunctionAffineConvexHull_2 (P : Set W) (φ : ConvexSpace.dual Q W) :
     supportFunctionAffine Q P φ = supportFunctionAffine Q (Convexity.convexHull Q P) (φ):= by
     by_cases! hP : P.Nonempty
     · by_cases hP' : ∃ x, IsLUB (φ '' P) x
       · obtain ⟨x, hx⟩ := hP'
-        have hx' : IsLUB (φ '' Convexity.convexHull Q P) x := by sorry
-        have hC : φ '' Convexity.convexHull Q P = Convexity.convexHull Q (φ '' P ) := sorry
-/- for this we could apply Convexity.IsAffineMap.image_convexHull but we need that φ isAffineMap
-and we have that it is in the convex space dual-/
-        sorry
--- this is the case where there is no LUB
-      · sorry
---this is the case with P = ∅
-    rw [hP]
-    rw [Convexity.convexHull_empty]
+        have hx' : IsLUB (φ '' Convexity.convexHull Q P) x := by
+          rw[Convexity.IsAffineMap.image_convexHull]
+          · refine isLUB_iff_le_iff.mpr ?_
+            intro b
+            constructor
+            · intro hb
+              rw [isLUB_iff_le_iff] at hx
+              specialize hx b
+              have hx' := hx.mp hb
+              rw [mem_upperBounds_iff_subset_Iic] at hx' ⊢
+              apply Convexity.convexHull_min hx'
+              refine Convexity.IsConvexSet.of_sConvexComb_mem ?_
+              intro w hw
+              change w.sConvexComb ≤ b
+              rw [Convexity.sConvexComb_eq_sum]
+              calc
+                w.weights.sum (fun q r => r • q) ≤ w.weights.sum (fun _ r => r • b) := by
+                  apply Finsupp.sum_le_sum
+                  intro q hq
+                  have hqb : q ≤ b := hw hq
+                  exact smul_le_smul_of_nonneg_left hqb (w.weights_nonneg q)
+                _ = (w.weights.sum fun _ r => r) • b := by
+                  simp only [Finsupp.sum]
+                  rw [Finset.sum_smul]
+                _ = b := by
+                  rw [w.total, one_smul]
+            · intro hb
+              rw [isLUB_iff_le_iff] at hx
+              specialize hx b
+              have hPP : ⇑φ '' P ⊆ Convexity.convexHull Q (⇑φ '' P) := by simp
+              have h := upperBounds_mono_set hPP
+              have hh : b ∈ upperBounds (⇑φ '' P) := by
+                apply Set.mem_of_subset_of_mem h hb
+              have := hx.mpr hh
+              exact this
+          · exact Convexity.ConvexSpace.AffineMap.isAffineMap φ
+        rw [supportFunctionAffine_of_nonempty_of_isLUB hP hx]
+        rw [supportFunctionAffine_of_nonempty_of_isLUB _ hx']
+        simp only [Convexity.convexHull_nonempty]
+        exact hP
+      · rw[supportFunctionAffine_of_nonempty_of_not_exists_isLUB hP hP']
+        have h : ¬ ∃ x, IsLUB (φ '' Convexity.convexHull Q P) x := by
+          rw [φ.isAffineMap.image_convexHull P]
+          intro hex
+          apply hP'
+          rcases hex with ⟨x, hx⟩
+          refine ⟨x, ?_⟩
+          have hub : upperBounds (Convexity.convexHull Q (φ '' P)) = upperBounds (φ '' P) := by
+            refine Set.ext ?_
+            intro x
+            constructor
+            · have hPP : ⇑φ '' P ⊆ Convexity.convexHull Q (⇑φ '' P) := by simp
+              have h := upperBounds_mono_set hPP
+              intro hx
+              have hh : x ∈ upperBounds (⇑φ '' P) := by
+                apply Set.mem_of_subset_of_mem h hx
+              exact hh
+            · intro hx
+              rw [mem_upperBounds_iff_subset_Iic] at hx ⊢
+              apply Convexity.convexHull_min hx
+              refine Convexity.IsConvexSet.of_sConvexComb_mem ?_
+              intro w hw
+              change w.sConvexComb ≤ x
+              rw [Convexity.sConvexComb_eq_sum]
+              calc
+                w.weights.sum (fun q r => r • q) ≤ w.weights.sum (fun _ r => r • x) := by
+                  apply Finsupp.sum_le_sum
+                  intro q hq
+                  have hqb : q ≤ x := hw hq
+                  exact smul_le_smul_of_nonneg_left hqb (w.weights_nonneg q)
+                _ = (w.weights.sum fun _ r => r) • x := by
+                  simp only [Finsupp.sum]
+                  rw [Finset.sum_smul]
+                _ = x := by
+                  rw [w.total, one_smul]
+          unfold IsLUB at hx
+          rw [hub] at hx
+          exact hx
+        rw[supportFunctionAffine_of_nonempty_of_not_exists_isLUB _ h]
+        simp only [Convexity.convexHull_nonempty]
+        exact hP
+    · rw [hP]
+      rw [Convexity.convexHull_empty]
 
 
 end
